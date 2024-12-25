@@ -4,16 +4,44 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Users } from 'lucide-react';
+import { useToast } from "@/components/ui/use-toast";
 
 const Customers = () => {
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement customer save logic
-    console.log('Customer submitted:', { customerName, customerPhone, customerEmail });
+    setIsSubmitting(true);
+
+    try {
+      // TODO: Backend entegrasyonu burada yapılacak
+      // Şimdilik sadece simüle ediyoruz
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      console.log('Customer submitted:', { customerName, customerPhone, customerEmail });
+      
+      toast({
+        title: "Müşteri başarıyla kaydedildi",
+        description: `${customerName} müşteri listenize eklendi.`,
+      });
+
+      // Form'u temizle
+      setCustomerName('');
+      setCustomerPhone('');
+      setCustomerEmail('');
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Hata!",
+        description: "Müşteri kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -57,8 +85,12 @@ const Customers = () => {
             />
           </div>
 
-          <Button type="submit" className="w-full">
-            Müşteriyi Kaydet
+          <Button 
+            type="submit" 
+            className="w-full"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Kaydediliyor..." : "Müşteriyi Kaydet"}
           </Button>
         </form>
       </Card>
