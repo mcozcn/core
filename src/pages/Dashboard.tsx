@@ -7,7 +7,7 @@ const StatCard = ({ title, value, icon: Icon, trend }: { title: string; value: s
       <div>
         <p className="text-sm text-gray-500">{title}</p>
         <h3 className="text-2xl font-semibold mt-1">{value}</h3>
-        {trend && <p className="text-xs text-green-500 mt-1">↑ {trend} from last month</p>}
+        {trend && <p className="text-xs text-green-500 mt-1">↑ Geçen aya göre {trend} artış</p>}
       </div>
       <Icon className="text-primary" size={24} />
     </div>
@@ -18,44 +18,44 @@ const Dashboard = () => {
   return (
     <div className="p-8 pl-72 animate-fadeIn">
       <div className="mb-8">
-        <h1 className="text-4xl font-serif mb-2">Welcome Back</h1>
-        <p className="text-gray-500">Here's what's happening at your salon today.</p>
+        <h1 className="text-4xl font-serif mb-2">Hoş Geldiniz</h1>
+        <p className="text-gray-500">Salonunuzdaki güncel durumu buradan takip edebilirsiniz.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard
-          title="Today's Appointments"
+          title="Bugünkü Randevular"
           value="24"
           icon={Calendar}
           trend="12%"
         />
         <StatCard
-          title="New Customers"
+          title="Yeni Müşteriler"
           value="156"
           icon={Users}
           trend="8%"
         />
         <StatCard
-          title="Revenue"
-          value="$2,845"
+          title="Gelir"
+          value="₺28.450"
           icon={DollarSign}
           trend="15%"
         />
         <StatCard
-          title="Avg. Service Time"
-          value="45m"
+          title="Ortalama Hizmet Süresi"
+          value="45dk"
           icon={Clock}
         />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <Card className="p-6">
-          <h2 className="text-xl font-serif mb-4">Upcoming Appointments</h2>
+          <h2 className="text-xl font-serif mb-4">Yaklaşan Randevular</h2>
           <div className="space-y-4">
             {[
-              { time: "10:00 AM", client: "Sarah Johnson", service: "Hair Coloring" },
-              { time: "11:30 AM", client: "Emily Davis", service: "Manicure" },
-              { time: "2:00 PM", client: "Michael Smith", service: "Haircut" },
+              { time: "10:00", client: "Ayşe Yılmaz", service: "Saç Boyama" },
+              { time: "11:30", client: "Elif Demir", service: "Manikür" },
+              { time: "14:00", client: "Mehmet Kaya", service: "Saç Kesimi" },
             ].map((apt, i) => (
               <div key={i} className="flex items-center justify-between p-3 bg-accent rounded-lg">
                 <div className="flex items-center space-x-4">
@@ -65,23 +65,23 @@ const Dashboard = () => {
                     <div className="text-sm text-gray-500">{apt.service}</div>
                   </div>
                 </div>
-                <button className="text-primary hover:text-primary/80">View</button>
+                <button className="text-primary hover:text-primary/80">Görüntüle</button>
               </div>
             ))}
           </div>
         </Card>
 
         <Card className="p-6">
-          <h2 className="text-xl font-serif mb-4">Popular Services</h2>
+          <h2 className="text-xl font-serif mb-4">Popüler Hizmetler</h2>
           <div className="space-y-4">
             {[
-              { name: "Hair Coloring", bookings: 45 },
-              { name: "Manicure & Pedicure", bookings: 38 },
-              { name: "Haircut & Styling", bookings: 32 },
+              { name: "Saç Boyama", bookings: 45 },
+              { name: "Manikür & Pedikür", bookings: 38 },
+              { name: "Saç Kesimi & Şekillendirme", bookings: 32 },
             ].map((service, i) => (
               <div key={i} className="flex items-center justify-between p-3 bg-accent rounded-lg">
                 <div className="font-medium">{service.name}</div>
-                <div className="text-sm text-gray-500">{service.bookings} bookings</div>
+                <div className="text-sm text-gray-500">{service.bookings} randevu</div>
               </div>
             ))}
           </div>
