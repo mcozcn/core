@@ -7,6 +7,7 @@ import Navigation from "./components/Navigation";
 import Dashboard from "./pages/Dashboard";
 import Customers from "./pages/Customers";
 import Appointments from "./pages/Appointments";
+import Services from "./pages/Services";
 
 const queryClient = new QueryClient();
 
@@ -21,6 +22,7 @@ const App = () => (
           <Route path="/" element={<Dashboard />} />
           <Route path="/customers" element={<Customers />} />
           <Route path="/appointments" element={<Appointments />} />
+          <Route path="/services" element={<Services />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
