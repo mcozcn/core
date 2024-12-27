@@ -5,17 +5,17 @@ const Navigation = () => {
   const location = useLocation();
   
   const links = [
-    { to: "/", label: "Dashboard", icon: BarChart3 },
-    { to: "/appointments", label: "Appointments", icon: Calendar },
-    { to: "/customers", label: "Customers", icon: Users },
-    { to: "/services", label: "Services", icon: Scissors },
+    { to: "/", label: "Panel", icon: BarChart3 },
+    { to: "/appointments", label: "Randevular", icon: Calendar },
+    { to: "/customers", label: "Müşteriler", icon: Users },
+    { to: "/services", label: "Hizmetler", icon: Scissors },
   ];
 
   return (
     <nav className="fixed top-0 left-0 h-full w-64 bg-white shadow-lg p-6">
       <div className="mb-8">
-        <h1 className="text-2xl font-serif text-primary font-semibold">Bella Beauty</h1>
-        <p className="text-sm text-gray-500">Salon Management</p>
+        <h1 className="text-2xl font-serif font-semibold" style={{ color: '#D4AF37' }}>ASLI ALTINBAŞ BEAUTY</h1>
+        <p className="text-sm text-gray-500">Salon Yönetimi</p>
       </div>
       
       <div className="space-y-2">

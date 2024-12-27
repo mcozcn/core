@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Calendar, Users, DollarSign, Clock } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 const StatCard = ({ title, value, icon: Icon, trend }: { title: string; value: string; icon: any; trend?: string }) => (
   <Card className="p-6 card-hover">
@@ -15,29 +16,51 @@ const StatCard = ({ title, value, icon: Icon, trend }: { title: string; value: s
 );
 
 const Dashboard = () => {
+  // Fetch appointments data
+  const { data: appointmentsData } = useQuery({
+    queryKey: ['appointments'],
+    queryFn: () => [], // Replace with actual API call
+  });
+
+  // Fetch customers data
+  const { data: customersData } = useQuery({
+    queryKey: ['customers'],
+    queryFn: () => [], // Replace with actual API call
+  });
+
+  // Fetch services data
+  const { data: servicesData } = useQuery({
+    queryKey: ['services'],
+    queryFn: () => [], // Replace with actual API call
+  });
+
+  const todayAppointments = appointmentsData?.length || 24;
+  const totalCustomers = customersData?.length || 156;
+  const totalRevenue = servicesData?.reduce((acc: number, service: any) => acc + (service.price || 0), 0) || 28450;
+
   return (
     <div className="p-8 pl-72 animate-fadeIn">
       <div className="mb-8">
-        <h1 className="text-4xl font-serif mb-2">Hoş Geldiniz</h1>
+        <h1 className="text-4xl font-serif mb-2" style={{ color: '#D4AF37' }}>Hoş Geldiniz</h1>
         <p className="text-gray-500">Salonunuzdaki güncel durumu buradan takip edebilirsiniz.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard
           title="Bugünkü Randevular"
-          value="24"
+          value={todayAppointments.toString()}
           icon={Calendar}
           trend="12%"
         />
         <StatCard
-          title="Yeni Müşteriler"
-          value="156"
+          title="Toplam Müşteriler"
+          value={totalCustomers.toString()}
           icon={Users}
           trend="8%"
         />
         <StatCard
-          title="Gelir"
-          value="₺28.450"
+          title="Toplam Gelir"
+          value={`₺${totalRevenue.toLocaleString()}`}
           icon={DollarSign}
           trend="15%"
         />
@@ -52,11 +75,11 @@ const Dashboard = () => {
         <Card className="p-6">
           <h2 className="text-xl font-serif mb-4">Yaklaşan Randevular</h2>
           <div className="space-y-4">
-            {[
+            {(appointmentsData || [
               { time: "10:00", client: "Ayşe Yılmaz", service: "Saç Boyama" },
               { time: "11:30", client: "Elif Demir", service: "Manikür" },
               { time: "14:00", client: "Mehmet Kaya", service: "Saç Kesimi" },
-            ].map((apt, i) => (
+            ]).slice(0, 3).map((apt: any, i: number) => (
               <div key={i} className="flex items-center justify-between p-3 bg-accent rounded-lg">
                 <div className="flex items-center space-x-4">
                   <div className="text-sm font-semibold">{apt.time}</div>
@@ -74,11 +97,11 @@ const Dashboard = () => {
         <Card className="p-6">
           <h2 className="text-xl font-serif mb-4">Popüler Hizmetler</h2>
           <div className="space-y-4">
-            {[
+            {(servicesData || [
               { name: "Saç Boyama", bookings: 45 },
               { name: "Manikür & Pedikür", bookings: 38 },
               { name: "Saç Kesimi & Şekillendirme", bookings: 32 },
-            ].map((service, i) => (
+            ]).slice(0, 3).map((service: any, i: number) => (
               <div key={i} className="flex items-center justify-between p-3 bg-accent rounded-lg">
                 <div className="font-medium">{service.name}</div>
                 <div className="text-sm text-gray-500">{service.bookings} randevu</div>
