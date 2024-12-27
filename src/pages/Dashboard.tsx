@@ -16,27 +16,52 @@ const StatCard = ({ title, value, icon: Icon, trend }: { title: string; value: s
 );
 
 const Dashboard = () => {
-  // Fetch appointments data
+  // Randevuları getir
   const { data: appointmentsData } = useQuery({
     queryKey: ['appointments'],
-    queryFn: () => [], // Replace with actual API call
+    queryFn: () => {
+      console.log('Fetching appointments data');
+      return [];
+    },
   });
 
-  // Fetch customers data
+  // Müşterileri getir
   const { data: customersData } = useQuery({
     queryKey: ['customers'],
-    queryFn: () => [], // Replace with actual API call
+    queryFn: () => {
+      console.log('Fetching customers data');
+      return [];
+    },
   });
 
-  // Fetch services data
+  // Hizmetleri getir
   const { data: servicesData } = useQuery({
     queryKey: ['services'],
-    queryFn: () => [], // Replace with actual API call
+    queryFn: () => {
+      console.log('Fetching services data');
+      return [];
+    },
   });
 
-  const todayAppointments = appointmentsData?.length || 24;
-  const totalCustomers = customersData?.length || 156;
-  const totalRevenue = servicesData?.reduce((acc: number, service: any) => acc + (service.price || 0), 0) || 28450;
+  // Bugünkü randevuları hesapla
+  const todayAppointments = appointmentsData?.filter((apt: any) => {
+    const aptDate = new Date(apt?.date);
+    const today = new Date();
+    return aptDate?.toDateString() === today.toDateString();
+  })?.length || 0;
+
+  // Toplam müşteri sayısı
+  const totalCustomers = customersData?.length || 0;
+
+  // Toplam gelir hesapla
+  const totalRevenue = servicesData?.reduce((acc: number, service: any) => {
+    return acc + (service.price || 0);
+  }, 0) || 0;
+
+  // Ortalama hizmet süresi hesapla (dakika cinsinden)
+  const averageServiceDuration = servicesData?.reduce((acc: number, service: any) => {
+    return acc + (service.duration || 0);
+  }, 0) / (servicesData?.length || 1) || 45;
 
   return (
     <div className="p-8 pl-72 animate-fadeIn">
@@ -66,7 +91,7 @@ const Dashboard = () => {
         />
         <StatCard
           title="Ortalama Hizmet Süresi"
-          value="45dk"
+          value={`${Math.round(averageServiceDuration)}dk`}
           icon={Clock}
         />
       </div>
@@ -75,21 +100,20 @@ const Dashboard = () => {
         <Card className="p-6">
           <h2 className="text-xl font-serif mb-4">Yaklaşan Randevular</h2>
           <div className="space-y-4">
-            {(appointmentsData || [
-              { time: "10:00", client: "Ayşe Yılmaz", service: "Saç Boyama" },
-              { time: "11:30", client: "Elif Demir", service: "Manikür" },
-              { time: "14:00", client: "Mehmet Kaya", service: "Saç Kesimi" },
-            ]).slice(0, 3).map((apt: any, i: number) => (
-              <div key={i} className="flex items-center justify-between p-3 bg-accent rounded-lg">
-                <div className="flex items-center space-x-4">
-                  <div className="text-sm font-semibold">{apt.time}</div>
-                  <div>
-                    <div className="font-medium">{apt.client}</div>
-                    <div className="text-sm text-gray-500">{apt.service}</div>
+            {(appointmentsData || [])
+              .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime())
+              .slice(0, 3)
+              .map((apt: any, i: number) => (
+                <div key={i} className="flex items-center justify-between p-3 bg-accent rounded-lg">
+                  <div className="flex items-center space-x-4">
+                    <div className="text-sm font-semibold">{apt.time}</div>
+                    <div>
+                      <div className="font-medium">{apt.client}</div>
+                      <div className="text-sm text-gray-500">{apt.service}</div>
+                    </div>
                   </div>
+                  <button className="text-primary hover:text-primary/80">Görüntüle</button>
                 </div>
-                <button className="text-primary hover:text-primary/80">Görüntüle</button>
-              </div>
             ))}
           </div>
         </Card>
@@ -97,15 +121,14 @@ const Dashboard = () => {
         <Card className="p-6">
           <h2 className="text-xl font-serif mb-4">Popüler Hizmetler</h2>
           <div className="space-y-4">
-            {(servicesData || [
-              { name: "Saç Boyama", bookings: 45 },
-              { name: "Manikür & Pedikür", bookings: 38 },
-              { name: "Saç Kesimi & Şekillendirme", bookings: 32 },
-            ]).slice(0, 3).map((service: any, i: number) => (
-              <div key={i} className="flex items-center justify-between p-3 bg-accent rounded-lg">
-                <div className="font-medium">{service.name}</div>
-                <div className="text-sm text-gray-500">{service.bookings} randevu</div>
-              </div>
+            {(servicesData || [])
+              .sort((a: any, b: any) => (b.bookings || 0) - (a.bookings || 0))
+              .slice(0, 3)
+              .map((service: any, i: number) => (
+                <div key={i} className="flex items-center justify-between p-3 bg-accent rounded-lg">
+                  <div className="font-medium">{service.name}</div>
+                  <div className="text-sm text-gray-500">{service.bookings || 0} randevu</div>
+                </div>
             ))}
           </div>
         </Card>
