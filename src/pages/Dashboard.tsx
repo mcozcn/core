@@ -2,13 +2,45 @@ import { Card } from "@/components/ui/card";
 import { Calendar, Users, DollarSign, Clock } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
-const StatCard = ({ title, value, icon: Icon, trend }: { title: string; value: string; icon: any; trend?: string }) => (
+const StatCard = ({ 
+  title, 
+  value, 
+  icon: Icon, 
+  trend, 
+  showTrend = true 
+}: { 
+  title: string; 
+  value: string; 
+  icon: any; 
+  trend?: { 
+    percentage: number; 
+    direction: 'up' | 'down' | 'none' 
+  }; 
+  showTrend?: boolean;
+}) => (
   <Card className="p-6 card-hover">
     <div className="flex items-start justify-between">
       <div>
         <p className="text-sm text-gray-500">{title}</p>
         <h3 className="text-2xl font-semibold mt-1">{value}</h3>
-        {trend && <p className="text-xs text-green-500 mt-1">↑ Geçen aya göre {trend} artış</p>}
+        {showTrend && trend && (
+          <p className={`text-xs mt-1 ${
+            trend.direction === 'up' 
+              ? 'text-green-500' 
+              : trend.direction === 'down' 
+                ? 'text-red-500' 
+                : 'text-gray-500'
+          }`}>
+            {trend.direction === 'up' ? '↑' : trend.direction === 'down' ? '↓' : '→'} 
+            Geçen aya göre {Math.abs(trend.percentage)}% {
+              trend.direction === 'up' 
+                ? 'artış' 
+                : trend.direction === 'down' 
+                  ? 'azalış' 
+                  : 'değişim yok'
+            }
+          </p>
+        )}
       </div>
       <Icon className="text-primary" size={24} />
     </div>
@@ -17,7 +49,7 @@ const StatCard = ({ title, value, icon: Icon, trend }: { title: string; value: s
 
 const Dashboard = () => {
   // Randevuları getir
-  const { data: appointmentsData } = useQuery({
+  const { data: appointmentsData = [] } = useQuery({
     queryKey: ['appointments'],
     queryFn: () => {
       console.log('Fetching appointments data');
@@ -26,7 +58,7 @@ const Dashboard = () => {
   });
 
   // Müşterileri getir
-  const { data: customersData } = useQuery({
+  const { data: customersData = [] } = useQuery({
     queryKey: ['customers'],
     queryFn: () => {
       console.log('Fetching customers data');
@@ -35,7 +67,7 @@ const Dashboard = () => {
   });
 
   // Hizmetleri getir
-  const { data: servicesData } = useQuery({
+  const { data: servicesData = [] } = useQuery({
     queryKey: ['services'],
     queryFn: () => {
       console.log('Fetching services data');
@@ -44,29 +76,73 @@ const Dashboard = () => {
   });
 
   // Bugünkü randevuları hesapla
-  const todayAppointments = appointmentsData?.filter((apt: any) => {
+  const today = new Date();
+  const todayAppointments = appointmentsData.filter((apt: any) => {
     const aptDate = new Date(apt?.date);
-    const today = new Date();
     return aptDate?.toDateString() === today.toDateString();
-  })?.length || 0;
+  }).length;
+
+  // Geçen ayın randevularını hesapla
+  const lastMonth = new Date();
+  lastMonth.setMonth(lastMonth.getMonth() - 1);
+  const lastMonthAppointments = appointmentsData.filter((apt: any) => {
+    const aptDate = new Date(apt?.date);
+    return aptDate.getMonth() === lastMonth.getMonth();
+  }).length;
+
+  // Randevu trendini hesapla
+  const appointmentTrend = lastMonthAppointments === 0 
+    ? { percentage: 0, direction: 'none' as const }
+    : {
+        percentage: Math.round(((todayAppointments - lastMonthAppointments) / lastMonthAppointments) * 100),
+        direction: todayAppointments >= lastMonthAppointments ? 'up' as const : 'down' as const
+      };
 
   // Toplam müşteri sayısı
-  const totalCustomers = customersData?.length || 0;
+  const totalCustomers = customersData.length;
+  const lastMonthCustomers = customersData.filter((customer: any) => {
+    const customerDate = new Date(customer?.createdAt);
+    return customerDate.getMonth() === lastMonth.getMonth();
+  }).length;
+
+  // Müşteri trendini hesapla
+  const customerTrend = lastMonthCustomers === 0
+    ? { percentage: 0, direction: 'none' as const }
+    : {
+        percentage: Math.round(((totalCustomers - lastMonthCustomers) / lastMonthCustomers) * 100),
+        direction: totalCustomers >= lastMonthCustomers ? 'up' as const : 'down' as const
+      };
 
   // Toplam gelir hesapla
-  const totalRevenue = servicesData?.reduce((acc: number, service: any) => {
+  const totalRevenue = servicesData.reduce((acc: number, service: any) => {
     return acc + (service.price || 0);
-  }, 0) || 0;
+  }, 0);
+
+  // Geçen ayın gelirini hesapla
+  const lastMonthRevenue = servicesData
+    .filter((service: any) => {
+      const serviceDate = new Date(service?.createdAt);
+      return serviceDate.getMonth() === lastMonth.getMonth();
+    })
+    .reduce((acc: number, service: any) => acc + (service.price || 0), 0);
+
+  // Gelir trendini hesapla
+  const revenueTrend = lastMonthRevenue === 0
+    ? { percentage: 0, direction: 'none' as const }
+    : {
+        percentage: Math.round(((totalRevenue - lastMonthRevenue) / lastMonthRevenue) * 100),
+        direction: totalRevenue >= lastMonthRevenue ? 'up' as const : 'down' as const
+      };
 
   // Ortalama hizmet süresi hesapla (dakika cinsinden)
-  const averageServiceDuration = servicesData?.reduce((acc: number, service: any) => {
+  const averageServiceDuration = servicesData.reduce((acc: number, service: any) => {
     return acc + (service.duration || 0);
-  }, 0) / (servicesData?.length || 1) || 45;
+  }, 0) / (servicesData.length || 1);
 
   return (
     <div className="p-8 pl-72 animate-fadeIn">
       <div className="mb-8">
-        <h1 className="text-4xl font-serif mb-2" style={{ color: '#D4AF37' }}>Hoş Geldiniz</h1>
+        <h1 className="text-4xl font-serif mb-2" style={{ color: '#D4AF37' }}>ASLI ALTINBAŞ BEAUTY</h1>
         <p className="text-gray-500">Salonunuzdaki güncel durumu buradan takip edebilirsiniz.</p>
       </div>
 
@@ -75,24 +151,25 @@ const Dashboard = () => {
           title="Bugünkü Randevular"
           value={todayAppointments.toString()}
           icon={Calendar}
-          trend="12%"
+          trend={appointmentTrend}
         />
         <StatCard
           title="Toplam Müşteriler"
           value={totalCustomers.toString()}
           icon={Users}
-          trend="8%"
+          trend={customerTrend}
         />
         <StatCard
           title="Toplam Gelir"
           value={`₺${totalRevenue.toLocaleString()}`}
           icon={DollarSign}
-          trend="15%"
+          trend={revenueTrend}
         />
         <StatCard
           title="Ortalama Hizmet Süresi"
           value={`${Math.round(averageServiceDuration)}dk`}
           icon={Clock}
+          showTrend={false}
         />
       </div>
 
@@ -100,7 +177,7 @@ const Dashboard = () => {
         <Card className="p-6">
           <h2 className="text-xl font-serif mb-4">Yaklaşan Randevular</h2>
           <div className="space-y-4">
-            {(appointmentsData || [])
+            {appointmentsData
               .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime())
               .slice(0, 3)
               .map((apt: any, i: number) => (
@@ -108,20 +185,20 @@ const Dashboard = () => {
                   <div className="flex items-center space-x-4">
                     <div className="text-sm font-semibold">{apt.time}</div>
                     <div>
-                      <div className="font-medium">{apt.client}</div>
+                      <div className="font-medium">{apt.customerName}</div>
                       <div className="text-sm text-gray-500">{apt.service}</div>
                     </div>
                   </div>
                   <button className="text-primary hover:text-primary/80">Görüntüle</button>
                 </div>
-            ))}
+              ))}
           </div>
         </Card>
 
         <Card className="p-6">
           <h2 className="text-xl font-serif mb-4">Popüler Hizmetler</h2>
           <div className="space-y-4">
-            {(servicesData || [])
+            {servicesData
               .sort((a: any, b: any) => (b.bookings || 0) - (a.bookings || 0))
               .slice(0, 3)
               .map((service: any, i: number) => (
@@ -129,7 +206,7 @@ const Dashboard = () => {
                   <div className="font-medium">{service.name}</div>
                   <div className="text-sm text-gray-500">{service.bookings || 0} randevu</div>
                 </div>
-            ))}
+              ))}
           </div>
         </Card>
       </div>
