@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,43 +13,42 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-interface Customer {
-  id: number;
-  name: string;
-  phone: string;
-  email: string;
-  createdAt: Date;
-}
+import { getCustomers, setCustomers, Customer } from '@/utils/localStorage';
 
 const Customers = () => {
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [customers, setCustomersState] = useState<Customer[]>([]);
   const [showForm, setShowForm] = useState(false);
   const { toast } = useToast();
+
+  // Local storage'dan müşterileri yükle
+  useEffect(() => {
+    const loadedCustomers = getCustomers();
+    console.log('Loaded customers from localStorage:', loadedCustomers);
+    setCustomersState(loadedCustomers);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      // TODO: Backend entegrasyonu burada yapılacak
-      // Şimdilik sadece state'e ekliyoruz
       const newCustomer: Customer = {
-        id: customers.length + 1,
+        id: Date.now(),
         name: customerName,
         phone: customerPhone,
         email: customerEmail,
         createdAt: new Date(),
       };
       
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setCustomers(prev => [...prev, newCustomer]);
+      const updatedCustomers = [...customers, newCustomer];
+      setCustomers(updatedCustomers); // Local storage'a kaydet
+      setCustomersState(updatedCustomers); // State'i güncelle
       
-      console.log('Customer submitted:', newCustomer);
+      console.log('Customer saved to localStorage:', newCustomer);
       
       toast({
         title: "Müşteri başarıyla kaydedildi",
@@ -62,6 +61,7 @@ const Customers = () => {
       setCustomerEmail('');
       setShowForm(false);
     } catch (error) {
+      console.error('Error saving customer:', error);
       toast({
         variant: "destructive",
         title: "Hata!",
