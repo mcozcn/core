@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Calendar, Users, DollarSign, Clock } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { getAppointments, getCustomers, getServices } from "@/utils/localStorage";
 
 const StatCard = ({ 
   title, 
@@ -23,7 +24,7 @@ const StatCard = ({
       <div>
         <p className="text-sm text-gray-500">{title}</p>
         <h3 className="text-2xl font-semibold mt-1">{value}</h3>
-        {showTrend && trend && (
+        {showTrend && trend && trend.percentage !== 0 && (
           <p className={`text-xs mt-1 ${
             trend.direction === 'up' 
               ? 'text-green-500' 
@@ -52,8 +53,8 @@ const Dashboard = () => {
   const { data: appointmentsData = [] } = useQuery({
     queryKey: ['appointments'],
     queryFn: () => {
-      console.log('Fetching appointments data');
-      return [];
+      console.log('Fetching appointments from local storage');
+      return getAppointments();
     },
   });
 
@@ -61,8 +62,8 @@ const Dashboard = () => {
   const { data: customersData = [] } = useQuery({
     queryKey: ['customers'],
     queryFn: () => {
-      console.log('Fetching customers data');
-      return [];
+      console.log('Fetching customers from local storage');
+      return getCustomers();
     },
   });
 
@@ -70,8 +71,8 @@ const Dashboard = () => {
   const { data: servicesData = [] } = useQuery({
     queryKey: ['services'],
     queryFn: () => {
-      console.log('Fetching services data');
-      return [];
+      console.log('Fetching services from local storage');
+      return getServices();
     },
   });
 
@@ -136,7 +137,7 @@ const Dashboard = () => {
 
   // Ortalama hizmet süresi hesapla (dakika cinsinden)
   const averageServiceDuration = servicesData.reduce((acc: number, service: any) => {
-    return acc + (service.duration || 0);
+    return acc + (parseInt(service.duration) || 0);
   }, 0) / (servicesData.length || 1);
 
   return (

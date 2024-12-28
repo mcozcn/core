@@ -3,8 +3,10 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Calendar, UserPlus, Clock } from 'lucide-react';
+import { Calendar, UserPlus } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getAppointments, setAppointments, type Appointment } from "@/utils/localStorage";
 import {
   Table,
   TableBody,
@@ -14,24 +16,23 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-interface Appointment {
-  id: number;
-  customerName: string;
-  date: string;
-  time: string;
-  service: string;
-  createdAt: Date;
-}
-
 const Appointments = () => {
   const [customerName, setCustomerName] = useState('');
   const [appointmentDate, setAppointmentDate] = useState('');
   const [appointmentTime, setAppointmentTime] = useState('');
   const [service, setService] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [showForm, setShowForm] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: appointments = [] } = useQuery({
+    queryKey: ['appointments'],
+    queryFn: () => {
+      console.log('Fetching appointments from local storage');
+      return getAppointments();
+    },
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,10 +48,11 @@ const Appointments = () => {
         createdAt: new Date(),
       };
       
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setAppointments(prev => [...prev, newAppointment]);
+      const updatedAppointments = [...appointments, newAppointment];
+      setAppointments(updatedAppointments);
+      queryClient.setQueryData(['appointments'], updatedAppointments);
       
-      console.log('Appointment submitted:', newAppointment);
+      console.log('Appointment saved to local storage:', newAppointment);
       
       toast({
         title: "Randevu başarıyla kaydedildi",

@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getServices, setServices, type Service } from "@/utils/localStorage";
 import {
   Table,
   TableBody,
@@ -14,21 +16,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-interface Service {
-  id: number;
-  name: string;
-  type: 'service' | 'product';
-  price: number;
-  description: string;
-  duration?: string;
-  createdAt: Date;
-}
-
 const Services = () => {
   const [showForm, setShowForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [services, setServices] = useState<Service[]>([]);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: services = [] } = useQuery({
+    queryKey: ['services'],
+    queryFn: () => {
+      console.log('Fetching services from local storage');
+      return getServices();
+    },
+  });
 
   const [formData, setFormData] = useState({
     name: '',
@@ -53,8 +53,9 @@ const Services = () => {
         createdAt: new Date(),
       };
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setServices(prev => [...prev, newService]);
+      const updatedServices = [...services, newService];
+      setServices(updatedServices);
+      queryClient.setQueryData(['services'], updatedServices);
 
       toast({
         title: "Başarıyla kaydedildi",
