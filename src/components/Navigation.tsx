@@ -15,8 +15,12 @@ const Navigation = () => {
   return (
     <nav className="fixed top-0 left-0 h-full w-64 bg-white shadow-lg p-6">
       <div className="mb-8">
-        <h1 className="text-2xl font-serif font-semibold" style={{ color: '#D4AF37' }}>ASLI ALTINBAŞ BEAUTY</h1>
-        <p className="text-sm text-gray-500">Salon Yönetimi</p>
+        <img 
+          src="/lovable-uploads/b98e8cd9-86a0-4af7-b322-84c8d9d63a3d.png" 
+          alt="Aslı Altınbaş Beauty Logo" 
+          className="w-32 mx-auto mb-2"
+        />
+        <p className="text-sm text-gray-500 text-center">Salon Yönetimi</p>
       </div>
       
       <div className="space-y-2">

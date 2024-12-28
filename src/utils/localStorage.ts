@@ -53,6 +53,8 @@ export interface Sale {
   productName: string;
   quantity: number;
   totalPrice: number;
+  customerName: string;
+  customerPhone: string;
   saleDate: Date;
 }
 
