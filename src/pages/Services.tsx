@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -57,6 +57,8 @@ const Services = () => {
       setServices(updatedServices);
       queryClient.setQueryData(['services'], updatedServices);
 
+      console.log('Service saved to localStorage:', newService);
+
       toast({
         title: "Başarıyla kaydedildi",
         description: `${newService.name} hizmet listenize eklendi.`,
@@ -71,6 +73,7 @@ const Services = () => {
       });
       setShowForm(false);
     } catch (error) {
+      console.error('Error saving service:', error);
       toast({
         variant: "destructive",
         title: "Hata!",

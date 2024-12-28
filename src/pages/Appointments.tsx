@@ -52,7 +52,7 @@ const Appointments = () => {
       setAppointments(updatedAppointments);
       queryClient.setQueryData(['appointments'], updatedAppointments);
       
-      console.log('Appointment saved to local storage:', newAppointment);
+      console.log('Appointment saved to localStorage:', newAppointment);
       
       toast({
         title: "Randevu başarıyla kaydedildi",
@@ -65,6 +65,7 @@ const Appointments = () => {
       setService('');
       setShowForm(false);
     } catch (error) {
+      console.error('Error saving appointment:', error);
       toast({
         variant: "destructive",
         title: "Hata!",
