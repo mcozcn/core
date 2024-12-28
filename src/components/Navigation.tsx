@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Calendar, Users, Scissors, BarChart3 } from "lucide-react";
+import { Calendar, Users, Scissors, BarChart3, Package } from "lucide-react";
 
 const Navigation = () => {
   const location = useLocation();
@@ -9,6 +9,7 @@ const Navigation = () => {
     { to: "/appointments", label: "Randevular", icon: Calendar },
     { to: "/customers", label: "Müşteriler", icon: Users },
     { to: "/services", label: "Hizmetler", icon: Scissors },
+    { to: "/stock", label: "Stok Yönetimi", icon: Package },
   ];
 
   return (

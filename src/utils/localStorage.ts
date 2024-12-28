@@ -3,6 +3,8 @@ const STORAGE_KEYS = {
   APPOINTMENTS: 'appointments',
   CUSTOMERS: 'customers',
   SERVICES: 'services',
+  STOCK: 'stock',
+  SALES: 'sales',
 } as const;
 
 // Type definitions
@@ -34,6 +36,26 @@ export interface Service {
   createdAt: Date;
 }
 
+export interface StockItem {
+  id: number;
+  productId: number;
+  productName: string;
+  quantity: number;
+  price: number;
+  category: string;
+  createdAt: Date;
+  lastUpdated: Date;
+}
+
+export interface Sale {
+  id: number;
+  productId: number;
+  productName: string;
+  quantity: number;
+  totalPrice: number;
+  saleDate: Date;
+}
+
 // Generic get function
 const getFromStorage = <T>(key: string): T[] => {
   const data = localStorage.getItem(key);
@@ -63,3 +85,15 @@ export const getServices = (): Service[] =>
 
 export const setServices = (services: Service[]): void =>
   setToStorage(STORAGE_KEYS.SERVICES, services);
+
+export const getStock = (): StockItem[] =>
+  getFromStorage<StockItem>(STORAGE_KEYS.STOCK);
+
+export const setStock = (stock: StockItem[]): void =>
+  setToStorage(STORAGE_KEYS.STOCK, stock);
+
+export const getSales = (): Sale[] =>
+  getFromStorage<Sale>(STORAGE_KEYS.SALES);
+
+export const setSales = (sales: Sale[]): void =>
+  setToStorage(STORAGE_KEYS.SALES, sales);

@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
-import { Calendar, Users, DollarSign, Clock } from "lucide-react";
+import { Calendar, Users, DollarSign, Clock, Package } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { getAppointments, getCustomers, getServices } from "@/utils/localStorage";
+import { getAppointments, getCustomers, getServices, getStock, getSales } from "@/utils/localStorage";
 
 const StatCard = ({ 
   title, 
@@ -76,6 +76,24 @@ const Dashboard = () => {
     },
   });
 
+  // Stok verilerini getir
+  const { data: stockData = [] } = useQuery({
+    queryKey: ['stock'],
+    queryFn: () => {
+      console.log('Fetching stock from localStorage');
+      return getStock();
+    },
+  });
+
+  // Satış verilerini getir
+  const { data: salesData = [] } = useQuery({
+    queryKey: ['sales'],
+    queryFn: () => {
+      console.log('Fetching sales from localStorage');
+      return getSales();
+    },
+  });
+
   // Bugünkü randevuları hesapla
   const today = new Date();
   const todayAppointments = appointmentsData.filter((apt: any) => {
@@ -140,6 +158,19 @@ const Dashboard = () => {
     return acc + (parseInt(service.duration) || 0);
   }, 0) / (servicesData.length || 1);
 
+  // Günlük satışları hesapla
+  const todaySales = salesData.filter((sale: any) => {
+    const saleDate = new Date(sale.saleDate);
+    return saleDate.toDateString() === today.toDateString();
+  });
+
+  const dailySalesTotal = todaySales.reduce((acc: number, sale: any) => acc + sale.totalPrice, 0);
+
+  // Toplam stok değerini hesapla
+  const totalStockValue = stockData.reduce((acc: number, item: any) => {
+    return acc + (item.quantity * item.price);
+  }, 0);
+
   return (
     <div className="p-8 pl-72 animate-fadeIn">
       <div className="mb-8">
@@ -170,6 +201,18 @@ const Dashboard = () => {
           title="Ortalama Hizmet Süresi"
           value={`${Math.round(averageServiceDuration)}dk`}
           icon={Clock}
+          showTrend={false}
+        />
+        <StatCard
+          title="Günlük Satış"
+          value={`₺${dailySalesTotal.toLocaleString()}`}
+          icon={DollarSign}
+          showTrend={false}
+        />
+        <StatCard
+          title="Toplam Stok Değeri"
+          value={`₺${totalStockValue.toLocaleString()}`}
+          icon={Package}
           showTrend={false}
         />
       </div>
