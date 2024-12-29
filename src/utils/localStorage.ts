@@ -45,6 +45,29 @@ export interface ServiceSale {
   saleDate: Date;
 }
 
+export interface StockItem {
+  id: number;
+  productId: number;
+  productName: string;
+  quantity: number;
+  price: number;
+  cost: number;
+  category: string;
+  createdAt: Date;
+  lastUpdated: Date;
+}
+
+export interface Sale {
+  id: number;
+  productId: number;
+  productName: string;
+  quantity: number;
+  totalPrice: number;
+  customerName: string;
+  customerPhone: string;
+  saleDate: Date;
+}
+
 // Generic get function
 const getFromStorage = <T>(key: string): T[] => {
   const data = localStorage.getItem(key);

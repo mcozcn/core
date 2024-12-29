@@ -20,6 +20,7 @@ const AddProductForm = ({ showForm, setShowForm, stock }: AddProductFormProps) =
     productName: '',
     quantity: '',
     price: '',
+    cost: '',
     category: '',
   });
 
@@ -33,6 +34,7 @@ const AddProductForm = ({ showForm, setShowForm, stock }: AddProductFormProps) =
         productName: formData.productName,
         quantity: Number(formData.quantity),
         price: Number(formData.price),
+        cost: Number(formData.cost),
         category: formData.category,
         createdAt: new Date(),
         lastUpdated: new Date(),
@@ -53,6 +55,7 @@ const AddProductForm = ({ showForm, setShowForm, stock }: AddProductFormProps) =
         productName: '',
         quantity: '',
         price: '',
+        cost: '',
         category: '',
       });
       setShowForm(false);
@@ -93,12 +96,23 @@ const AddProductForm = ({ showForm, setShowForm, stock }: AddProductFormProps) =
         </div>
 
         <div>
-          <Label>Fiyat (₺)</Label>
+          <Label>Maliyet (₺)</Label>
+          <Input
+            type="number"
+            value={formData.cost}
+            onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
+            placeholder="Ürün maliyetini girin"
+            required
+          />
+        </div>
+
+        <div>
+          <Label>Satış Fiyatı (₺)</Label>
           <Input
             type="number"
             value={formData.price}
             onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-            placeholder="Ürün fiyatını girin"
+            placeholder="Ürün satış fiyatını girin"
             required
           />
         </div>

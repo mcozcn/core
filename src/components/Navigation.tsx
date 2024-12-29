@@ -18,7 +18,7 @@ const Navigation = () => {
         <img 
           src="/lovable-uploads/b98e8cd9-86a0-4af7-b322-84c8d9d63a3d.png" 
           alt="Aslı Altınbaş Beauty Logo" 
-          className="w-32 mx-auto mb-2"
+          className="w-48 mx-auto mb-4"
         />
         <p className="text-sm text-gray-500 text-center">Salon Yönetimi</p>
       </div>
