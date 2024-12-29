@@ -3,7 +3,8 @@ import { Calendar, Users, DollarSign, Clock, Package } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getAppointments, getCustomers, getServices, getStock, getSales } from "@/utils/localStorage";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ProfitLossAnalysis from "@/components/dashboard/ProfitLossAnalysis";
+import ProductProfitLossAnalysis from "@/components/dashboard/ProductProfitLossAnalysis";
+import ServiceProfitLossAnalysis from "@/components/dashboard/ServiceProfitLossAnalysis";
 
 const StatCard = ({ 
   title, 
@@ -183,7 +184,8 @@ const Dashboard = () => {
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList>
           <TabsTrigger value="overview">Genel Bakış</TabsTrigger>
-          <TabsTrigger value="profitLoss">Kar/Zarar Analizi</TabsTrigger>
+          <TabsTrigger value="productProfitLoss">Ürün Kar/Zarar</TabsTrigger>
+          <TabsTrigger value="serviceProfitLoss">Hizmet Kar/Zarar</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
@@ -265,8 +267,12 @@ const Dashboard = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="profitLoss">
-          <ProfitLossAnalysis />
+        <TabsContent value="productProfitLoss">
+          <ProductProfitLossAnalysis />
+        </TabsContent>
+
+        <TabsContent value="serviceProfitLoss">
+          <ServiceProfitLossAnalysis />
         </TabsContent>
       </Tabs>
     </div>
