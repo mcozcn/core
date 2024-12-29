@@ -9,6 +9,7 @@ import Customers from "./pages/Customers";
 import Appointments from "./pages/Appointments";
 import Services from "./pages/Services";
 import Stock from "./pages/Stock";
+import Costs from "./pages/Costs";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ const App = () => (
           <Route path="/appointments" element={<Appointments />} />
           <Route path="/services" element={<Services />} />
           <Route path="/stock" element={<Stock />} />
+          <Route path="/costs" element={<Costs />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>

@@ -68,7 +68,15 @@ export interface Sale {
   saleDate: Date;
 }
 
-// Generic get function
+export interface Cost {
+  id: number;
+  description: string;
+  amount: number;
+  category: string;
+  date: Date;
+  createdAt: Date;
+}
+
 const getFromStorage = <T>(key: string): T[] => {
   const data = localStorage.getItem(key);
   return data ? JSON.parse(data) : [];
@@ -115,3 +123,9 @@ export const getServiceSales = (): ServiceSale[] =>
 
 export const setServiceSales = (sales: ServiceSale[]): void =>
   setToStorage(STORAGE_KEYS.SERVICE_SALES, sales);
+
+export const getCosts = (): Cost[] =>
+  getFromStorage<Cost>('costs');
+
+export const setCosts = (costs: Cost[]): void =>
+  setToStorage('costs', costs);

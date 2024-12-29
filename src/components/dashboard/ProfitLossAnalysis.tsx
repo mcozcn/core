@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { getSales, getStock } from "@/utils/localStorage";
+import { getSales, getStock, getCosts } from "@/utils/localStorage";
 import ProfitLossCard from "./ProfitLossCard";
-import { Card } from "@/components/ui/card";
 
 const ProfitLossAnalysis = () => {
   const { data: sales = [] } = useQuery({
@@ -14,6 +13,11 @@ const ProfitLossAnalysis = () => {
     queryFn: getStock,
   });
 
+  const { data: costs = [] } = useQuery({
+    queryKey: ['costs'],
+    queryFn: getCosts,
+  });
+
   const calculateProfitLoss = (days: number) => {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
@@ -22,16 +26,21 @@ const ProfitLossAnalysis = () => {
       new Date(sale.saleDate) >= cutoffDate
     );
 
+    const periodCosts = costs.filter(cost => 
+      new Date(cost.date) >= cutoffDate
+    );
+
     const totalSales = periodSales.reduce((sum, sale) => sum + sale.totalPrice, 0);
-    const totalCosts = periodSales.reduce((sum, sale) => {
+    const totalProductCosts = periodSales.reduce((sum, sale) => {
       const product = stock.find(item => item.productId === sale.productId);
       return sum + (product?.cost || 0) * sale.quantity;
     }, 0);
+    const totalAdditionalCosts = periodCosts.reduce((sum, cost) => sum + cost.amount, 0);
 
     return {
       sales: totalSales,
-      costs: totalCosts,
-      profit: totalSales - totalCosts
+      costs: totalProductCosts + totalAdditionalCosts,
+      profit: totalSales - (totalProductCosts + totalAdditionalCosts)
     };
   };
 
