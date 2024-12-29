@@ -2,6 +2,8 @@ import { Card } from "@/components/ui/card";
 import { Calendar, Users, DollarSign, Clock, Package } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getAppointments, getCustomers, getServices, getStock, getSales } from "@/utils/localStorage";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ProfitLossAnalysis from "@/components/dashboard/ProfitLossAnalysis";
 
 const StatCard = ({ 
   title, 
@@ -178,82 +180,95 @@ const Dashboard = () => {
         <p className="text-gray-500">Salonunuzdaki güncel durumu buradan takip edebilirsiniz.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard
-          title="Bugünkü Randevular"
-          value={todayAppointments.toString()}
-          icon={Calendar}
-          trend={appointmentTrend}
-        />
-        <StatCard
-          title="Toplam Müşteriler"
-          value={totalCustomers.toString()}
-          icon={Users}
-          trend={customerTrend}
-        />
-        <StatCard
-          title="Toplam Gelir"
-          value={`₺${totalRevenue.toLocaleString()}`}
-          icon={DollarSign}
-          trend={revenueTrend}
-        />
-        <StatCard
-          title="Ortalama Hizmet Süresi"
-          value={`${Math.round(averageServiceDuration)}dk`}
-          icon={Clock}
-          showTrend={false}
-        />
-        <StatCard
-          title="Günlük Satış"
-          value={`₺${dailySalesTotal.toLocaleString()}`}
-          icon={DollarSign}
-          showTrend={false}
-        />
-        <StatCard
-          title="Toplam Stok Değeri"
-          value={`₺${totalStockValue.toLocaleString()}`}
-          icon={Package}
-          showTrend={false}
-        />
-      </div>
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="overview">Genel Bakış</TabsTrigger>
+          <TabsTrigger value="profitLoss">Kar/Zarar Analizi</TabsTrigger>
+        </TabsList>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Card className="p-6">
-          <h2 className="text-xl font-serif mb-4">Yaklaşan Randevular</h2>
-          <div className="space-y-4">
-            {appointmentsData
-              .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime())
-              .slice(0, 3)
-              .map((apt: any, i: number) => (
-                <div key={i} className="flex items-center justify-between p-3 bg-accent rounded-lg">
-                  <div className="flex items-center space-x-4">
-                    <div className="text-sm font-semibold">{apt.time}</div>
-                    <div>
-                      <div className="font-medium">{apt.customerName}</div>
-                      <div className="text-sm text-gray-500">{apt.service}</div>
+        <TabsContent value="overview">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <StatCard
+              title="Bugünkü Randevular"
+              value={todayAppointments.toString()}
+              icon={Calendar}
+              trend={appointmentTrend}
+            />
+            <StatCard
+              title="Toplam Müşteriler"
+              value={totalCustomers.toString()}
+              icon={Users}
+              trend={customerTrend}
+            />
+            <StatCard
+              title="Toplam Gelir"
+              value={`₺${totalRevenue.toLocaleString()}`}
+              icon={DollarSign}
+              trend={revenueTrend}
+            />
+            <StatCard
+              title="Ortalama Hizmet Süresi"
+              value={`${Math.round(averageServiceDuration)}dk`}
+              icon={Clock}
+              showTrend={false}
+            />
+            <StatCard
+              title="Günlük Satış"
+              value={`₺${dailySalesTotal.toLocaleString()}`}
+              icon={DollarSign}
+              showTrend={false}
+            />
+            <StatCard
+              title="Toplam Stok Değeri"
+              value={`₺${totalStockValue.toLocaleString()}`}
+              icon={Package}
+              showTrend={false}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <Card className="p-6">
+              <h2 className="text-xl font-serif mb-4">Yaklaşan Randevular</h2>
+              <div className="space-y-4">
+                {appointmentsData
+                  .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                  .slice(0, 3)
+                  .map((apt: any, i: number) => (
+                    <div key={i} className="flex items-center justify-between p-3 bg-accent rounded-lg">
+                      <div className="flex items-center space-x-4">
+                        <div className="text-sm font-semibold">{apt.time}</div>
+                        <div>
+                          <div className="font-medium">{apt.customerName}</div>
+                          <div className="text-sm text-gray-500">{apt.service}</div>
+                        </div>
+                      </div>
+                      <button className="text-primary hover:text-primary/80">Görüntüle</button>
                     </div>
-                  </div>
-                  <button className="text-primary hover:text-primary/80">Görüntüle</button>
-                </div>
-              ))}
-          </div>
-        </Card>
+                  ))}
+              </div>
+            </Card>
 
-        <Card className="p-6">
-          <h2 className="text-xl font-serif mb-4">Popüler Hizmetler</h2>
-          <div className="space-y-4">
-            {servicesData
-              .sort((a: any, b: any) => (b.bookings || 0) - (a.bookings || 0))
-              .slice(0, 3)
-              .map((service: any, i: number) => (
-                <div key={i} className="flex items-center justify-between p-3 bg-accent rounded-lg">
-                  <div className="font-medium">{service.name}</div>
-                  <div className="text-sm text-gray-500">{service.bookings || 0} randevu</div>
-                </div>
-              ))}
+            <Card className="p-6">
+              <h2 className="text-xl font-serif mb-4">Popüler Hizmetler</h2>
+              <div className="space-y-4">
+                {servicesData
+                  .sort((a: any, b: any) => (b.bookings || 0) - (a.bookings || 0))
+                  .slice(0, 3)
+                  .map((service: any, i: number) => (
+                    <div key={i} className="flex items-center justify-between p-3 bg-accent rounded-lg">
+                      <div className="font-medium">{service.name}</div>
+                      <div className="text-sm text-gray-500">{service.bookings || 0} randevu</div>
+                    </div>
+                  ))}
+              </div>
+            </Card>
           </div>
-        </Card>
-      </div>
+        </TabsContent>
+
+        <TabsContent value="profitLoss">
+          <ProfitLossAnalysis />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
