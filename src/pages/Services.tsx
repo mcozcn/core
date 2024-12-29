@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getServices, setServices, type Service } from "@/utils/localStorage";
+import { getServices, setServices, getServiceSales, type Service } from "@/utils/localStorage";
 import {
   Table,
   TableBody,
@@ -15,9 +15,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ServiceSaleForm from "@/components/services/ServiceSaleForm";
+import ServiceSalesTable from "@/components/services/ServiceSalesTable";
 
 const Services = () => {
   const [showForm, setShowForm] = useState(false);
+  const [showSaleForm, setShowSaleForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -30,9 +34,16 @@ const Services = () => {
     },
   });
 
+  const { data: sales = [] } = useQuery({
+    queryKey: ['serviceSales'],
+    queryFn: () => {
+      console.log('Fetching service sales from local storage');
+      return getServiceSales();
+    },
+  });
+
   const [formData, setFormData] = useState({
     name: '',
-    type: 'service',
     price: '',
     description: '',
     duration: '',
@@ -46,10 +57,9 @@ const Services = () => {
       const newService: Service = {
         id: services.length + 1,
         name: formData.name,
-        type: formData.type as 'service' | 'product',
         price: Number(formData.price),
         description: formData.description,
-        duration: formData.type === 'service' ? formData.duration : undefined,
+        duration: formData.duration,
         createdAt: new Date(),
       };
 
@@ -66,7 +76,6 @@ const Services = () => {
 
       setFormData({
         name: '',
-        type: 'service',
         price: '',
         description: '',
         duration: '',
@@ -87,33 +96,33 @@ const Services = () => {
   return (
     <div className="p-8 pl-72 animate-fadeIn">
       <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-4xl font-serif">Hizmet ve Ürün Yönetimi</h1>
-        <Button onClick={() => setShowForm(true)} className="flex items-center gap-2">
-          Yeni Ekle
-        </Button>
+        <h1 className="text-4xl font-serif">Hizmet Yönetimi</h1>
+        <div className="space-x-2">
+          <Button onClick={() => setShowSaleForm(true)} variant="outline">
+            Satış Yap
+          </Button>
+          <Button onClick={() => setShowForm(true)}>
+            Yeni Hizmet Ekle
+          </Button>
+        </div>
       </div>
+
+      <ServiceSaleForm 
+        showForm={showSaleForm} 
+        setShowForm={setShowSaleForm} 
+        services={services}
+        sales={sales}
+      />
 
       {showForm && (
         <Card className="p-6 mb-8">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label>Tür</Label>
-              <select
-                value={formData.type}
-                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <option value="service">Hizmet</option>
-                <option value="product">Ürün</option>
-              </select>
-            </div>
-
-            <div>
               <Label>İsim</Label>
               <Input
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Hizmet/Ürün adını girin"
+                placeholder="Hizmet adını girin"
                 required
               />
             </div>
@@ -129,16 +138,14 @@ const Services = () => {
               />
             </div>
 
-            {formData.type === 'service' && (
-              <div>
-                <Label>Süre (dk)</Label>
-                <Input
-                  value={formData.duration}
-                  onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                  placeholder="Hizmet süresini girin"
-                />
-              </div>
-            )}
+            <div>
+              <Label>Süre (dk)</Label>
+              <Input
+                value={formData.duration}
+                onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                placeholder="Hizmet süresini girin"
+              />
+            </div>
 
             <div>
               <Label>Açıklama</Label>
@@ -169,38 +176,51 @@ const Services = () => {
         </Card>
       )}
 
-      <Card>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Tür</TableHead>
-              <TableHead>İsim</TableHead>
-              <TableHead>Fiyat</TableHead>
-              <TableHead>Süre</TableHead>
-              <TableHead>Açıklama</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {services.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground">
-                  Henüz hizmet/ürün kaydı bulunmamaktadır.
-                </TableCell>
-              </TableRow>
-            ) : (
-              services.map((service) => (
-                <TableRow key={service.id}>
-                  <TableCell>{service.type === 'service' ? 'Hizmet' : 'Ürün'}</TableCell>
-                  <TableCell>{service.name}</TableCell>
-                  <TableCell>{service.price} ₺</TableCell>
-                  <TableCell>{service.duration || '-'}</TableCell>
-                  <TableCell>{service.description}</TableCell>
+      <Tabs defaultValue="services" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="services">Hizmetler</TabsTrigger>
+          <TabsTrigger value="sales">Satışlar</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="services">
+          <Card>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>İsim</TableHead>
+                  <TableHead>Fiyat</TableHead>
+                  <TableHead>Süre</TableHead>
+                  <TableHead>Açıklama</TableHead>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </Card>
+              </TableHeader>
+              <TableBody>
+                {services.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center text-muted-foreground">
+                      Henüz hizmet kaydı bulunmamaktadır.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  services.map((service) => (
+                    <TableRow key={service.id}>
+                      <TableCell>{service.name}</TableCell>
+                      <TableCell>{service.price} ₺</TableCell>
+                      <TableCell>{service.duration || '-'}</TableCell>
+                      <TableCell>{service.description}</TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="sales">
+          <Card>
+            <ServiceSalesTable sales={sales} />
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

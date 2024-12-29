@@ -5,6 +5,7 @@ const STORAGE_KEYS = {
   SERVICES: 'services',
   STOCK: 'stock',
   SALES: 'sales',
+  SERVICE_SALES: 'serviceSales',
 } as const;
 
 // Type definitions
@@ -28,31 +29,17 @@ export interface Customer {
 export interface Service {
   id: number;
   name: string;
-  type: 'service' | 'product';
   price: number;
   description: string;
   duration?: string;
-  bookings?: number;
   createdAt: Date;
 }
 
-export interface StockItem {
+export interface ServiceSale {
   id: number;
-  productId: number;
-  productName: string;
-  quantity: number;
+  serviceId: number;
+  serviceName: string;
   price: number;
-  category: string;
-  createdAt: Date;
-  lastUpdated: Date;
-}
-
-export interface Sale {
-  id: number;
-  productId: number;
-  productName: string;
-  quantity: number;
-  totalPrice: number;
   customerName: string;
   customerPhone: string;
   saleDate: Date;
@@ -99,3 +86,9 @@ export const getSales = (): Sale[] =>
 
 export const setSales = (sales: Sale[]): void =>
   setToStorage(STORAGE_KEYS.SALES, sales);
+
+export const getServiceSales = (): ServiceSale[] =>
+  getFromStorage<ServiceSale>(STORAGE_KEYS.SERVICE_SALES);
+
+export const setServiceSales = (sales: ServiceSale[]): void =>
+  setToStorage(STORAGE_KEYS.SERVICE_SALES, sales);
