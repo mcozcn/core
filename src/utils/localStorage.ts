@@ -5,6 +5,8 @@ const STORAGE_KEYS = {
   STOCK: 'stock',
   SALES: 'sales',
   SERVICE_SALES: 'serviceSales',
+  CUSTOMER_RECORDS: 'customerRecords',
+  PAYMENTS: 'payments',
 } as const;
 
 export interface Appointment {
@@ -30,7 +32,7 @@ export interface Service {
   price: number;
   description: string;
   duration?: string;
-  type: 'recurring' | 'one-time'; // New field
+  type: 'recurring' | 'one-time';
   createdAt: Date;
 }
 
@@ -74,6 +76,29 @@ export interface Cost {
   category: string;
   date: Date;
   createdAt: Date;
+}
+
+export interface CustomerRecord {
+  id: number;
+  customerId: number;
+  type: 'service' | 'product';
+  itemId: number;
+  itemName: string;
+  amount: number;
+  date: Date;
+  isPaid: boolean;
+  dueDate?: Date;
+  notes?: string;
+}
+
+export interface Payment {
+  id: number;
+  customerId: number;
+  amount: number;
+  date: Date;
+  type: 'credit' | 'debit';
+  description: string;
+  relatedRecordId?: number;
 }
 
 const getFromStorage = <T>(key: string): T[] => {
@@ -126,3 +151,15 @@ export const getCosts = (): Cost[] =>
 
 export const setCosts = (costs: Cost[]): void =>
   setToStorage('costs', costs);
+
+export const getCustomerRecords = (): CustomerRecord[] =>
+  getFromStorage<CustomerRecord>(STORAGE_KEYS.CUSTOMER_RECORDS);
+
+export const setCustomerRecords = (records: CustomerRecord[]): void =>
+  setToStorage(STORAGE_KEYS.CUSTOMER_RECORDS, records);
+
+export const getPayments = (): Payment[] =>
+  getFromStorage<Payment>(STORAGE_KEYS.PAYMENTS);
+
+export const setPayments = (payments: Payment[]): void =>
+  setToStorage(STORAGE_KEYS.PAYMENTS, payments);

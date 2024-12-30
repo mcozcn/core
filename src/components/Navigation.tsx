@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Calendar, Users, Scissors, BarChart3, Package, DollarSign } from "lucide-react";
+import { Calendar, Users, Scissors, BarChart3, Package, DollarSign, CreditCard } from "lucide-react";
 
 const Navigation = () => {
   const location = useLocation();
@@ -11,6 +11,7 @@ const Navigation = () => {
     { to: "/services", label: "Hizmetler", icon: Scissors },
     { to: "/stock", label: "Stok Yönetimi", icon: Package },
     { to: "/costs", label: "Maliyetler", icon: DollarSign },
+    { to: "/financial", label: "Finansal Takip", icon: CreditCard },
   ];
 
   return (
@@ -19,7 +20,7 @@ const Navigation = () => {
         <img 
           src="/lovable-uploads/b98e8cd9-86a0-4af7-b322-84c8d9d63a3d.png" 
           alt="Aslı Altınbaş Beauty Logo" 
-          className="w-48 mx-auto mb-4"
+          className="w-56 mx-auto mb-4"
         />
         <p className="text-sm text-gray-500 text-center">Salon Yönetimi</p>
       </div>
