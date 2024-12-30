@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Textarea } from "@/components/ui/textarea";
 import { getCustomerRecords, setCustomerRecords, type CustomerRecord } from '@/utils/localStorage';
 
 interface AddCustomerRecordFormProps {
@@ -21,9 +22,11 @@ const AddCustomerRecordForm = ({ customerId, onSuccess }: AddCustomerRecordFormP
   const [itemName, setItemName] = useState('');
   const [amount, setAmount] = useState('');
   const [type, setType] = useState<'service' | 'product'>('service');
+  const [recordType, setRecordType] = useState<'debt' | 'credit'>('debt');
   const [isPaid, setIsPaid] = useState(false);
   const [date, setDate] = useState<Date>(new Date());
   const [dueDate, setDueDate] = useState<Date | undefined>();
+  const [description, setDescription] = useState('');
   const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -32,13 +35,15 @@ const AddCustomerRecordForm = ({ customerId, onSuccess }: AddCustomerRecordFormP
     const newRecord: CustomerRecord = {
       id: Date.now(),
       customerId,
-      itemId: Date.now(), // Adding the required itemId field
+      itemId: Date.now(),
       itemName,
-      amount: Number(amount),
+      amount: recordType === 'debt' ? Number(amount) : -Number(amount), // Negative amount for credits
       type,
       isPaid,
       date: date,
       dueDate,
+      description,
+      recordType,
     };
 
     console.log('Creating new customer record:', newRecord);
@@ -48,15 +53,17 @@ const AddCustomerRecordForm = ({ customerId, onSuccess }: AddCustomerRecordFormP
 
     toast({
       title: "Kayıt eklendi",
-      description: "Müşteri kaydı başarıyla eklendi.",
+      description: `${recordType === 'debt' ? 'Borç' : 'Alacak'} kaydı başarıyla eklendi.`,
     });
 
     // Reset form
     setItemName('');
     setAmount('');
     setType('service');
+    setRecordType('debt');
     setIsPaid(false);
     setDueDate(undefined);
+    setDescription('');
 
     if (onSuccess) {
       onSuccess();
@@ -66,6 +73,20 @@ const AddCustomerRecordForm = ({ customerId, onSuccess }: AddCustomerRecordFormP
   return (
     <Card className="p-6">
       <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <Label>Kayıt Türü</Label>
+          <RadioGroup value={recordType} onValueChange={(value) => setRecordType(value as 'debt' | 'credit')} className="flex space-x-4">
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="debt" id="debt" />
+              <Label htmlFor="debt">Borç</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="credit" id="credit" />
+              <Label htmlFor="credit">Alacak</Label>
+            </div>
+          </RadioGroup>
+        </div>
+
         <div>
           <Label>Ürün/Hizmet Adı</Label>
           <Input
@@ -139,6 +160,16 @@ const AddCustomerRecordForm = ({ customerId, onSuccess }: AddCustomerRecordFormP
               />
             </PopoverContent>
           </Popover>
+        </div>
+
+        <div>
+          <Label>Açıklama</Label>
+          <Textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Açıklama ekleyin (opsiyonel)"
+            className="min-h-[100px]"
+          />
         </div>
 
         <Button type="submit" className="w-full">Kaydet</Button>

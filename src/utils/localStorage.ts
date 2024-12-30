@@ -89,6 +89,8 @@ export interface CustomerRecord {
   isPaid: boolean;
   dueDate?: Date;
   notes?: string;
+  description?: string;
+  recordType: 'debt' | 'credit';
 }
 
 export interface Payment {
