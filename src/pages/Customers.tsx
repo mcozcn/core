@@ -13,7 +13,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getCustomers, setCustomers, Customer } from '@/utils/localStorage';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getCustomers, setCustomers, Customer, getCustomerRecords } from '@/utils/localStorage';
+import AddCustomerRecordForm from '@/components/customers/AddCustomerRecordForm';
+import CustomerRecordsList from '@/components/customers/CustomerRecordsList';
 
 const Customers = () => {
   const [customerName, setCustomerName] = useState('');
@@ -22,9 +25,10 @@ const Customers = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [customers, setCustomersState] = useState<Customer[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
   const { toast } = useToast();
 
-  // Local storage'dan müşterileri yükle
+  // Load customers from localStorage
   useEffect(() => {
     const loadedCustomers = getCustomers();
     console.log('Loaded customers from localStorage:', loadedCustomers);
@@ -45,8 +49,8 @@ const Customers = () => {
       };
       
       const updatedCustomers = [...customers, newCustomer];
-      setCustomers(updatedCustomers); // Local storage'a kaydet
-      setCustomersState(updatedCustomers); // State'i güncelle
+      setCustomers(updatedCustomers);
+      setCustomersState(updatedCustomers);
       
       console.log('Customer saved to localStorage:', newCustomer);
       
@@ -55,7 +59,6 @@ const Customers = () => {
         description: `${customerName} müşteri listenize eklendi.`,
       });
 
-      // Form'u temizle
       setCustomerName('');
       setCustomerPhone('');
       setCustomerEmail('');
@@ -71,6 +74,11 @@ const Customers = () => {
       setIsSubmitting(false);
     }
   };
+
+  const records = getCustomerRecords();
+  const customerRecords = selectedCustomerId 
+    ? records.filter(record => record.customerId === selectedCustomerId)
+    : [];
 
   return (
     <div className="p-8 pl-72 animate-fadeIn">
@@ -148,12 +156,13 @@ const Customers = () => {
               <TableHead>Telefon</TableHead>
               <TableHead>E-posta</TableHead>
               <TableHead>Kayıt Tarihi</TableHead>
+              <TableHead>İşlemler</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {customers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center text-muted-foreground">
+                <TableCell colSpan={5} className="text-center text-muted-foreground">
                   Henüz müşteri kaydı bulunmamaktadır.
                 </TableCell>
               </TableRow>
@@ -166,12 +175,47 @@ const Customers = () => {
                   <TableCell>
                     {new Date(customer.createdAt).toLocaleDateString('tr-TR')}
                   </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outline"
+                      onClick={() => setSelectedCustomerId(customer.id)}
+                    >
+                      Kayıtları Göster
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
       </Card>
+
+      {selectedCustomerId && (
+        <div className="mt-8 space-y-6">
+          <h2 className="text-2xl font-serif">Müşteri Kayıtları</h2>
+          
+          <Tabs defaultValue="records" className="w-full">
+            <TabsList>
+              <TabsTrigger value="records">Kayıtlar</TabsTrigger>
+              <TabsTrigger value="add">Yeni Kayıt Ekle</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="records">
+              <CustomerRecordsList records={customerRecords} />
+            </TabsContent>
+            
+            <TabsContent value="add">
+              <AddCustomerRecordForm 
+                customerId={selectedCustomerId} 
+                onSuccess={() => {
+                  // Refresh the records list
+                  setSelectedCustomerId(selectedCustomerId);
+                }}
+              />
+            </TabsContent>
+          </Tabs>
+        </div>
+      )}
     </div>
   );
 };
