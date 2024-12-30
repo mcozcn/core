@@ -32,6 +32,7 @@ const AddCustomerRecordForm = ({ customerId, onSuccess }: AddCustomerRecordFormP
     const newRecord: CustomerRecord = {
       id: Date.now(),
       customerId,
+      itemId: Date.now(), // Adding the required itemId field
       itemName,
       amount: Number(amount),
       type,
@@ -39,6 +40,8 @@ const AddCustomerRecordForm = ({ customerId, onSuccess }: AddCustomerRecordFormP
       date: date,
       dueDate,
     };
+
+    console.log('Creating new customer record:', newRecord);
 
     const existingRecords = getCustomerRecords();
     setCustomerRecords([...existingRecords, newRecord]);
