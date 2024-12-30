@@ -1,4 +1,3 @@
-// Local storage keys
 const STORAGE_KEYS = {
   APPOINTMENTS: 'appointments',
   CUSTOMERS: 'customers',
@@ -8,7 +7,6 @@ const STORAGE_KEYS = {
   SERVICE_SALES: 'serviceSales',
 } as const;
 
-// Type definitions
 export interface Appointment {
   id: number;
   customerName: string;
@@ -32,6 +30,7 @@ export interface Service {
   price: number;
   description: string;
   duration?: string;
+  type: 'recurring' | 'one-time'; // New field
   createdAt: Date;
 }
 
@@ -82,12 +81,10 @@ const getFromStorage = <T>(key: string): T[] => {
   return data ? JSON.parse(data) : [];
 };
 
-// Generic set function
 const setToStorage = <T>(key: string, data: T[]): void => {
   localStorage.setItem(key, JSON.stringify(data));
 };
 
-// Specific functions for each data type
 export const getAppointments = (): Appointment[] => 
   getFromStorage<Appointment>(STORAGE_KEYS.APPOINTMENTS);
 

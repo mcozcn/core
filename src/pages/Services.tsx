@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/components/ui/use-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getServices, setServices, getServiceSales, type Service } from "@/utils/localStorage";
@@ -47,6 +48,7 @@ const Services = () => {
     price: '',
     description: '',
     duration: '',
+    type: 'one-time' as 'recurring' | 'one-time',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -60,6 +62,7 @@ const Services = () => {
         price: Number(formData.price),
         description: formData.description,
         duration: formData.duration,
+        type: formData.type,
         createdAt: new Date(),
       };
 
@@ -79,6 +82,7 @@ const Services = () => {
         price: '',
         description: '',
         duration: '',
+        type: 'one-time',
       });
       setShowForm(false);
     } catch (error) {
@@ -148,6 +152,24 @@ const Services = () => {
             </div>
 
             <div>
+              <Label>Hizmet Tipi</Label>
+              <RadioGroup
+                value={formData.type}
+                onValueChange={(value) => setFormData({ ...formData, type: value as 'recurring' | 'one-time' })}
+                className="flex space-x-4 mt-2"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="recurring" id="recurring" />
+                  <Label htmlFor="recurring">Sürekli</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="one-time" id="one-time" />
+                  <Label htmlFor="one-time">Tek Seferlik</Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            <div>
               <Label>Açıklama</Label>
               <Textarea
                 value={formData.description}
@@ -190,13 +212,14 @@ const Services = () => {
                   <TableHead>İsim</TableHead>
                   <TableHead>Fiyat</TableHead>
                   <TableHead>Süre</TableHead>
+                  <TableHead>Tür</TableHead>
                   <TableHead>Açıklama</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {services.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground">
+                    <TableCell colSpan={5} className="text-center text-muted-foreground">
                       Henüz hizmet kaydı bulunmamaktadır.
                     </TableCell>
                   </TableRow>
@@ -206,6 +229,7 @@ const Services = () => {
                       <TableCell>{service.name}</TableCell>
                       <TableCell>{service.price} ₺</TableCell>
                       <TableCell>{service.duration || '-'}</TableCell>
+                      <TableCell>{service.type === 'recurring' ? 'Sürekli' : 'Tek Seferlik'}</TableCell>
                       <TableCell>{service.description}</TableCell>
                     </TableRow>
                   ))

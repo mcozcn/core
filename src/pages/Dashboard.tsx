@@ -177,8 +177,10 @@ const Dashboard = () => {
   return (
     <div className="p-8 pl-72 animate-fadeIn">
       <div className="mb-8">
-        <h1 className="text-4xl font-serif mb-2" style={{ color: '#D4AF37' }}>ASLI ALTINBAŞ BEAUTY</h1>
-        <p className="text-gray-500">Salonunuzdaki güncel durumu buradan takip edebilirsiniz.</p>
+        <h1 className="text-5xl font-serif mb-4 text-center" style={{ color: '#D4AF37' }}>
+          ASLI ALTINBAŞ BEAUTY
+        </h1>
+        <p className="text-gray-500 text-center">Salonunuzdaki güncel durumu buradan takip edebilirsiniz.</p>
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
