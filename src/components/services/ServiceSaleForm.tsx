@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { getServiceSales, setServiceSales, getServices, getCustomers, type Service, type ServiceSale } from "@/utils/localStorage";
+import { getServiceSales, setServiceSales, getServices, getCustomers, type Service, type ServiceSale, setCustomerRecords, getCustomerRecords, type CustomerRecord } from "@/utils/localStorage";
 import CustomerSelect from '../common/CustomerSelect';
 
 interface ServiceSaleFormProps {
@@ -27,9 +27,8 @@ const ServiceSaleForm = ({ showForm, setShowForm, services, sales }: ServiceSale
 
     try {
       const service = services.find(item => item.id === Number(saleData.serviceId));
-      const customer = await getCustomers().then(customers => 
-        customers.find(c => c.id === Number(saleData.customerId))
-      );
+      const customers = getCustomers();
+      const customer = customers.find(c => c.id === Number(saleData.customerId));
       
       if (!service) {
         throw new Error("Hizmet bulunamadı");
@@ -54,7 +53,26 @@ const ServiceSaleForm = ({ showForm, setShowForm, services, sales }: ServiceSale
       setServiceSales(updatedSales);
       queryClient.setQueryData(['serviceSales'], updatedSales);
 
+      // Add to customer records
+      const newRecord: CustomerRecord = {
+        id: Date.now(),
+        customerId: Number(saleData.customerId),
+        type: 'service',
+        itemId: service.id,
+        itemName: service.name,
+        amount: service.price,
+        date: new Date(),
+        isPaid: false,
+        description: `Hizmet satışı: ${service.name}`,
+        recordType: 'debt'
+      };
+
+      const existingRecords = getCustomerRecords();
+      setCustomerRecords([...existingRecords, newRecord]);
+      queryClient.invalidateQueries({ queryKey: ['customerRecords'] });
+
       console.log('Service sale completed:', newSale);
+      console.log('Customer record added:', newRecord);
 
       toast({
         title: "Satış başarılı",

@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { getStock, setStock, getSales, setSales, getCustomers, type StockItem, type Sale } from "@/utils/localStorage";
+import { getStock, setStock, getSales, setSales, getCustomers, type StockItem, type Sale, setCustomerRecords, getCustomerRecords, type CustomerRecord } from "@/utils/localStorage";
 import CustomerSelect from '../common/CustomerSelect';
 
 interface SaleFormProps {
@@ -21,6 +22,7 @@ const SaleForm = ({ showForm, setShowForm, stock, sales }: SaleFormProps) => {
     productId: '',
     quantity: '',
     customerId: '',
+    discount: '0'
   });
 
   const handleSale = async (e: React.FormEvent) => {
@@ -28,9 +30,8 @@ const SaleForm = ({ showForm, setShowForm, stock, sales }: SaleFormProps) => {
 
     try {
       const product = stock.find(item => item.productId === Number(saleData.productId));
-      const customer = await getCustomers().then(customers => 
-        customers.find(c => c.id === Number(saleData.customerId))
-      );
+      const customers = getCustomers();
+      const customer = customers.find(c => c.id === Number(saleData.customerId));
       
       if (!product) {
         throw new Error("Ürün bulunamadı");
@@ -40,16 +41,22 @@ const SaleForm = ({ showForm, setShowForm, stock, sales }: SaleFormProps) => {
         throw new Error("Müşteri bulunamadı");
       }
 
-      if (product.quantity < Number(saleData.quantity)) {
+      const quantity = Number(saleData.quantity);
+      const discount = Number(saleData.discount);
+
+      if (product.quantity < quantity) {
         throw new Error("Yetersiz stok");
       }
+
+      const totalPrice = (product.price * quantity) - discount;
 
       const newSale: Sale = {
         id: Date.now(),
         productId: product.productId,
         productName: product.productName,
-        quantity: Number(saleData.quantity),
-        totalPrice: product.price * Number(saleData.quantity),
+        quantity,
+        totalPrice,
+        discount,
         customerName: customer.name,
         customerPhone: customer.phone,
         saleDate: new Date(),
@@ -58,19 +65,39 @@ const SaleForm = ({ showForm, setShowForm, stock, sales }: SaleFormProps) => {
       // Update stock
       const updatedStock = stock.map(item => 
         item.productId === product.productId 
-          ? { ...item, quantity: item.quantity - Number(saleData.quantity), lastUpdated: new Date() }
+          ? { ...item, quantity: item.quantity - quantity, lastUpdated: new Date() }
           : item
       );
 
       // Update sales
       const updatedSales = [...sales, newSale];
 
+      // Add to customer records
+      const newRecord: CustomerRecord = {
+        id: Date.now(),
+        customerId: Number(saleData.customerId),
+        type: 'product',
+        itemId: product.productId,
+        itemName: product.productName,
+        amount: totalPrice,
+        date: new Date(),
+        isPaid: false,
+        description: `Ürün satışı: ${product.productName} (${quantity} adet)`,
+        recordType: 'debt'
+      };
+
+      const existingRecords = getCustomerRecords();
+
       setStock(updatedStock);
       setSales(updatedSales);
+      setCustomerRecords([...existingRecords, newRecord]);
+
       queryClient.setQueryData(['stock'], updatedStock);
       queryClient.setQueryData(['sales'], updatedSales);
+      queryClient.invalidateQueries({ queryKey: ['customerRecords'] });
 
       console.log('Sale completed:', newSale);
+      console.log('Customer record added:', newRecord);
 
       toast({
         title: "Satış başarılı",
@@ -81,6 +108,7 @@ const SaleForm = ({ showForm, setShowForm, stock, sales }: SaleFormProps) => {
         productId: '',
         quantity: '',
         customerId: '',
+        discount: '0'
       });
       setShowForm(false);
     } catch (error) {
@@ -116,14 +144,25 @@ const SaleForm = ({ showForm, setShowForm, stock, sales }: SaleFormProps) => {
         </div>
 
         <div>
-          <Label>Satış Miktarı</Label>
-          <input
+          <Label>Miktar</Label>
+          <Input
             type="number"
             value={saleData.quantity}
             onChange={(e) => setSaleData({ ...saleData, quantity: e.target.value })}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2"
             placeholder="Satış miktarını girin"
+            min="1"
             required
+          />
+        </div>
+
+        <div>
+          <Label>İndirim Tutarı (₺)</Label>
+          <Input
+            type="number"
+            value={saleData.discount}
+            onChange={(e) => setSaleData({ ...saleData, discount: e.target.value })}
+            placeholder="İndirim tutarını girin"
+            min="0"
           />
         </div>
 

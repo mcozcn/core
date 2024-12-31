@@ -8,6 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { type Sale } from "@/utils/localStorage";
+import { formatCurrency } from '@/utils/format';
 
 interface SalesTableProps {
   sales: Sale[];
@@ -20,6 +21,7 @@ const SalesTable = ({ sales }: SalesTableProps) => {
         <TableRow>
           <TableHead>Ürün</TableHead>
           <TableHead>Miktar</TableHead>
+          <TableHead>İndirim</TableHead>
           <TableHead>Toplam Fiyat</TableHead>
           <TableHead>Müşteri</TableHead>
           <TableHead>Telefon</TableHead>
@@ -29,7 +31,7 @@ const SalesTable = ({ sales }: SalesTableProps) => {
       <TableBody>
         {sales.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={6} className="text-center text-muted-foreground">
+            <TableCell colSpan={7} className="text-center text-muted-foreground">
               Henüz satış kaydı bulunmamaktadır.
             </TableCell>
           </TableRow>
@@ -38,7 +40,8 @@ const SalesTable = ({ sales }: SalesTableProps) => {
             <TableRow key={sale.id}>
               <TableCell>{sale.productName}</TableCell>
               <TableCell>{sale.quantity}</TableCell>
-              <TableCell>{sale.totalPrice} ₺</TableCell>
+              <TableCell>{formatCurrency(sale.discount)}</TableCell>
+              <TableCell>{formatCurrency(sale.totalPrice)}</TableCell>
               <TableCell>{sale.customerName}</TableCell>
               <TableCell>{sale.customerPhone}</TableCell>
               <TableCell>{new Date(sale.saleDate).toLocaleDateString()}</TableCell>

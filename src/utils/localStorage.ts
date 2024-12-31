@@ -64,6 +64,7 @@ export interface Sale {
   productName: string;
   quantity: number;
   totalPrice: number;
+  discount: number;
   customerName: string;
   customerPhone: string;
   saleDate: Date;
