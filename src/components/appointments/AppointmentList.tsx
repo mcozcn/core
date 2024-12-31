@@ -72,7 +72,7 @@ const AppointmentList = ({ appointments, selectedDate }: AppointmentListProps) =
               <TableCell>{appointment.service}</TableCell>
               <TableCell>
                 <Badge variant={
-                  appointment.status === 'confirmed' ? 'success' :
+                  appointment.status === 'confirmed' ? 'secondary' :
                   appointment.status === 'cancelled' ? 'destructive' :
                   'default'
                 }>
