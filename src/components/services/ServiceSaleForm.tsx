@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { getServiceSales, setServiceSales, getServices, type Service, type ServiceSale } from "@/utils/localStorage";
+import { getServiceSales, setServiceSales, getServices, getCustomers, type Service, type ServiceSale } from "@/utils/localStorage";
+import CustomerSelect from '../common/CustomerSelect';
 
 interface ServiceSaleFormProps {
   showForm: boolean;
@@ -19,8 +19,7 @@ const ServiceSaleForm = ({ showForm, setShowForm, services, sales }: ServiceSale
   const queryClient = useQueryClient();
   const [saleData, setSaleData] = useState({
     serviceId: '',
-    customerName: '',
-    customerPhone: '',
+    customerId: '',
   });
 
   const handleSale = async (e: React.FormEvent) => {
@@ -28,9 +27,16 @@ const ServiceSaleForm = ({ showForm, setShowForm, services, sales }: ServiceSale
 
     try {
       const service = services.find(item => item.id === Number(saleData.serviceId));
+      const customer = await getCustomers().then(customers => 
+        customers.find(c => c.id === Number(saleData.customerId))
+      );
       
       if (!service) {
         throw new Error("Hizmet bulunamadı");
+      }
+
+      if (!customer) {
+        throw new Error("Müşteri bulunamadı");
       }
 
       const newSale: ServiceSale = {
@@ -38,8 +44,8 @@ const ServiceSaleForm = ({ showForm, setShowForm, services, sales }: ServiceSale
         serviceId: service.id,
         serviceName: service.name,
         price: service.price,
-        customerName: saleData.customerName,
-        customerPhone: saleData.customerPhone,
+        customerName: customer.name,
+        customerPhone: customer.phone,
         saleDate: new Date(),
       };
 
@@ -57,8 +63,7 @@ const ServiceSaleForm = ({ showForm, setShowForm, services, sales }: ServiceSale
 
       setSaleData({
         serviceId: '',
-        customerName: '',
-        customerPhone: '',
+        customerId: '',
       });
       setShowForm(false);
     } catch (error) {
@@ -94,22 +99,10 @@ const ServiceSaleForm = ({ showForm, setShowForm, services, sales }: ServiceSale
         </div>
 
         <div>
-          <Label>Müşteri Adı</Label>
-          <Input
-            value={saleData.customerName}
-            onChange={(e) => setSaleData({ ...saleData, customerName: e.target.value })}
-            placeholder="Müşteri adını girin"
-            required
-          />
-        </div>
-
-        <div>
-          <Label>Müşteri Telefonu</Label>
-          <Input
-            value={saleData.customerPhone}
-            onChange={(e) => setSaleData({ ...saleData, customerPhone: e.target.value })}
-            placeholder="Müşteri telefonunu girin"
-            required
+          <Label>Müşteri</Label>
+          <CustomerSelect
+            value={saleData.customerId}
+            onValueChange={(value) => setSaleData({ ...saleData, customerId: value })}
           />
         </div>
 

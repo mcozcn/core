@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { getStock, setStock, getSales, setSales, type StockItem, type Sale } from "@/utils/localStorage";
+import { getStock, setStock, getSales, setSales, getCustomers, type StockItem, type Sale } from "@/utils/localStorage";
+import CustomerSelect from '../common/CustomerSelect';
 
 interface SaleFormProps {
   showForm: boolean;
@@ -20,8 +20,7 @@ const SaleForm = ({ showForm, setShowForm, stock, sales }: SaleFormProps) => {
   const [saleData, setSaleData] = useState({
     productId: '',
     quantity: '',
-    customerName: '',
-    customerPhone: '',
+    customerId: '',
   });
 
   const handleSale = async (e: React.FormEvent) => {
@@ -29,9 +28,16 @@ const SaleForm = ({ showForm, setShowForm, stock, sales }: SaleFormProps) => {
 
     try {
       const product = stock.find(item => item.productId === Number(saleData.productId));
+      const customer = await getCustomers().then(customers => 
+        customers.find(c => c.id === Number(saleData.customerId))
+      );
       
       if (!product) {
         throw new Error("Ürün bulunamadı");
+      }
+
+      if (!customer) {
+        throw new Error("Müşteri bulunamadı");
       }
 
       if (product.quantity < Number(saleData.quantity)) {
@@ -44,8 +50,8 @@ const SaleForm = ({ showForm, setShowForm, stock, sales }: SaleFormProps) => {
         productName: product.productName,
         quantity: Number(saleData.quantity),
         totalPrice: product.price * Number(saleData.quantity),
-        customerName: saleData.customerName,
-        customerPhone: saleData.customerPhone,
+        customerName: customer.name,
+        customerPhone: customer.phone,
         saleDate: new Date(),
       };
 
@@ -74,8 +80,7 @@ const SaleForm = ({ showForm, setShowForm, stock, sales }: SaleFormProps) => {
       setSaleData({
         productId: '',
         quantity: '',
-        customerName: '',
-        customerPhone: '',
+        customerId: '',
       });
       setShowForm(false);
     } catch (error) {
@@ -112,32 +117,21 @@ const SaleForm = ({ showForm, setShowForm, stock, sales }: SaleFormProps) => {
 
         <div>
           <Label>Satış Miktarı</Label>
-          <Input
+          <input
             type="number"
             value={saleData.quantity}
             onChange={(e) => setSaleData({ ...saleData, quantity: e.target.value })}
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2"
             placeholder="Satış miktarını girin"
             required
           />
         </div>
 
         <div>
-          <Label>Müşteri Adı</Label>
-          <Input
-            value={saleData.customerName}
-            onChange={(e) => setSaleData({ ...saleData, customerName: e.target.value })}
-            placeholder="Müşteri adını girin"
-            required
-          />
-        </div>
-
-        <div>
-          <Label>Müşteri Telefonu</Label>
-          <Input
-            value={saleData.customerPhone}
-            onChange={(e) => setSaleData({ ...saleData, customerPhone: e.target.value })}
-            placeholder="Müşteri telefonunu girin"
-            required
+          <Label>Müşteri</Label>
+          <CustomerSelect
+            value={saleData.customerId}
+            onValueChange={(value) => setSaleData({ ...saleData, customerId: value })}
           />
         </div>
 
