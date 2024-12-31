@@ -11,10 +11,12 @@ const STORAGE_KEYS = {
 
 export interface Appointment {
   id: number;
-  customerName: string;
+  customerId: number;
+  customerName?: string;
   date: string;
   time: string;
   service: string;
+  status: 'pending' | 'confirmed' | 'cancelled';
   createdAt: Date;
 }
 
@@ -166,3 +168,4 @@ export const getPayments = (): Payment[] =>
 
 export const setPayments = (payments: Payment[]): void =>
   setToStorage(STORAGE_KEYS.PAYMENTS, payments);
+

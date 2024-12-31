@@ -1,30 +1,16 @@
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Calendar, UserPlus } from 'lucide-react';
-import { useToast } from "@/components/ui/use-toast";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getAppointments, setAppointments, type Appointment } from "@/utils/localStorage";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { useQuery } from "@tanstack/react-query";
+import { getAppointments } from "@/utils/localStorage";
+import AppointmentCalendar from '@/components/appointments/AppointmentCalendar';
+import AppointmentForm from '@/components/appointments/AppointmentForm';
+import AppointmentList from '@/components/appointments/AppointmentList';
 
 const Appointments = () => {
-  const [customerName, setCustomerName] = useState('');
-  const [appointmentDate, setAppointmentDate] = useState('');
-  const [appointmentTime, setAppointmentTime] = useState('');
-  const [service, setService] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [showForm, setShowForm] = useState(false);
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
 
   const { data: appointments = [] } = useQuery({
     queryKey: ['appointments'],
@@ -33,48 +19,6 @@ const Appointments = () => {
       return getAppointments();
     },
   });
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      const newAppointment: Appointment = {
-        id: appointments.length + 1,
-        customerName,
-        date: appointmentDate,
-        time: appointmentTime,
-        service,
-        createdAt: new Date(),
-      };
-      
-      const updatedAppointments = [...appointments, newAppointment];
-      setAppointments(updatedAppointments);
-      queryClient.setQueryData(['appointments'], updatedAppointments);
-      
-      console.log('Appointment saved to localStorage:', newAppointment);
-      
-      toast({
-        title: "Randevu başarıyla kaydedildi",
-        description: `${customerName} için randevu oluşturuldu.`,
-      });
-
-      setCustomerName('');
-      setAppointmentDate('');
-      setAppointmentTime('');
-      setService('');
-      setShowForm(false);
-    } catch (error) {
-      console.error('Error saving appointment:', error);
-      toast({
-        variant: "destructive",
-        title: "Hata!",
-        description: "Randevu kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   return (
     <div className="p-8 pl-72 animate-fadeIn">
@@ -89,103 +33,31 @@ const Appointments = () => {
         </Button>
       </div>
 
-      {showForm && (
-        <Card className="p-6 mb-8">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label>Müşteri Adı</Label>
-              <Input 
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                placeholder="Müşteri adını girin"
-                required
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-1">
+          <AppointmentCalendar
+            selectedDate={selectedDate}
+            onSelect={(date) => date && setSelectedDate(date)}
+          />
+        </div>
+
+        <div className="md:col-span-2">
+          {showForm ? (
+            <AppointmentForm
+              selectedDate={selectedDate}
+              onSuccess={() => setShowForm(false)}
+              onCancel={() => setShowForm(false)}
+            />
+          ) : (
+            <Card>
+              <AppointmentList
+                appointments={appointments}
+                selectedDate={selectedDate}
               />
-            </div>
-
-            <div>
-              <Label>Randevu Tarihi</Label>
-              <Input 
-                type="date"
-                value={appointmentDate}
-                onChange={(e) => setAppointmentDate(e.target.value)}
-                required
-              />
-            </div>
-
-            <div>
-              <Label>Randevu Saati</Label>
-              <Input 
-                type="time"
-                value={appointmentTime}
-                onChange={(e) => setAppointmentTime(e.target.value)}
-                required
-              />
-            </div>
-
-            <div>
-              <Label>Hizmet</Label>
-              <Input 
-                value={service}
-                onChange={(e) => setService(e.target.value)}
-                placeholder="Alınacak hizmeti girin"
-                required
-              />
-            </div>
-
-            <div className="flex gap-2">
-              <Button 
-                type="submit" 
-                className="flex-1"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Kaydediliyor..." : "Randevuyu Kaydet"}
-              </Button>
-              <Button 
-                type="button" 
-                variant="outline"
-                onClick={() => setShowForm(false)}
-              >
-                İptal
-              </Button>
-            </div>
-          </form>
-        </Card>
-      )}
-
-      <Card>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Müşteri Adı</TableHead>
-              <TableHead>Tarih</TableHead>
-              <TableHead>Saat</TableHead>
-              <TableHead>Hizmet</TableHead>
-              <TableHead>Kayıt Tarihi</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {appointments.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground">
-                  Henüz randevu kaydı bulunmamaktadır.
-                </TableCell>
-              </TableRow>
-            ) : (
-              appointments.map((appointment) => (
-                <TableRow key={appointment.id}>
-                  <TableCell>{appointment.customerName}</TableCell>
-                  <TableCell>{appointment.date}</TableCell>
-                  <TableCell>{appointment.time}</TableCell>
-                  <TableCell>{appointment.service}</TableCell>
-                  <TableCell>
-                    {new Date(appointment.createdAt).toLocaleDateString('tr-TR')}
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </Card>
+            </Card>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
