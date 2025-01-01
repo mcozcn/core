@@ -86,9 +86,9 @@ export interface Cost {
 export interface CustomerRecord {
   id: number;
   customerId: number;
-  customerName: string;
-  debt: number;
-  payment: number;
+  customerName?: string;
+  debt?: number;
+  payment?: number;
   date: Date;
   notes?: string;
   type: 'service' | 'product' | 'payment';

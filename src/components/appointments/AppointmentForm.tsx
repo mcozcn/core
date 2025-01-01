@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import CustomerSelect from "@/components/common/CustomerSelect";
-import { getAppointments, setAppointments, type Appointment } from "@/utils/localStorage";
+import { getAppointments, setAppointments, type Appointment, getCustomers } from "@/utils/localStorage";
 
 interface AppointmentFormProps {
   selectedDate: Date;
@@ -28,9 +28,17 @@ const AppointmentForm = ({ selectedDate, onSuccess, onCancel }: AppointmentFormP
 
     try {
       const appointments = getAppointments();
+      const customers = getCustomers();
+      const customer = customers.find(c => c.id === Number(customerId));
+
+      if (!customer) {
+        throw new Error("Müşteri bulunamadı");
+      }
+
       const newAppointment: Appointment = {
         id: Date.now(),
         customerId: Number(customerId),
+        customerName: customer.name,
         date: selectedDate.toISOString().split('T')[0],
         time: appointmentTime,
         service,
