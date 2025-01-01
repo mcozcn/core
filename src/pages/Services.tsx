@@ -7,40 +7,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/components/ui/use-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getServices, setServices, getServiceSales, type Service } from "@/utils/localStorage";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ServiceSaleForm from "@/components/services/ServiceSaleForm";
-import ServiceSalesTable from "@/components/services/ServiceSalesTable";
+import { getServices, setServices, type Service } from "@/utils/localStorage";
+import ServiceList from '@/components/services/ServiceList';
+import SearchInput from '@/components/common/SearchInput';
 
 const Services = () => {
   const [showForm, setShowForm] = useState(false);
-  const [showSaleForm, setShowSaleForm] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: services = [] } = useQuery({
     queryKey: ['services'],
-    queryFn: () => {
-      console.log('Fetching services from local storage');
-      return getServices();
-    },
-  });
-
-  const { data: sales = [] } = useQuery({
-    queryKey: ['serviceSales'],
-    queryFn: () => {
-      console.log('Fetching service sales from local storage');
-      return getServiceSales();
-    },
+    queryFn: getServices,
   });
 
   const [formData, setFormData] = useState({
@@ -49,6 +29,7 @@ const Services = () => {
     description: '',
     duration: '',
     type: 'one-time' as 'recurring' | 'one-time',
+    sessionCount: '1',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -63,14 +44,13 @@ const Services = () => {
         description: formData.description,
         duration: formData.duration,
         type: formData.type,
+        sessionCount: Number(formData.sessionCount),
         createdAt: new Date(),
       };
 
       const updatedServices = [...services, newService];
       setServices(updatedServices);
       queryClient.setQueryData(['services'], updatedServices);
-
-      console.log('Service saved to localStorage:', newService);
 
       toast({
         title: "Başarıyla kaydedildi",
@@ -83,6 +63,7 @@ const Services = () => {
         description: '',
         duration: '',
         type: 'one-time',
+        sessionCount: '1',
       });
       setShowForm(false);
     } catch (error) {
@@ -97,26 +78,26 @@ const Services = () => {
     }
   };
 
+  const filteredServices = services.filter(service =>
+    service.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="p-8 pl-72 animate-fadeIn">
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-4xl font-serif">Hizmet Yönetimi</h1>
-        <div className="space-x-2">
-          <Button onClick={() => setShowSaleForm(true)} variant="outline">
-            Satış Yap
-          </Button>
-          <Button onClick={() => setShowForm(true)}>
-            Yeni Hizmet Ekle
-          </Button>
-        </div>
+        <Button onClick={() => setShowForm(true)}>
+          Yeni Hizmet Ekle
+        </Button>
       </div>
 
-      <ServiceSaleForm 
-        showForm={showSaleForm} 
-        setShowForm={setShowSaleForm} 
-        services={services}
-        sales={sales}
-      />
+      <div className="mb-6">
+        <SearchInput
+          value={searchTerm}
+          onChange={setSearchTerm}
+          placeholder="Hizmet ara..."
+        />
+      </div>
 
       {showForm && (
         <Card className="p-6 mb-8">
@@ -148,6 +129,18 @@ const Services = () => {
                 value={formData.duration}
                 onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
                 placeholder="Hizmet süresini girin"
+              />
+            </div>
+
+            <div>
+              <Label>Seans Sayısı</Label>
+              <Input
+                type="number"
+                min="1"
+                value={formData.sessionCount}
+                onChange={(e) => setFormData({ ...formData, sessionCount: e.target.value })}
+                placeholder="Seans sayısını girin"
+                required
               />
             </div>
 
@@ -198,53 +191,7 @@ const Services = () => {
         </Card>
       )}
 
-      <Tabs defaultValue="services" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="services">Hizmetler</TabsTrigger>
-          <TabsTrigger value="sales">Satışlar</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="services">
-          <Card>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>İsim</TableHead>
-                  <TableHead>Fiyat</TableHead>
-                  <TableHead>Süre</TableHead>
-                  <TableHead>Tür</TableHead>
-                  <TableHead>Açıklama</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {services.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground">
-                      Henüz hizmet kaydı bulunmamaktadır.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  services.map((service) => (
-                    <TableRow key={service.id}>
-                      <TableCell>{service.name}</TableCell>
-                      <TableCell>{service.price} ₺</TableCell>
-                      <TableCell>{service.duration || '-'}</TableCell>
-                      <TableCell>{service.type === 'recurring' ? 'Sürekli' : 'Tek Seferlik'}</TableCell>
-                      <TableCell>{service.description}</TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="sales">
-          <Card>
-            <ServiceSalesTable sales={sales} />
-          </Card>
-        </TabsContent>
-      </Tabs>
+      <ServiceList services={filteredServices} />
     </div>
   );
 };

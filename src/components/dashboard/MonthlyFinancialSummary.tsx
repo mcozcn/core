@@ -27,14 +27,14 @@ const MonthlyFinancialSummary = ({ payments }: MonthlyFinancialSummaryProps) => 
 
   return (
     <Card className="p-6">
-      <h2 className="text-xl font-serif mb-4">Aylık Finansal Özet</h2>
+      <h2 className="text-xl font-serif mb-4">Aylık Tahsilat Özeti</h2>
       <div className="space-y-4">
         <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-          <span className="font-medium">Toplam Alacak</span>
+          <span className="font-medium">Toplam Tahsilat</span>
           <span className="text-green-600 font-semibold">{formatCurrency(totalCredit)}</span>
         </div>
         <div className="flex justify-between items-center p-3 bg-red-50 rounded-lg">
-          <span className="font-medium">Toplam Borç</span>
+          <span className="font-medium">Toplam Gider</span>
           <span className="text-red-600 font-semibold">{formatCurrency(totalDebit)}</span>
         </div>
         <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">

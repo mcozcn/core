@@ -35,6 +35,7 @@ export interface Service {
   description: string;
   duration?: string;
   type: 'recurring' | 'one-time';
+  sessionCount: number;
   createdAt: Date;
 }
 
