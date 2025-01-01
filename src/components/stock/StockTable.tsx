@@ -1,4 +1,5 @@
 import React from 'react';
+import { Card } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -7,44 +8,54 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { type StockItem } from "@/utils/localStorage";
+import { useQuery } from "@tanstack/react-query";
+import { getProducts, Product } from "@/utils/localStorage";
 
 interface StockTableProps {
-  filteredStock: StockItem[];
+  searchTerm?: string;
 }
 
-const StockTable = ({ filteredStock }: StockTableProps) => {
+const StockTable = ({ searchTerm = '' }: StockTableProps) => {
+  const { data: products = [] } = useQuery({
+    queryKey: ['products'],
+    queryFn: getProducts,
+  });
+
+  const filteredProducts = products.filter(product =>
+    product.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Ürün Adı</TableHead>
-          <TableHead>Kategori</TableHead>
-          <TableHead>Stok</TableHead>
-          <TableHead>Fiyat</TableHead>
-          <TableHead>Son Güncelleme</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {filteredStock.length === 0 ? (
+    <Card>
+      <Table>
+        <TableHeader>
           <TableRow>
-            <TableCell colSpan={5} className="text-center text-muted-foreground">
-              Stokta ürün bulunmamaktadır.
-            </TableCell>
+            <TableHead>Ürün Adı</TableHead>
+            <TableHead>Stok Miktarı</TableHead>
+            <TableHead>Birim Fiyatı</TableHead>
+            <TableHead>Açıklama</TableHead>
           </TableRow>
-        ) : (
-          filteredStock.map((item) => (
-            <TableRow key={item.id}>
-              <TableCell>{item.productName}</TableCell>
-              <TableCell>{item.category}</TableCell>
-              <TableCell>{item.quantity}</TableCell>
-              <TableCell>{item.price} ₺</TableCell>
-              <TableCell>{new Date(item.lastUpdated).toLocaleDateString()}</TableCell>
+        </TableHeader>
+        <TableBody>
+          {filteredProducts.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={4} className="text-center text-muted-foreground">
+                {searchTerm ? 'Arama sonucu bulunamadı.' : 'Henüz ürün kaydı bulunmamaktadır.'}
+              </TableCell>
             </TableRow>
-          ))
-        )}
-      </TableBody>
-    </Table>
+          ) : (
+            filteredProducts.map((product) => (
+              <TableRow key={product.id}>
+                <TableCell>{product.name}</TableCell>
+                <TableCell>{product.quantity}</TableCell>
+                <TableCell>{product.price} ₺</TableCell>
+                <TableCell>{product.description}</TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </Card>
   );
 };
 

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Card } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -7,93 +8,56 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CustomerRecord } from '@/utils/localStorage';
-import { formatCurrency } from '@/utils/format';
+import { useQuery } from "@tanstack/react-query";
+import { getCustomerRecords } from "@/utils/localStorage";
 
 interface CustomerRecordsListProps {
-  records: CustomerRecord[];
+  searchTerm?: string;
 }
 
-const CustomerRecordsList = ({ records }: CustomerRecordsListProps) => {
-  // Toplam borç ve tahsilat hesaplama
-  const totals = records.reduce((acc, record) => {
-    if (record.recordType === 'debt') {
-      acc.totalDebt += record.amount;
-    } else if (record.recordType === 'payment') {
-      acc.totalPayment += Math.abs(record.amount);
-    }
-    return acc;
-  }, { totalDebt: 0, totalPayment: 0 });
+const CustomerRecordsList = ({ searchTerm = '' }: CustomerRecordsListProps) => {
+  const { data: records = [] } = useQuery({
+    queryKey: ['customerRecords'],
+    queryFn: getCustomerRecords,
+  });
 
-  const balance = totals.totalDebt - totals.totalPayment;
+  const filteredRecords = records.filter(record =>
+    record.customerName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-3 gap-4 mb-4">
-        <div className="p-4 bg-red-50 rounded-lg">
-          <div className="text-sm text-red-600">Toplam Borç</div>
-          <div className="text-lg font-semibold text-red-700">{formatCurrency(totals.totalDebt)}</div>
-        </div>
-        <div className="p-4 bg-green-50 rounded-lg">
-          <div className="text-sm text-green-600">Toplam Tahsilat</div>
-          <div className="text-lg font-semibold text-green-700">{formatCurrency(totals.totalPayment)}</div>
-        </div>
-        <div className={`p-4 ${balance > 0 ? 'bg-red-50' : 'bg-green-50'} rounded-lg`}>
-          <div className={`text-sm ${balance > 0 ? 'text-red-600' : 'text-green-600'}`}>Kalan Borç</div>
-          <div className={`text-lg font-semibold ${balance > 0 ? 'text-red-700' : 'text-green-700'}`}>
-            {formatCurrency(Math.abs(balance))}
-          </div>
-        </div>
-      </div>
-
+    <Card>
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead>Müşteri Adı</TableHead>
+            <TableHead>Borç</TableHead>
+            <TableHead>Tahsilat</TableHead>
             <TableHead>Tarih</TableHead>
-            <TableHead>İşlem</TableHead>
-            <TableHead>Açıklama</TableHead>
-            <TableHead>Tutar</TableHead>
-            <TableHead>Durum</TableHead>
-            <TableHead>Vade Tarihi</TableHead>
             <TableHead>Not</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {records.length === 0 ? (
+          {filteredRecords.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-center text-muted-foreground">
-                Henüz kayıt bulunmamaktadır.
+              <TableCell colSpan={5} className="text-center text-muted-foreground">
+                {searchTerm ? 'Arama sonucu bulunamadı.' : 'Henüz kayıt bulunmamaktadır.'}
               </TableCell>
             </TableRow>
           ) : (
-            records.map((record) => (
+            filteredRecords.map((record) => (
               <TableRow key={record.id}>
-                <TableCell>{new Date(record.date).toLocaleDateString()}</TableCell>
-                <TableCell>
-                  {record.recordType === 'payment' ? 'Tahsilat' : 
-                   record.type === 'service' ? 'Hizmet' : 'Ürün'}
-                </TableCell>
-                <TableCell>{record.itemName}</TableCell>
-                <TableCell className={record.recordType === 'debt' ? 'text-red-600' : 'text-green-600'}>
-                  {formatCurrency(Math.abs(record.amount))}
-                </TableCell>
-                <TableCell>
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    record.isPaid ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                  }`}>
-                    {record.isPaid ? 'Ödendi' : 'Ödenmedi'}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  {record.dueDate ? new Date(record.dueDate).toLocaleDateString() : '-'}
-                </TableCell>
-                <TableCell>{record.description || '-'}</TableCell>
+                <TableCell>{record.customerName}</TableCell>
+                <TableCell>{record.debt} ₺</TableCell>
+                <TableCell>{record.payment} ₺</TableCell>
+                <TableCell>{new Date(record.date).toLocaleDateString('tr-TR')}</TableCell>
+                <TableCell>{record.note}</TableCell>
               </TableRow>
             ))
           )}
         </TableBody>
       </Table>
-    </div>
+    </Card>
   );
 };
 
