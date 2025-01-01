@@ -111,6 +111,9 @@ export interface Payment {
   relatedRecordId?: number;
 }
 
+// For backward compatibility, we'll alias StockItem as Product
+export type Product = StockItem;
+
 const getFromStorage = <T>(key: string): T[] => {
   const data = localStorage.getItem(key);
   return data ? JSON.parse(data) : [];

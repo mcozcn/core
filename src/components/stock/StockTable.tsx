@@ -22,7 +22,7 @@ const StockTable = ({ searchTerm = '' }: StockTableProps) => {
   });
 
   const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase())
+    product.productName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -33,7 +33,7 @@ const StockTable = ({ searchTerm = '' }: StockTableProps) => {
             <TableHead>Ürün Adı</TableHead>
             <TableHead>Stok Miktarı</TableHead>
             <TableHead>Birim Fiyatı</TableHead>
-            <TableHead>Açıklama</TableHead>
+            <TableHead>Kategori</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -46,10 +46,10 @@ const StockTable = ({ searchTerm = '' }: StockTableProps) => {
           ) : (
             filteredProducts.map((product) => (
               <TableRow key={product.id}>
-                <TableCell>{product.name}</TableCell>
+                <TableCell>{product.productName}</TableCell>
                 <TableCell>{product.quantity}</TableCell>
                 <TableCell>{product.price} ₺</TableCell>
-                <TableCell>{product.description}</TableCell>
+                <TableCell>{product.category}</TableCell>
               </TableRow>
             ))
           )}
