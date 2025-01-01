@@ -9,7 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useQuery } from "@tanstack/react-query";
-import { getProducts, Product } from "@/utils/localStorage";
+import { getProducts, type Product } from "@/utils/localStorage";
 
 interface StockTableProps {
   searchTerm?: string;

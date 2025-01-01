@@ -13,15 +13,18 @@ import { getCustomerRecords } from "@/utils/localStorage";
 
 interface CustomerRecordsListProps {
   searchTerm?: string;
+  records?: any[];
 }
 
-const CustomerRecordsList = ({ searchTerm = '' }: CustomerRecordsListProps) => {
-  const { data: records = [] } = useQuery({
+const CustomerRecordsList = ({ searchTerm = '', records }: CustomerRecordsListProps) => {
+  const { data: fetchedRecords = [] } = useQuery({
     queryKey: ['customerRecords'],
     queryFn: getCustomerRecords,
   });
 
-  const filteredRecords = records.filter(record =>
+  const recordsToUse = records || fetchedRecords;
+  
+  const filteredRecords = recordsToUse.filter(record =>
     record.customerName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -51,7 +54,7 @@ const CustomerRecordsList = ({ searchTerm = '' }: CustomerRecordsListProps) => {
                 <TableCell>{record.debt} ₺</TableCell>
                 <TableCell>{record.payment} ₺</TableCell>
                 <TableCell>{new Date(record.date).toLocaleDateString('tr-TR')}</TableCell>
-                <TableCell>{record.note}</TableCell>
+                <TableCell>{record.notes}</TableCell>
               </TableRow>
             ))
           )}

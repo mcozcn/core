@@ -12,11 +12,12 @@ const STORAGE_KEYS = {
 export interface Appointment {
   id: number;
   customerId: number;
-  customerName?: string;
+  customerName: string;
   date: string;
   time: string;
   service: string;
   status: 'pending' | 'confirmed' | 'cancelled';
+  note?: string;
   createdAt: Date;
 }
 
@@ -85,14 +86,17 @@ export interface Cost {
 export interface CustomerRecord {
   id: number;
   customerId: number;
+  customerName: string;
+  debt: number;
+  payment: number;
+  date: Date;
+  notes?: string;
   type: 'service' | 'product' | 'payment';
   itemId: number;
   itemName: string;
   amount: number;
-  date: Date;
   isPaid: boolean;
   dueDate?: Date;
-  notes?: string;
   description?: string;
   recordType: 'debt' | 'payment';
 }
@@ -169,3 +173,9 @@ export const getPayments = (): Payment[] =>
 
 export const setPayments = (payments: Payment[]): void =>
   setToStorage(STORAGE_KEYS.PAYMENTS, payments);
+
+export const getProducts = (): Product[] => 
+  getFromStorage<Product>(STORAGE_KEYS.STOCK);
+
+export const setProducts = (products: Product[]): void =>
+  setToStorage(STORAGE_KEYS.STOCK, products);
