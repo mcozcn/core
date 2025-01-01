@@ -37,7 +37,7 @@ const AddCustomerRecordForm = ({ customerId, onSuccess }: AddCustomerRecordFormP
       customerId,
       itemId: Date.now(),
       itemName,
-      amount: recordType === 'debt' ? Number(amount) : -Number(amount), // Negative amount for payments
+      amount: recordType === 'debt' ? Number(amount) : -Number(amount), // Negatif değer tahsilat için
       type: recordType === 'payment' ? 'payment' : type,
       isPaid: recordType === 'payment' ? true : isPaid,
       date: date,
@@ -46,7 +46,7 @@ const AddCustomerRecordForm = ({ customerId, onSuccess }: AddCustomerRecordFormP
       recordType,
     };
 
-    console.log('Creating new customer record:', newRecord);
+    console.log('Yeni müşteri kaydı oluşturuluyor:', newRecord);
 
     const existingRecords = getCustomerRecords();
     setCustomerRecords([...existingRecords, newRecord]);
@@ -56,7 +56,7 @@ const AddCustomerRecordForm = ({ customerId, onSuccess }: AddCustomerRecordFormP
       description: `${recordType === 'debt' ? 'Borç' : 'Tahsilat'} kaydı başarıyla eklendi.`,
     });
 
-    // Reset form
+    // Formu sıfırla
     setItemName('');
     setAmount('');
     setType('service');
