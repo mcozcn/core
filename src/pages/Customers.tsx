@@ -5,6 +5,7 @@ import SearchInput from '@/components/common/SearchInput';
 
 const Customers = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCustomerId, setSelectedCustomerId] = useState<number>(1); // Default to 1 for now
 
   return (
     <div className="p-8 pl-72 animate-fadeIn">
@@ -16,12 +17,12 @@ const Customers = () => {
         <SearchInput
           value={searchTerm}
           onChange={setSearchTerm}
-          placeholder="Müşteri ara..."
+          placeholder="Kayıtlarda ara..."
         />
       </div>
 
       <div className="space-y-6">
-        <AddCustomerRecordForm />
+        <AddCustomerRecordForm customerId={selectedCustomerId} />
         <CustomerRecordsList searchTerm={searchTerm} />
       </div>
     </div>

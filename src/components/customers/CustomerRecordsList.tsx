@@ -9,11 +9,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useQuery } from "@tanstack/react-query";
-import { getCustomerRecords } from "@/utils/localStorage";
+import { getCustomerRecords, type CustomerRecord } from '@/utils/localStorage';
 
 interface CustomerRecordsListProps {
   searchTerm?: string;
-  records?: any[];
+  records?: CustomerRecord[];
 }
 
 const CustomerRecordsList = ({ searchTerm = '', records }: CustomerRecordsListProps) => {
@@ -25,7 +25,7 @@ const CustomerRecordsList = ({ searchTerm = '', records }: CustomerRecordsListPr
   const recordsToUse = records || fetchedRecords;
   
   const filteredRecords = recordsToUse.filter(record =>
-    record.customerName.toLowerCase().includes(searchTerm.toLowerCase())
+    record.itemName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -33,11 +33,11 @@ const CustomerRecordsList = ({ searchTerm = '', records }: CustomerRecordsListPr
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Müşteri Adı</TableHead>
-            <TableHead>Borç</TableHead>
-            <TableHead>Tahsilat</TableHead>
+            <TableHead>İşlem</TableHead>
+            <TableHead>Tutar</TableHead>
+            <TableHead>Tür</TableHead>
             <TableHead>Tarih</TableHead>
-            <TableHead>Not</TableHead>
+            <TableHead>Açıklama</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -50,11 +50,11 @@ const CustomerRecordsList = ({ searchTerm = '', records }: CustomerRecordsListPr
           ) : (
             filteredRecords.map((record) => (
               <TableRow key={record.id}>
-                <TableCell>{record.customerName}</TableCell>
-                <TableCell>{record.debt} ₺</TableCell>
-                <TableCell>{record.payment} ₺</TableCell>
+                <TableCell>{record.itemName}</TableCell>
+                <TableCell>{record.amount} ₺</TableCell>
+                <TableCell>{record.type}</TableCell>
                 <TableCell>{new Date(record.date).toLocaleDateString('tr-TR')}</TableCell>
-                <TableCell>{record.notes}</TableCell>
+                <TableCell>{record.description || '-'}</TableCell>
               </TableRow>
             ))
           )}
