@@ -5,6 +5,8 @@ import { getAppointments, getCustomers, getServices, getStock, getSales } from "
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProductProfitLossAnalysis from "@/components/dashboard/ProductProfitLossAnalysis";
 import ServiceProfitLossAnalysis from "@/components/dashboard/ServiceProfitLossAnalysis";
+import SalesSummary from "@/components/dashboard/SalesSummary";
+import UpcomingAppointments from "@/components/dashboard/UpcomingAppointments";
 
 const StatCard = ({ 
   title, 
@@ -52,7 +54,6 @@ const StatCard = ({
 );
 
 const Dashboard = () => {
-  // Randevuları getir
   const { data: appointmentsData = [] } = useQuery({
     queryKey: ['appointments'],
     queryFn: () => {
@@ -61,7 +62,6 @@ const Dashboard = () => {
     },
   });
 
-  // Müşterileri getir
   const { data: customersData = [] } = useQuery({
     queryKey: ['customers'],
     queryFn: () => {
@@ -70,7 +70,6 @@ const Dashboard = () => {
     },
   });
 
-  // Hizmetleri getir
   const { data: servicesData = [] } = useQuery({
     queryKey: ['services'],
     queryFn: () => {
@@ -79,7 +78,6 @@ const Dashboard = () => {
     },
   });
 
-  // Stok verilerini getir
   const { data: stockData = [] } = useQuery({
     queryKey: ['stock'],
     queryFn: () => {
@@ -88,7 +86,6 @@ const Dashboard = () => {
     },
   });
 
-  // Satış verilerini getir
   const { data: salesData = [] } = useQuery({
     queryKey: ['sales'],
     queryFn: () => {
@@ -97,14 +94,12 @@ const Dashboard = () => {
     },
   });
 
-  // Bugünkü randevuları hesapla
   const today = new Date();
   const todayAppointments = appointmentsData.filter((apt: any) => {
     const aptDate = new Date(apt?.date);
     return aptDate?.toDateString() === today.toDateString();
   }).length;
 
-  // Geçen ayın randevularını hesapla
   const lastMonth = new Date();
   lastMonth.setMonth(lastMonth.getMonth() - 1);
   const lastMonthAppointments = appointmentsData.filter((apt: any) => {
@@ -112,7 +107,6 @@ const Dashboard = () => {
     return aptDate.getMonth() === lastMonth.getMonth();
   }).length;
 
-  // Randevu trendini hesapla
   const appointmentTrend = lastMonthAppointments === 0 
     ? { percentage: 0, direction: 'none' as const }
     : {
@@ -120,14 +114,12 @@ const Dashboard = () => {
         direction: todayAppointments >= lastMonthAppointments ? 'up' as const : 'down' as const
       };
 
-  // Toplam müşteri sayısı
   const totalCustomers = customersData.length;
   const lastMonthCustomers = customersData.filter((customer: any) => {
     const customerDate = new Date(customer?.createdAt);
     return customerDate.getMonth() === lastMonth.getMonth();
   }).length;
 
-  // Müşteri trendini hesapla
   const customerTrend = lastMonthCustomers === 0
     ? { percentage: 0, direction: 'none' as const }
     : {
@@ -135,12 +127,10 @@ const Dashboard = () => {
         direction: totalCustomers >= lastMonthCustomers ? 'up' as const : 'down' as const
       };
 
-  // Toplam gelir hesapla
   const totalRevenue = servicesData.reduce((acc: number, service: any) => {
     return acc + (service.price || 0);
   }, 0);
 
-  // Geçen ayın gelirini hesapla
   const lastMonthRevenue = servicesData
     .filter((service: any) => {
       const serviceDate = new Date(service?.createdAt);
@@ -148,7 +138,6 @@ const Dashboard = () => {
     })
     .reduce((acc: number, service: any) => acc + (service.price || 0), 0);
 
-  // Gelir trendini hesapla
   const revenueTrend = lastMonthRevenue === 0
     ? { percentage: 0, direction: 'none' as const }
     : {
@@ -156,12 +145,10 @@ const Dashboard = () => {
         direction: totalRevenue >= lastMonthRevenue ? 'up' as const : 'down' as const
       };
 
-  // Ortalama hizmet süresi hesapla (dakika cinsinden)
   const averageServiceDuration = servicesData.reduce((acc: number, service: any) => {
     return acc + (parseInt(service.duration) || 0);
   }, 0) / (servicesData.length || 1);
 
-  // Günlük satışları hesapla
   const todaySales = salesData.filter((sale: any) => {
     const saleDate = new Date(sale.saleDate);
     return saleDate.toDateString() === today.toDateString();
@@ -169,7 +156,6 @@ const Dashboard = () => {
 
   const dailySalesTotal = todaySales.reduce((acc: number, sale: any) => acc + sale.totalPrice, 0);
 
-  // Toplam stok değerini hesapla
   const totalStockValue = stockData.reduce((acc: number, item: any) => {
     return acc + (item.quantity * item.price);
   }, 0);
@@ -231,41 +217,8 @@ const Dashboard = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <Card className="p-6">
-              <h2 className="text-xl font-serif mb-4">Yaklaşan Randevular</h2>
-              <div className="space-y-4">
-                {appointmentsData
-                  .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime())
-                  .slice(0, 3)
-                  .map((apt: any, i: number) => (
-                    <div key={i} className="flex items-center justify-between p-3 bg-accent rounded-lg">
-                      <div className="flex items-center space-x-4">
-                        <div className="text-sm font-semibold">{apt.time}</div>
-                        <div>
-                          <div className="font-medium">{apt.customerName}</div>
-                          <div className="text-sm text-gray-500">{apt.service}</div>
-                        </div>
-                      </div>
-                      <button className="text-primary hover:text-primary/80">Görüntüle</button>
-                    </div>
-                  ))}
-              </div>
-            </Card>
-
-            <Card className="p-6">
-              <h2 className="text-xl font-serif mb-4">Popüler Hizmetler</h2>
-              <div className="space-y-4">
-                {servicesData
-                  .sort((a: any, b: any) => (b.bookings || 0) - (a.bookings || 0))
-                  .slice(0, 3)
-                  .map((service: any, i: number) => (
-                    <div key={i} className="flex items-center justify-between p-3 bg-accent rounded-lg">
-                      <div className="font-medium">{service.name}</div>
-                      <div className="text-sm text-gray-500">{service.bookings || 0} randevu</div>
-                    </div>
-                  ))}
-              </div>
-            </Card>
+            <UpcomingAppointments appointments={appointmentsData} />
+            <SalesSummary />
           </div>
         </TabsContent>
 
