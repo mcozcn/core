@@ -6,6 +6,17 @@ import SearchInput from '@/components/common/SearchInput';
 
 const Appointments = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+
+  const handleSuccess = () => {
+    // Reset form or update list
+    console.log('Appointment created successfully');
+  };
+
+  const handleCancel = () => {
+    // Handle cancel
+    console.log('Appointment creation cancelled');
+  };
 
   return (
     <div className="p-8 pl-72 animate-fadeIn">
@@ -23,10 +34,17 @@ const Appointments = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-6">
-          <AppointmentForm />
+          <AppointmentForm 
+            selectedDate={selectedDate}
+            onSuccess={handleSuccess}
+            onCancel={handleCancel}
+          />
           <AppointmentList searchTerm={searchTerm} />
         </div>
-        <AppointmentCalendar />
+        <AppointmentCalendar 
+          selectedDate={selectedDate}
+          onSelect={setSelectedDate}
+        />
       </div>
     </div>
   );

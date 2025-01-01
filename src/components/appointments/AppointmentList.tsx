@@ -9,7 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useQuery } from "@tanstack/react-query";
-import { getAppointments } from "@/utils/localStorage";
+import { getAppointments, getCustomers } from "@/utils/localStorage";
 
 interface AppointmentListProps {
   searchTerm?: string;
@@ -21,10 +21,17 @@ const AppointmentList = ({ searchTerm = '' }: AppointmentListProps) => {
     queryFn: getAppointments,
   });
 
-  const filteredAppointments = appointments.filter(appointment =>
-    appointment.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    appointment.service.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const { data: customers = [] } = useQuery({
+    queryKey: ['customers'],
+    queryFn: getCustomers,
+  });
+
+  const filteredAppointments = appointments.filter(appointment => {
+    const customer = customers.find(c => c.id === appointment.customerId);
+    const customerName = customer?.name || '';
+    return customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+           appointment.service.toLowerCase().includes(searchTerm.toLowerCase());
+  });
 
   return (
     <Card>
@@ -46,15 +53,18 @@ const AppointmentList = ({ searchTerm = '' }: AppointmentListProps) => {
               </TableCell>
             </TableRow>
           ) : (
-            filteredAppointments.map((appointment) => (
-              <TableRow key={appointment.id}>
-                <TableCell>{appointment.customerName}</TableCell>
-                <TableCell>{appointment.service}</TableCell>
-                <TableCell>{new Date(appointment.date).toLocaleDateString('tr-TR')}</TableCell>
-                <TableCell>{appointment.time}</TableCell>
-                <TableCell>{appointment.note}</TableCell>
-              </TableRow>
-            ))
+            filteredAppointments.map((appointment) => {
+              const customer = customers.find(c => c.id === appointment.customerId);
+              return (
+                <TableRow key={appointment.id}>
+                  <TableCell>{customer?.name || 'Müşteri bulunamadı'}</TableCell>
+                  <TableCell>{appointment.service}</TableCell>
+                  <TableCell>{new Date(appointment.date).toLocaleDateString('tr-TR')}</TableCell>
+                  <TableCell>{appointment.time}</TableCell>
+                  <TableCell>{appointment.note || '-'}</TableCell>
+                </TableRow>
+              );
+            })
           )}
         </TableBody>
       </Table>
