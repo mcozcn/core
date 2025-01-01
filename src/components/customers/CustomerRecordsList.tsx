@@ -15,17 +15,17 @@ interface CustomerRecordsListProps {
 }
 
 const CustomerRecordsList = ({ records }: CustomerRecordsListProps) => {
-  // Toplam borç ve alacak hesaplama
+  // Toplam borç ve tahsilat hesaplama
   const totals = records.reduce((acc, record) => {
     if (record.recordType === 'debt') {
       acc.totalDebt += record.amount;
-    } else {
-      acc.totalCredit += Math.abs(record.amount);
+    } else if (record.recordType === 'payment') {
+      acc.totalPayment += Math.abs(record.amount);
     }
     return acc;
-  }, { totalDebt: 0, totalCredit: 0 });
+  }, { totalDebt: 0, totalPayment: 0 });
 
-  const balance = totals.totalDebt - totals.totalCredit;
+  const balance = totals.totalDebt - totals.totalPayment;
 
   return (
     <div className="space-y-4">
@@ -35,11 +35,11 @@ const CustomerRecordsList = ({ records }: CustomerRecordsListProps) => {
           <div className="text-lg font-semibold text-red-700">{formatCurrency(totals.totalDebt)}</div>
         </div>
         <div className="p-4 bg-green-50 rounded-lg">
-          <div className="text-sm text-green-600">Toplam Alacak</div>
-          <div className="text-lg font-semibold text-green-700">{formatCurrency(totals.totalCredit)}</div>
+          <div className="text-sm text-green-600">Toplam Tahsilat</div>
+          <div className="text-lg font-semibold text-green-700">{formatCurrency(totals.totalPayment)}</div>
         </div>
         <div className={`p-4 ${balance > 0 ? 'bg-red-50' : 'bg-green-50'} rounded-lg`}>
-          <div className={`text-sm ${balance > 0 ? 'text-red-600' : 'text-green-600'}`}>Bakiye</div>
+          <div className={`text-sm ${balance > 0 ? 'text-red-600' : 'text-green-600'}`}>Kalan Borç</div>
           <div className={`text-lg font-semibold ${balance > 0 ? 'text-red-700' : 'text-green-700'}`}>
             {formatCurrency(Math.abs(balance))}
           </div>
@@ -50,12 +50,12 @@ const CustomerRecordsList = ({ records }: CustomerRecordsListProps) => {
         <TableHeader>
           <TableRow>
             <TableHead>Tarih</TableHead>
-            <TableHead>Tür</TableHead>
-            <TableHead>Ürün/Hizmet</TableHead>
+            <TableHead>İşlem</TableHead>
+            <TableHead>Açıklama</TableHead>
             <TableHead>Tutar</TableHead>
             <TableHead>Durum</TableHead>
             <TableHead>Vade Tarihi</TableHead>
-            <TableHead>Açıklama</TableHead>
+            <TableHead>Not</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -69,7 +69,10 @@ const CustomerRecordsList = ({ records }: CustomerRecordsListProps) => {
             records.map((record) => (
               <TableRow key={record.id}>
                 <TableCell>{new Date(record.date).toLocaleDateString()}</TableCell>
-                <TableCell>{record.type === 'service' ? 'Hizmet' : 'Ürün'}</TableCell>
+                <TableCell>
+                  {record.recordType === 'payment' ? 'Tahsilat' : 
+                   record.type === 'service' ? 'Hizmet' : 'Ürün'}
+                </TableCell>
                 <TableCell>{record.itemName}</TableCell>
                 <TableCell className={record.recordType === 'debt' ? 'text-red-600' : 'text-green-600'}>
                   {formatCurrency(Math.abs(record.amount))}

@@ -84,7 +84,7 @@ export interface Cost {
 export interface CustomerRecord {
   id: number;
   customerId: number;
-  type: 'service' | 'product';
+  type: 'service' | 'product' | 'payment';
   itemId: number;
   itemName: string;
   amount: number;
@@ -93,7 +93,7 @@ export interface CustomerRecord {
   dueDate?: Date;
   notes?: string;
   description?: string;
-  recordType: 'debt' | 'credit';
+  recordType: 'debt' | 'payment';
 }
 
 export interface Payment {
@@ -168,4 +168,3 @@ export const getPayments = (): Payment[] =>
 
 export const setPayments = (payments: Payment[]): void =>
   setToStorage(STORAGE_KEYS.PAYMENTS, payments);
-

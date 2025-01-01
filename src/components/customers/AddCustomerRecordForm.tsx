@@ -22,7 +22,7 @@ const AddCustomerRecordForm = ({ customerId, onSuccess }: AddCustomerRecordFormP
   const [itemName, setItemName] = useState('');
   const [amount, setAmount] = useState('');
   const [type, setType] = useState<'service' | 'product'>('service');
-  const [recordType, setRecordType] = useState<'debt' | 'credit'>('debt');
+  const [recordType, setRecordType] = useState<'debt' | 'payment'>('debt');
   const [isPaid, setIsPaid] = useState(false);
   const [date, setDate] = useState<Date>(new Date());
   const [dueDate, setDueDate] = useState<Date | undefined>();
@@ -37,9 +37,9 @@ const AddCustomerRecordForm = ({ customerId, onSuccess }: AddCustomerRecordFormP
       customerId,
       itemId: Date.now(),
       itemName,
-      amount: recordType === 'debt' ? Number(amount) : -Number(amount), // Negative amount for credits
-      type,
-      isPaid,
+      amount: recordType === 'debt' ? Number(amount) : -Number(amount), // Negative amount for payments
+      type: recordType === 'payment' ? 'payment' : type,
+      isPaid: recordType === 'payment' ? true : isPaid,
       date: date,
       dueDate,
       description,
@@ -53,7 +53,7 @@ const AddCustomerRecordForm = ({ customerId, onSuccess }: AddCustomerRecordFormP
 
     toast({
       title: "Kayıt eklendi",
-      description: `${recordType === 'debt' ? 'Borç' : 'Alacak'} kaydı başarıyla eklendi.`,
+      description: `${recordType === 'debt' ? 'Borç' : 'Tahsilat'} kaydı başarıyla eklendi.`,
     });
 
     // Reset form
@@ -75,24 +75,40 @@ const AddCustomerRecordForm = ({ customerId, onSuccess }: AddCustomerRecordFormP
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <Label>Kayıt Türü</Label>
-          <RadioGroup value={recordType} onValueChange={(value) => setRecordType(value as 'debt' | 'credit')} className="flex space-x-4">
+          <RadioGroup value={recordType} onValueChange={(value) => setRecordType(value as 'debt' | 'payment')} className="flex space-x-4">
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="debt" id="debt" />
               <Label htmlFor="debt">Borç</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="credit" id="credit" />
-              <Label htmlFor="credit">Alacak</Label>
+              <RadioGroupItem value="payment" id="payment" />
+              <Label htmlFor="payment">Tahsilat</Label>
             </div>
           </RadioGroup>
         </div>
 
+        {recordType === 'debt' && (
+          <div>
+            <Label>Tür</Label>
+            <RadioGroup value={type} onValueChange={(value) => setType(value as 'service' | 'product')} className="flex space-x-4">
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="service" id="service" />
+                <Label htmlFor="service">Hizmet</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="product" id="product" />
+                <Label htmlFor="product">Ürün</Label>
+              </div>
+            </RadioGroup>
+          </div>
+        )}
+
         <div>
-          <Label>Ürün/Hizmet Adı</Label>
+          <Label>{recordType === 'debt' ? 'Ürün/Hizmet Adı' : 'Tahsilat Açıklaması'}</Label>
           <Input
             value={itemName}
             onChange={(e) => setItemName(e.target.value)}
-            placeholder="Ürün veya hizmet adını girin"
+            placeholder={recordType === 'debt' ? "Ürün veya hizmet adını girin" : "Tahsilat açıklaması girin"}
             required
           />
         </div>
@@ -108,59 +124,49 @@ const AddCustomerRecordForm = ({ customerId, onSuccess }: AddCustomerRecordFormP
           />
         </div>
 
-        <div>
-          <Label>Tür</Label>
-          <RadioGroup value={type} onValueChange={(value) => setType(value as 'service' | 'product')} className="flex space-x-4">
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="service" id="service" />
-              <Label htmlFor="service">Hizmet</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="product" id="product" />
-              <Label htmlFor="product">Ürün</Label>
-            </div>
-          </RadioGroup>
-        </div>
+        {recordType === 'debt' && (
+          <div>
+            <Label>Ödeme Durumu</Label>
+            <RadioGroup value={isPaid ? "paid" : "unpaid"} onValueChange={(value) => setIsPaid(value === "paid")} className="flex space-x-4">
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="paid" id="paid" />
+                <Label htmlFor="paid">Ödendi</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="unpaid" id="unpaid" />
+                <Label htmlFor="unpaid">Ödenmedi</Label>
+              </div>
+            </RadioGroup>
+          </div>
+        )}
 
-        <div>
-          <Label>Ödeme Durumu</Label>
-          <RadioGroup value={isPaid ? "paid" : "unpaid"} onValueChange={(value) => setIsPaid(value === "paid")} className="flex space-x-4">
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="paid" id="paid" />
-              <Label htmlFor="paid">Ödendi</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="unpaid" id="unpaid" />
-              <Label htmlFor="unpaid">Ödenmedi</Label>
-            </div>
-          </RadioGroup>
-        </div>
-
-        <div>
-          <Label>Vade Tarihi</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={"outline"}
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !dueDate && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {dueDate ? format(dueDate, "PPP") : "Tarih seçin"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={dueDate}
-                onSelect={setDueDate}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
+        {recordType === 'debt' && !isPaid && (
+          <div>
+            <Label>Vade Tarihi</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !dueDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dueDate ? format(dueDate, "PPP") : "Tarih seçin"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={dueDate}
+                  onSelect={setDueDate}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+        )}
 
         <div>
           <Label>Açıklama</Label>
