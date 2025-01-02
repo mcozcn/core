@@ -69,7 +69,7 @@ const CustomerSelect = ({ value = '', onValueChange }: CustomerSelectProps) => {
           <CommandInput placeholder="Müşteri ara..." />
           <CommandEmpty>Müşteri bulunamadı.</CommandEmpty>
           <CommandGroup>
-            {customers.map((customer) => (
+            {(customers || []).map((customer) => (
               <CommandItem
                 key={customer.id}
                 value={`${customer.name} ${customer.phone}`}
@@ -78,13 +78,13 @@ const CustomerSelect = ({ value = '', onValueChange }: CustomerSelectProps) => {
                   setOpen(false);
                 }}
               >
-                {customer.name} - {customer.phone}
                 <Check
                   className={cn(
-                    "ml-auto h-4 w-4",
+                    "mr-2 h-4 w-4",
                     value === customer.id.toString() ? "opacity-100" : "opacity-0"
                   )}
                 />
+                {customer.name} - {customer.phone}
               </CommandItem>
             ))}
           </CommandGroup>
