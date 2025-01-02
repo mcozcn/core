@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
-import { getCustomerRecords, setCustomerRecords, type CustomerRecord, getServices, getProducts } from '@/utils/localStorage';
+import { getCustomerRecords, setCustomerRecords, type CustomerRecord, getServices, getProducts, type Service, type StockItem } from '@/utils/localStorage';
 
 interface AddCustomerRecordFormProps {
   customerId: number;
@@ -45,7 +45,7 @@ const AddCustomerRecordForm = ({ customerId, onSuccess }: AddCustomerRecordFormP
   useEffect(() => {
     if (selectedItemId) {
       const selectedService = services.find(s => s.id.toString() === selectedItemId);
-      const selectedProduct = products.find(p => p.productId.toString() === selectedItemId);
+      const selectedProduct = products.find(p => p.id.toString() === selectedItemId);
       const price = selectedService?.price || selectedProduct?.price || 0;
       setAmount(price.toString());
     }
@@ -57,7 +57,7 @@ const AddCustomerRecordForm = ({ customerId, onSuccess }: AddCustomerRecordFormP
     const finalAmount = Number(amount) - Number(discount);
     const selectedItem = type === 'service' 
       ? services.find(s => s.id.toString() === selectedItemId)
-      : products.find(p => p.productId.toString() === selectedItemId);
+      : products.find(p => p.id.toString() === selectedItemId);
 
     if (!selectedItem) {
       toast({
@@ -71,8 +71,10 @@ const AddCustomerRecordForm = ({ customerId, onSuccess }: AddCustomerRecordFormP
     const newRecord: CustomerRecord = {
       id: Date.now(),
       customerId,
-      itemId: type === 'service' ? selectedItem.id : selectedItem.productId,
-      itemName: type === 'service' ? selectedItem.name : selectedItem.productName,
+      itemId: type === 'service' ? selectedItem.id : selectedItem.id,
+      itemName: type === 'service' 
+        ? (selectedItem as Service).name 
+        : (selectedItem as StockItem).productName,
       amount: recordType === 'debt' ? finalAmount : -finalAmount,
       type: recordType === 'payment' ? 'payment' : type,
       isPaid: recordType === 'payment' ? true : isPaid,
@@ -157,7 +159,7 @@ const AddCustomerRecordForm = ({ customerId, onSuccess }: AddCustomerRecordFormP
                   ))
                 ) : (
                   products.map((product) => (
-                    <SelectItem key={product.productId} value={product.productId.toString()}>
+                    <SelectItem key={product.id} value={product.id.toString()}>
                       {product.productName} - {product.price} ₺
                     </SelectItem>
                   ))
