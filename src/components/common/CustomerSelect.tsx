@@ -22,10 +22,10 @@ interface CustomerSelectProps {
   onValueChange: (value: string) => void;
 }
 
-const CustomerSelect = ({ value, onValueChange }: CustomerSelectProps) => {
+const CustomerSelect = ({ value = '', onValueChange }: CustomerSelectProps) => {
   const [open, setOpen] = useState(false);
 
-  const { data: customers = [] } = useQuery({
+  const { data: customers = [], isLoading, error } = useQuery({
     queryKey: ['customers'],
     queryFn: () => {
       console.log('Fetching customers for select');
@@ -34,6 +34,22 @@ const CustomerSelect = ({ value, onValueChange }: CustomerSelectProps) => {
   });
 
   const selectedCustomer = customers.find(customer => customer.id.toString() === value);
+
+  if (isLoading) {
+    return (
+      <Button variant="outline" className="w-full" disabled>
+        Yükleniyor...
+      </Button>
+    );
+  }
+
+  if (error) {
+    return (
+      <Button variant="outline" className="w-full text-red-500" disabled>
+        Hata oluştu
+      </Button>
+    );
+  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
