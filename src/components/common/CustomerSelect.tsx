@@ -66,7 +66,7 @@ const CustomerSelect = ({ value = '', onValueChange }: CustomerSelectProps) => {
       </PopoverTrigger>
       <PopoverContent className="w-full p-0">
         <Command>
-          <CommandInput placeholder="Müşteri ara..." className="h-9" />
+          <CommandInput placeholder="Müşteri ara..." />
           <CommandEmpty>Müşteri bulunamadı.</CommandEmpty>
           <CommandGroup className="max-h-[300px] overflow-auto">
             {customers.map((customer) => (
