@@ -33,8 +33,6 @@ const CustomerSelect = ({ value = '', onValueChange }: CustomerSelectProps) => {
     },
   });
 
-  const selectedCustomer = customers.find(customer => customer.id.toString() === value);
-
   if (isLoading) {
     return (
       <Button variant="outline" className="w-full" disabled>
@@ -50,6 +48,8 @@ const CustomerSelect = ({ value = '', onValueChange }: CustomerSelectProps) => {
       </Button>
     );
   }
+
+  const selectedCustomer = customers.find(customer => customer.id.toString() === value);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -68,7 +68,7 @@ const CustomerSelect = ({ value = '', onValueChange }: CustomerSelectProps) => {
         <Command>
           <CommandInput placeholder="Müşteri ara..." />
           <CommandEmpty>Müşteri bulunamadı.</CommandEmpty>
-          <CommandGroup className="max-h-[300px] overflow-auto">
+          <CommandGroup>
             {customers.map((customer) => (
               <CommandItem
                 key={customer.id}
