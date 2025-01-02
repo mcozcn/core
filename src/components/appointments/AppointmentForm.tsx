@@ -4,9 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import CustomerSelect from "@/components/common/CustomerSelect";
-import { getAppointments, setAppointments, type Appointment, getCustomers } from "@/utils/localStorage";
+import { getAppointments, setAppointments, type Appointment, getCustomers, getServices } from "@/utils/localStorage";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface AppointmentFormProps {
   selectedDate: Date;
@@ -17,10 +18,15 @@ interface AppointmentFormProps {
 const AppointmentForm = ({ selectedDate, onSuccess, onCancel }: AppointmentFormProps) => {
   const [customerId, setCustomerId] = useState('');
   const [appointmentTime, setAppointmentTime] = useState('');
-  const [service, setService] = useState('');
+  const [serviceId, setServiceId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  const { data: services = [] } = useQuery({
+    queryKey: ['services'],
+    queryFn: getServices,
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,9 +36,14 @@ const AppointmentForm = ({ selectedDate, onSuccess, onCancel }: AppointmentFormP
       const appointments = getAppointments();
       const customers = getCustomers();
       const customer = customers.find(c => c.id === Number(customerId));
+      const service = services.find(s => s.id === Number(serviceId));
 
       if (!customer) {
         throw new Error("Müşteri bulunamadı");
+      }
+
+      if (!service) {
+        throw new Error("Hizmet bulunamadı");
       }
 
       const newAppointment: Appointment = {
@@ -41,7 +52,7 @@ const AppointmentForm = ({ selectedDate, onSuccess, onCancel }: AppointmentFormP
         customerName: customer.name,
         date: selectedDate.toISOString().split('T')[0],
         time: appointmentTime,
-        service,
+        service: service.name,
         status: 'pending',
         createdAt: new Date(),
       };
@@ -54,7 +65,7 @@ const AppointmentForm = ({ selectedDate, onSuccess, onCancel }: AppointmentFormP
       
       toast({
         title: "Randevu başarıyla kaydedildi",
-        description: `${service} için randevu oluşturuldu.`,
+        description: `${service.name} için randevu oluşturuldu.`,
       });
 
       onSuccess();
@@ -63,7 +74,7 @@ const AppointmentForm = ({ selectedDate, onSuccess, onCancel }: AppointmentFormP
       toast({
         variant: "destructive",
         title: "Hata!",
-        description: "Randevu kaydedilirken bir hata oluştu. Lütfen tekrar deneyin.",
+        description: error instanceof Error ? error.message : "Randevu kaydedilirken bir hata oluştu.",
       });
     } finally {
       setIsSubmitting(false);
@@ -93,12 +104,18 @@ const AppointmentForm = ({ selectedDate, onSuccess, onCancel }: AppointmentFormP
 
         <div>
           <Label>Hizmet</Label>
-          <Input 
-            value={service}
-            onChange={(e) => setService(e.target.value)}
-            placeholder="Alınacak hizmeti girin"
-            required
-          />
+          <Select value={serviceId} onValueChange={setServiceId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Hizmet seçin" />
+            </SelectTrigger>
+            <SelectContent>
+              {services.map((service) => (
+                <SelectItem key={service.id} value={service.id.toString()}>
+                  {service.name} - {service.price} ₺
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="flex gap-2">

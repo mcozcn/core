@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,9 @@ import { format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
-import { getCustomerRecords, setCustomerRecords, type CustomerRecord } from '@/utils/localStorage';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useQuery } from "@tanstack/react-query";
+import { getCustomerRecords, setCustomerRecords, type CustomerRecord, getServices, getProducts } from '@/utils/localStorage';
 
 interface AddCustomerRecordFormProps {
   customerId: number;
@@ -19,8 +21,9 @@ interface AddCustomerRecordFormProps {
 }
 
 const AddCustomerRecordForm = ({ customerId, onSuccess }: AddCustomerRecordFormProps) => {
-  const [itemName, setItemName] = useState('');
+  const [selectedItemId, setSelectedItemId] = useState('');
   const [amount, setAmount] = useState('');
+  const [discount, setDiscount] = useState('0');
   const [type, setType] = useState<'service' | 'product'>('service');
   const [recordType, setRecordType] = useState<'debt' | 'payment'>('debt');
   const [isPaid, setIsPaid] = useState(false);
@@ -29,21 +32,55 @@ const AddCustomerRecordForm = ({ customerId, onSuccess }: AddCustomerRecordFormP
   const [description, setDescription] = useState('');
   const { toast } = useToast();
 
+  const { data: services = [] } = useQuery({
+    queryKey: ['services'],
+    queryFn: getServices,
+  });
+
+  const { data: products = [] } = useQuery({
+    queryKey: ['products'],
+    queryFn: getProducts,
+  });
+
+  useEffect(() => {
+    if (selectedItemId) {
+      const selectedService = services.find(s => s.id.toString() === selectedItemId);
+      const selectedProduct = products.find(p => p.productId.toString() === selectedItemId);
+      const price = selectedService?.price || selectedProduct?.price || 0;
+      setAmount(price.toString());
+    }
+  }, [selectedItemId, services, products]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const finalAmount = Number(amount) - Number(discount);
+    const selectedItem = type === 'service' 
+      ? services.find(s => s.id.toString() === selectedItemId)
+      : products.find(p => p.productId.toString() === selectedItemId);
+
+    if (!selectedItem) {
+      toast({
+        variant: "destructive",
+        title: "Hata!",
+        description: "Lütfen bir ürün veya hizmet seçin.",
+      });
+      return;
+    }
 
     const newRecord: CustomerRecord = {
       id: Date.now(),
       customerId,
-      itemId: Date.now(),
-      itemName,
-      amount: recordType === 'debt' ? Number(amount) : -Number(amount), // Negatif değer tahsilat için
+      itemId: type === 'service' ? selectedItem.id : selectedItem.productId,
+      itemName: type === 'service' ? selectedItem.name : selectedItem.productName,
+      amount: recordType === 'debt' ? finalAmount : -finalAmount,
       type: recordType === 'payment' ? 'payment' : type,
       isPaid: recordType === 'payment' ? true : isPaid,
-      date: date,
+      date,
       dueDate,
       description,
       recordType,
+      discount: Number(discount),
     };
 
     console.log('Yeni müşteri kaydı oluşturuluyor:', newRecord);
@@ -56,9 +93,10 @@ const AddCustomerRecordForm = ({ customerId, onSuccess }: AddCustomerRecordFormP
       description: `${recordType === 'debt' ? 'Borç' : 'Tahsilat'} kaydı başarıyla eklendi.`,
     });
 
-    // Formu sıfırla
-    setItemName('');
+    // Reset form
+    setSelectedItemId('');
     setAmount('');
+    setDiscount('0');
     setType('service');
     setRecordType('debt');
     setIsPaid(false);
@@ -103,15 +141,31 @@ const AddCustomerRecordForm = ({ customerId, onSuccess }: AddCustomerRecordFormP
           </div>
         )}
 
-        <div>
-          <Label>{recordType === 'debt' ? 'Ürün/Hizmet Adı' : 'Tahsilat Açıklaması'}</Label>
-          <Input
-            value={itemName}
-            onChange={(e) => setItemName(e.target.value)}
-            placeholder={recordType === 'debt' ? "Ürün veya hizmet adını girin" : "Tahsilat açıklaması girin"}
-            required
-          />
-        </div>
+        {recordType === 'debt' && (
+          <div>
+            <Label>{type === 'service' ? 'Hizmet' : 'Ürün'}</Label>
+            <Select value={selectedItemId} onValueChange={setSelectedItemId}>
+              <SelectTrigger>
+                <SelectValue placeholder={type === 'service' ? 'Hizmet seçin' : 'Ürün seçin'} />
+              </SelectTrigger>
+              <SelectContent>
+                {type === 'service' ? (
+                  services.map((service) => (
+                    <SelectItem key={service.id} value={service.id.toString()}>
+                      {service.name} - {service.price} ₺
+                    </SelectItem>
+                  ))
+                ) : (
+                  products.map((product) => (
+                    <SelectItem key={product.productId} value={product.productId.toString()}>
+                      {product.productName} - {product.price} ₺
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         <div>
           <Label>Tutar (₺)</Label>
@@ -121,8 +175,22 @@ const AddCustomerRecordForm = ({ customerId, onSuccess }: AddCustomerRecordFormP
             onChange={(e) => setAmount(e.target.value)}
             placeholder="Tutarı girin"
             required
+            readOnly={recordType === 'debt'}
           />
         </div>
+
+        {recordType === 'debt' && (
+          <div>
+            <Label>İndirim Tutarı (₺)</Label>
+            <Input
+              type="number"
+              value={discount}
+              onChange={(e) => setDiscount(e.target.value)}
+              placeholder="İndirim tutarını girin"
+              min="0"
+            />
+          </div>
+        )}
 
         {recordType === 'debt' && (
           <div>

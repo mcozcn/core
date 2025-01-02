@@ -99,6 +99,7 @@ export interface CustomerRecord {
   dueDate?: Date;
   description?: string;
   recordType: 'debt' | 'payment';
+  discount?: number;
 }
 
 export interface Payment {
