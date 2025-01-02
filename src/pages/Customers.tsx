@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { getCustomers } from "@/utils/localStorage";
+import CustomerSelect from '@/components/common/CustomerSelect';
 import {
   Table,
   TableBody,
@@ -18,7 +19,7 @@ import {
 
 const Customers = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCustomerId, setSelectedCustomerId] = useState<number>(1);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>('1');
 
   const { data: customers = [] } = useQuery({
     queryKey: ['customers'],
@@ -79,12 +80,18 @@ const Customers = () => {
 
         <TabsContent value="customer-records">
           <div className="space-y-6">
+            <div className="mb-4">
+              <CustomerSelect
+                value={selectedCustomerId}
+                onValueChange={setSelectedCustomerId}
+              />
+            </div>
+            <AddCustomerRecordForm customerId={Number(selectedCustomerId)} />
             <SearchInput
               value={searchTerm}
               onChange={setSearchTerm}
               placeholder="Kayıtlarda ara..."
             />
-            <AddCustomerRecordForm customerId={selectedCustomerId} />
             <CustomerRecordsList searchTerm={searchTerm} />
           </div>
         </TabsContent>
