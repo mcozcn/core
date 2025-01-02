@@ -35,16 +35,18 @@ const CustomerSelect = ({ value = '', onValueChange }: CustomerSelectProps) => {
 
   if (isLoading) {
     return (
-      <Button variant="outline" className="w-full" disabled>
-        Yükleniyor...
+      <Button variant="outline" className="w-full justify-between" disabled>
+        <span>Yükleniyor...</span>
+        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
       </Button>
     );
   }
 
   if (error) {
     return (
-      <Button variant="outline" className="w-full text-red-500" disabled>
-        Hata oluştu
+      <Button variant="outline" className="w-full justify-between text-red-500" disabled>
+        <span>Hata oluştu</span>
+        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
       </Button>
     );
   }
@@ -64,7 +66,7 @@ const CustomerSelect = ({ value = '', onValueChange }: CustomerSelectProps) => {
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0">
+      <PopoverContent className="w-full p-0" align="start">
         <Command>
           <CommandInput placeholder="Müşteri ara..." />
           <CommandEmpty>Müşteri bulunamadı.</CommandEmpty>
@@ -72,7 +74,7 @@ const CustomerSelect = ({ value = '', onValueChange }: CustomerSelectProps) => {
             {customers.map((customer) => (
               <CommandItem
                 key={customer.id}
-                value={`${customer.name} ${customer.phone}`}
+                value={customer.name}
                 onSelect={() => {
                   onValueChange(customer.id.toString());
                   setOpen(false);
