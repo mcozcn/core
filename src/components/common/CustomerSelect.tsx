@@ -25,14 +25,14 @@ interface CustomerSelectProps {
 const CustomerSelect = ({ value = '', onValueChange }: CustomerSelectProps) => {
   const [open, setOpen] = useState(false);
 
-  const { data: customers = [], isLoading, error, isError } = useQuery({
+  const { data: customers = [], isLoading, error } = useQuery({
     queryKey: ['customers'],
     queryFn: () => {
       console.log('Fetching customers for select');
       try {
         const result = getCustomers();
         console.log('Fetched customers:', result);
-        return result;
+        return result || []; // Ensure we always return an array
       } catch (err) {
         console.error('Error fetching customers:', err);
         throw err;
@@ -40,6 +40,7 @@ const CustomerSelect = ({ value = '', onValueChange }: CustomerSelectProps) => {
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
     retry: 2,
+    initialData: [], // Provide initial empty array
   });
 
   if (isLoading) {
@@ -51,7 +52,8 @@ const CustomerSelect = ({ value = '', onValueChange }: CustomerSelectProps) => {
     );
   }
 
-  if (isError) {
+  if (error) {
+    console.error('Customer select error:', error);
     return (
       <Button variant="outline" className="w-full justify-between text-red-500" disabled>
         <span>Hata oluştu</span>
@@ -80,7 +82,7 @@ const CustomerSelect = ({ value = '', onValueChange }: CustomerSelectProps) => {
           <CommandInput placeholder="Müşteri ara..." />
           <CommandEmpty>Müşteri bulunamadı.</CommandEmpty>
           <CommandGroup className="max-h-[300px] overflow-y-auto">
-            {customers.map((customer) => (
+            {Array.isArray(customers) && customers.map((customer) => (
               <CommandItem
                 key={customer.id}
                 value={customer.name}
