@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { getCustomerRecords, getAppointments, type CustomerRecord } from '@/utils/localStorage';
 import { formatCurrency } from '@/utils/format';
+import { cn } from "@/lib/utils";
 
 interface CustomerDetailsProps {
   customerId: number;

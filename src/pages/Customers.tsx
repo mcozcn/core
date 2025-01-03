@@ -1,30 +1,29 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
-import { useQuery } from "@tanstack/react-query";
-import { getCustomers } from "@/utils/localStorage";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getCustomers, getCustomerRecords } from "@/utils/localStorage";
 import SearchInput from '@/components/common/SearchInput';
 import AddCustomerForm from '@/components/customers/AddCustomerForm';
 import CustomerDetails from '@/components/customers/CustomerDetails';
 import CustomerDebtForm from '@/components/customers/forms/CustomerDebtForm';
 import CustomerPaymentForm from '@/components/customers/forms/CustomerPaymentForm';
 import CustomerRecordsList from '@/components/customers/CustomerRecordsList';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
 const Customers = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
+  const queryClient = useQueryClient();
 
   const { data: customers = [] } = useQuery({
     queryKey: ['customers'],
     queryFn: getCustomers,
+  });
+
+  const { data: records = [] } = useQuery({
+    queryKey: ['customerRecords'],
+    queryFn: getCustomerRecords,
   });
 
   const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
