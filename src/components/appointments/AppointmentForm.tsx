@@ -1,13 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
-import CustomerSelect from "@/components/common/CustomerSelect";
 import { getAppointments, setAppointments, type Appointment, getCustomers, getServices } from "@/utils/localStorage";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Search } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface AppointmentFormProps {
   selectedDate: Date;
@@ -17,6 +25,7 @@ interface AppointmentFormProps {
 
 const AppointmentForm = ({ selectedDate, onSuccess, onCancel }: AppointmentFormProps) => {
   const [customerId, setCustomerId] = useState('');
+  const [customerSearch, setCustomerSearch] = useState('');
   const [appointmentTime, setAppointmentTime] = useState('');
   const [serviceId, setServiceId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -28,13 +37,24 @@ const AppointmentForm = ({ selectedDate, onSuccess, onCancel }: AppointmentFormP
     queryFn: getServices,
   });
 
+  const { data: customers = [] } = useQuery({
+    queryKey: ['customers'],
+    queryFn: getCustomers,
+  });
+
+  const filteredCustomers = customers.filter(customer => 
+    customer.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
+    customer.phone.includes(customerSearch)
+  );
+
+  const selectedCustomer = customers.find(c => c.id.toString() === customerId);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
       const appointments = getAppointments();
-      const customers = getCustomers();
       const customer = customers.find(c => c.id === Number(customerId));
       const service = services.find(s => s.id === Number(serviceId));
 
@@ -86,10 +106,54 @@ const AppointmentForm = ({ selectedDate, onSuccess, onCancel }: AppointmentFormP
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <Label>Müşteri</Label>
-          <CustomerSelect
-            value={customerId}
-            onValueChange={setCustomerId}
-          />
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full justify-between"
+                type="button"
+              >
+                {selectedCustomer ? (
+                  <span>{selectedCustomer.name} - {selectedCustomer.phone}</span>
+                ) : (
+                  <span>Müşteri seçin...</span>
+                )}
+                <Search className="ml-2 h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Müşteri Seç</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <Input
+                  placeholder="Müşteri ara..."
+                  value={customerSearch}
+                  onChange={(e) => setCustomerSearch(e.target.value)}
+                />
+                <ScrollArea className="h-[300px]">
+                  <div className="space-y-2">
+                    {filteredCustomers.map((customer) => (
+                      <Button
+                        key={customer.id}
+                        variant="ghost"
+                        className="w-full justify-start"
+                        onClick={() => {
+                          setCustomerId(customer.id.toString());
+                          setCustomerSearch('');
+                        }}
+                      >
+                        <div className="text-left">
+                          <div>{customer.name}</div>
+                          <div className="text-sm text-muted-foreground">{customer.phone}</div>
+                        </div>
+                      </Button>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
 
         <div>
