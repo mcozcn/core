@@ -22,6 +22,7 @@ const AddProductForm = ({ showForm, setShowForm, stock }: AddProductFormProps) =
     price: '',
     cost: '',
     category: '',
+    criticalLevel: '5', // Varsayılan kritik stok seviyesi
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -36,20 +37,29 @@ const AddProductForm = ({ showForm, setShowForm, stock }: AddProductFormProps) =
         price: Number(formData.price),
         cost: Number(formData.cost),
         category: formData.category,
+        criticalLevel: Number(formData.criticalLevel),
         createdAt: new Date(),
         lastUpdated: new Date(),
       };
+
+      console.log('Yeni ürün ekleniyor:', newStockItem);
 
       const updatedStock = [...stock, newStockItem];
       setStock(updatedStock);
       queryClient.setQueryData(['stock'], updatedStock);
 
-      console.log('Stock item saved to localStorage:', newStockItem);
-
       toast({
         title: "Başarıyla kaydedildi",
         description: `${newStockItem.productName} stok listenize eklendi.`,
       });
+
+      if (newStockItem.quantity <= newStockItem.criticalLevel) {
+        toast({
+          variant: "destructive",
+          title: "Kritik Stok Uyarısı!",
+          description: `${newStockItem.productName} kritik stok seviyesinde başladı.`,
+        });
+      }
 
       setFormData({
         productName: '',
@@ -57,10 +67,11 @@ const AddProductForm = ({ showForm, setShowForm, stock }: AddProductFormProps) =
         price: '',
         cost: '',
         category: '',
+        criticalLevel: '5',
       });
       setShowForm(false);
     } catch (error) {
-      console.error('Error saving stock item:', error);
+      console.error('Ürün kaydı sırasında hata:', error);
       toast({
         variant: "destructive",
         title: "Hata!",
@@ -91,6 +102,17 @@ const AddProductForm = ({ showForm, setShowForm, stock }: AddProductFormProps) =
             value={formData.quantity}
             onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
             placeholder="Stok miktarını girin"
+            required
+          />
+        </div>
+
+        <div>
+          <Label>Kritik Stok Seviyesi</Label>
+          <Input
+            type="number"
+            value={formData.criticalLevel}
+            onChange={(e) => setFormData({ ...formData, criticalLevel: e.target.value })}
+            placeholder="Kritik stok seviyesini girin"
             required
           />
         </div>

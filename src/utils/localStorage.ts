@@ -58,6 +58,7 @@ export interface StockItem {
   price: number;
   cost: number;
   category: string;
+  criticalLevel: number;
   createdAt: Date;
   lastUpdated: Date;
 }
