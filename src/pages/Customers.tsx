@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import AddCustomerRecordForm from '@/components/customers/AddCustomerRecordForm';
-import CustomerRecordsList from '@/components/customers/CustomerRecordsList';
-import AddCustomerForm from '@/components/customers/AddCustomerForm';
-import SearchInput from '@/components/common/SearchInput';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { getCustomers } from "@/utils/localStorage";
-import CustomerSelect from '@/components/common/CustomerSelect';
+import SearchInput from '@/components/common/SearchInput';
+import AddCustomerForm from '@/components/customers/AddCustomerForm';
+import CustomerDetails from '@/components/customers/CustomerDetails';
+import CustomerDebtForm from '@/components/customers/forms/CustomerDebtForm';
+import CustomerPaymentForm from '@/components/customers/forms/CustomerPaymentForm';
+import CustomerRecordsList from '@/components/customers/CustomerRecordsList';
 import {
   Table,
   TableBody,
@@ -19,12 +20,14 @@ import {
 
 const Customers = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string>('1');
+  const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
 
   const { data: customers = [] } = useQuery({
     queryKey: ['customers'],
     queryFn: getCustomers,
   });
+
+  const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
 
   return (
     <div className="p-8 pl-72 animate-fadeIn">
@@ -32,70 +35,91 @@ const Customers = () => {
         <h1 className="text-4xl font-serif">Müşteri İşlemleri</h1>
       </div>
 
-      <Tabs defaultValue="add-customer" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="add-customer">Müşteri Ekle</TabsTrigger>
-          <TabsTrigger value="customer-records">Müşteri Kayıtları</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="add-customer">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <AddCustomerForm />
-            <Card className="p-6">
-              <h2 className="text-lg font-semibold mb-4">Müşteri Listesi</h2>
-              <div className="mb-4">
-                <SearchInput
-                  value={searchTerm}
-                  onChange={setSearchTerm}
-                  placeholder="Müşteri ara..."
-                />
-              </div>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Müşteri Adı</TableHead>
-                    <TableHead>Telefon</TableHead>
-                    <TableHead>E-posta</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {customers
-                    .filter(customer => 
-                      customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                      customer.phone.includes(searchTerm) ||
-                      customer.email?.toLowerCase().includes(searchTerm.toLowerCase())
-                    )
-                    .map((customer) => (
-                      <TableRow key={customer.id}>
-                        <TableCell>{customer.name}</TableCell>
-                        <TableCell>{customer.phone}</TableCell>
-                        <TableCell>{customer.email || '-'}</TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="customer-records">
-          <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-1">
+          <Card className="p-6">
             <div className="mb-4">
-              <CustomerSelect
-                value={selectedCustomerId}
-                onValueChange={setSelectedCustomerId}
+              <SearchInput
+                value={searchTerm}
+                onChange={setSearchTerm}
+                placeholder="Müşteri ara..."
               />
             </div>
-            <AddCustomerRecordForm customerId={Number(selectedCustomerId)} />
-            <SearchInput
-              value={searchTerm}
-              onChange={setSearchTerm}
-              placeholder="Kayıtlarda ara..."
-            />
-            <CustomerRecordsList searchTerm={searchTerm} />
-          </div>
-        </TabsContent>
-      </Tabs>
+            <div className="space-y-2">
+              {customers
+                .filter(customer => 
+                  customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  customer.phone.includes(searchTerm) ||
+                  customer.email?.toLowerCase().includes(searchTerm.toLowerCase())
+                )
+                .map((customer) => (
+                  <div
+                    key={customer.id}
+                    onClick={() => setSelectedCustomerId(customer.id)}
+                    className={cn(
+                      "p-3 rounded-lg cursor-pointer transition-colors",
+                      selectedCustomerId === customer.id
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-accent hover:bg-accent/80"
+                    )}
+                  >
+                    <div className="font-medium">{customer.name}</div>
+                    <div className="text-sm opacity-90">{customer.phone}</div>
+                  </div>
+                ))}
+            </div>
+          </Card>
+        </div>
+
+        <div className="lg:col-span-2">
+          {selectedCustomer ? (
+            <div className="space-y-6">
+              <CustomerDetails 
+                customerId={selectedCustomer.id}
+                customerName={selectedCustomer.name}
+              />
+
+              <Tabs defaultValue="records" className="w-full">
+                <TabsList>
+                  <TabsTrigger value="records">Kayıtlar</TabsTrigger>
+                  <TabsTrigger value="debt">Borç Ekle</TabsTrigger>
+                  <TabsTrigger value="payment">Ödeme Al</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="records">
+                  <Card className="p-6">
+                    <CustomerRecordsList 
+                      records={records.filter(record => record.customerId === selectedCustomer.id)}
+                    />
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="debt">
+                  <Card className="p-6">
+                    <CustomerDebtForm 
+                      customerId={selectedCustomer.id}
+                      onSuccess={() => queryClient.invalidateQueries({ queryKey: ['customerRecords'] })}
+                    />
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="payment">
+                  <Card className="p-6">
+                    <CustomerPaymentForm 
+                      customerId={selectedCustomer.id}
+                      onSuccess={() => queryClient.invalidateQueries({ queryKey: ['customerRecords'] })}
+                    />
+                  </Card>
+                </TabsContent>
+              </Tabs>
+            </div>
+          ) : (
+            <Card className="p-6">
+              <AddCustomerForm onSuccess={() => queryClient.invalidateQueries({ queryKey: ['customers'] })} />
+            </Card>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
