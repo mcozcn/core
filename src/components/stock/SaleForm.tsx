@@ -6,7 +6,16 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { getStock, setStock, getSales, setSales, getCustomers, type StockItem, type Sale, setCustomerRecords, getCustomerRecords, type CustomerRecord } from "@/utils/localStorage";
-import CustomerSelect from '../common/CustomerSelect';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Search } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useQuery } from "@tanstack/react-query";
 
 interface SaleFormProps {
   showForm: boolean;
@@ -18,6 +27,7 @@ interface SaleFormProps {
 const SaleForm = ({ showForm, setShowForm, stock, sales }: SaleFormProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [customerSearch, setCustomerSearch] = useState('');
   const [saleData, setSaleData] = useState({
     productId: '',
     quantity: '',
@@ -25,12 +35,26 @@ const SaleForm = ({ showForm, setShowForm, stock, sales }: SaleFormProps) => {
     discount: '0'
   });
 
+  const { data: customers = [] } = useQuery({
+    queryKey: ['customers'],
+    queryFn: () => {
+      console.log('Fetching customers for sale form');
+      return getCustomers();
+    },
+  });
+
+  const filteredCustomers = customers.filter(customer => 
+    customer.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
+    customer.phone.includes(customerSearch)
+  );
+
+  const selectedCustomer = customers.find(c => c.id.toString() === saleData.customerId);
+
   const handleSale = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
       const product = stock.find(item => item.productId === Number(saleData.productId));
-      const customers = getCustomers();
       const customer = customers.find(c => c.id === Number(saleData.customerId));
       
       if (!product) {
@@ -168,10 +192,54 @@ const SaleForm = ({ showForm, setShowForm, stock, sales }: SaleFormProps) => {
 
         <div>
           <Label>Müşteri</Label>
-          <CustomerSelect
-            value={saleData.customerId}
-            onValueChange={(value) => setSaleData({ ...saleData, customerId: value })}
-          />
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full justify-between"
+                type="button"
+              >
+                {selectedCustomer ? (
+                  <span>{selectedCustomer.name} - {selectedCustomer.phone}</span>
+                ) : (
+                  <span>Müşteri seçin...</span>
+                )}
+                <Search className="ml-2 h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Müşteri Seç</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <Input
+                  placeholder="Müşteri ara..."
+                  value={customerSearch}
+                  onChange={(e) => setCustomerSearch(e.target.value)}
+                />
+                <ScrollArea className="h-[300px]">
+                  <div className="space-y-2">
+                    {filteredCustomers.map((customer) => (
+                      <Button
+                        key={customer.id}
+                        variant="ghost"
+                        className="w-full justify-start"
+                        onClick={() => {
+                          setSaleData(prev => ({ ...prev, customerId: customer.id.toString() }));
+                          setCustomerSearch('');
+                        }}
+                      >
+                        <div className="text-left">
+                          <div>{customer.name}</div>
+                          <div className="text-sm text-muted-foreground">{customer.phone}</div>
+                        </div>
+                      </Button>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
 
         <div className="flex gap-2">
