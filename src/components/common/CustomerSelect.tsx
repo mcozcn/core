@@ -25,12 +25,21 @@ interface CustomerSelectProps {
 const CustomerSelect = ({ value = '', onValueChange }: CustomerSelectProps) => {
   const [open, setOpen] = useState(false);
 
-  const { data: customers = [], isLoading, error } = useQuery({
+  const { data: customers = [], isLoading, error, isError } = useQuery({
     queryKey: ['customers'],
     queryFn: () => {
       console.log('Fetching customers for select');
-      return getCustomers();
+      try {
+        const result = getCustomers();
+        console.log('Fetched customers:', result);
+        return result;
+      } catch (err) {
+        console.error('Error fetching customers:', err);
+        throw err;
+      }
     },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 2,
   });
 
   if (isLoading) {
@@ -42,7 +51,7 @@ const CustomerSelect = ({ value = '', onValueChange }: CustomerSelectProps) => {
     );
   }
 
-  if (error) {
+  if (isError) {
     return (
       <Button variant="outline" className="w-full justify-between text-red-500" disabled>
         <span>Hata oluştu</span>
@@ -66,11 +75,11 @@ const CustomerSelect = ({ value = '', onValueChange }: CustomerSelectProps) => {
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0" align="start">
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
         <Command>
           <CommandInput placeholder="Müşteri ara..." />
           <CommandEmpty>Müşteri bulunamadı.</CommandEmpty>
-          <CommandGroup>
+          <CommandGroup className="max-h-[300px] overflow-y-auto">
             {customers.map((customer) => (
               <CommandItem
                 key={customer.id}
