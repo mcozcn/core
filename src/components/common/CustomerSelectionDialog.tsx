@@ -9,7 +9,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search } from "lucide-react";
+import { Search, User } from "lucide-react";
 import { type Customer } from "@/utils/localStorage";
 
 interface CustomerSelectionDialogProps {
@@ -37,45 +37,64 @@ const CustomerSelectionDialog = ({
       <DialogTrigger asChild>
         <Button
           variant="outline"
-          className="w-full justify-between"
+          className="w-full justify-between bg-white hover:bg-gray-50 border-2 border-gray-200"
           type="button"
         >
           {selectedCustomer ? (
-            <span>{selectedCustomer.name} - {selectedCustomer.phone}</span>
+            <div className="flex items-center gap-2 text-left">
+              <User className="h-4 w-4 text-primary" />
+              <div>
+                <div className="font-medium">{selectedCustomer.name}</div>
+                <div className="text-sm text-muted-foreground">{selectedCustomer.phone}</div>
+              </div>
+            </div>
           ) : (
-            <span>Müşteri seçin...</span>
+            <span className="text-muted-foreground">Müşteri seçin...</span>
           )}
-          <Search className="ml-2 h-4 w-4" />
+          <Search className="ml-2 h-4 w-4 text-muted-foreground" />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Müşteri Seç</DialogTitle>
+          <DialogTitle className="text-xl font-serif">Müşteri Seç</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <Input
-            placeholder="Müşteri ara..."
-            value={customerSearch}
-            onChange={(e) => setCustomerSearch(e.target.value)}
-          />
-          <ScrollArea className="h-[300px]">
+          <div className="relative">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="İsim veya telefon ile ara..."
+              value={customerSearch}
+              onChange={(e) => setCustomerSearch(e.target.value)}
+              className="pl-9 bg-accent/50"
+            />
+          </div>
+          <ScrollArea className="h-[300px] rounded-md border border-input bg-accent/30 p-2">
             <div className="space-y-2">
-              {filteredCustomers.map((customer) => (
-                <Button
-                  key={customer.id}
-                  variant="ghost"
-                  className="w-full justify-start"
-                  onClick={() => {
-                    onCustomerSelect(customer.id.toString());
-                    setCustomerSearch('');
-                  }}
-                >
-                  <div className="text-left">
-                    <div>{customer.name}</div>
-                    <div className="text-sm text-muted-foreground">{customer.phone}</div>
-                  </div>
-                </Button>
-              ))}
+              {filteredCustomers.length === 0 ? (
+                <div className="text-center py-4 text-muted-foreground">
+                  Müşteri bulunamadı
+                </div>
+              ) : (
+                filteredCustomers.map((customer) => (
+                  <Button
+                    key={customer.id}
+                    variant="ghost"
+                    className="w-full justify-start hover:bg-accent transition-all duration-200"
+                    onClick={() => {
+                      onCustomerSelect(customer.id.toString());
+                      setCustomerSearch('');
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <User className="h-4 w-4 text-primary" />
+                      <div className="text-left">
+                        <div className="font-medium">{customer.name}</div>
+                        <div className="text-sm text-muted-foreground">{customer.phone}</div>
+                      </div>
+                    </div>
+                  </Button>
+                ))
+              )}
             </div>
           </ScrollArea>
         </div>
