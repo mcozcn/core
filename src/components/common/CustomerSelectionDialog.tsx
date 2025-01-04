@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, User } from "lucide-react";
@@ -27,13 +28,25 @@ const CustomerSelectionDialog = ({
   setCustomerSearch,
   onCustomerSelect,
 }: CustomerSelectionDialogProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [tempSelectedCustomerId, setTempSelectedCustomerId] = useState<string | null>(null);
+
   const filteredCustomers = customers.filter(customer => 
     customer.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
     customer.phone.includes(customerSearch)
   );
 
+  const handleConfirm = () => {
+    if (tempSelectedCustomerId) {
+      onCustomerSelect(tempSelectedCustomerId);
+      setIsOpen(false);
+      setCustomerSearch('');
+      setTempSelectedCustomerId(null);
+    }
+  };
+
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button
           variant="outline"
@@ -79,10 +92,11 @@ const CustomerSelectionDialog = ({
                   <Button
                     key={customer.id}
                     variant="ghost"
-                    className="w-full justify-start hover:bg-accent transition-all duration-200"
+                    className={`w-full justify-start hover:bg-accent transition-all duration-200 ${
+                      tempSelectedCustomerId === customer.id.toString() ? 'bg-accent' : ''
+                    }`}
                     onClick={() => {
-                      onCustomerSelect(customer.id.toString());
-                      setCustomerSearch('');
+                      setTempSelectedCustomerId(customer.id.toString());
                     }}
                   >
                     <div className="flex items-center gap-3">
@@ -98,6 +112,26 @@ const CustomerSelectionDialog = ({
             </div>
           </ScrollArea>
         </div>
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setIsOpen(false);
+              setTempSelectedCustomerId(null);
+              setCustomerSearch('');
+            }}
+          >
+            İptal
+          </Button>
+          <Button
+            type="button"
+            onClick={handleConfirm}
+            disabled={!tempSelectedCustomerId}
+          >
+            Tamam
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
