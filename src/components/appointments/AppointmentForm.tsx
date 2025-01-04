@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -7,15 +7,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { getAppointments, setAppointments, type Appointment, getCustomers, getServices } from "@/utils/localStorage";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Search } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import CustomerSelectionDialog from '../common/CustomerSelectionDialog';
 
 interface AppointmentFormProps {
   selectedDate: Date;
@@ -41,11 +33,6 @@ const AppointmentForm = ({ selectedDate, onSuccess, onCancel }: AppointmentFormP
     queryKey: ['customers'],
     queryFn: getCustomers,
   });
-
-  const filteredCustomers = customers.filter(customer => 
-    customer.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
-    customer.phone.includes(customerSearch)
-  );
 
   const selectedCustomer = customers.find(c => c.id.toString() === customerId);
 
@@ -106,54 +93,13 @@ const AppointmentForm = ({ selectedDate, onSuccess, onCancel }: AppointmentFormP
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <Label>Müşteri</Label>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-full justify-between"
-                type="button"
-              >
-                {selectedCustomer ? (
-                  <span>{selectedCustomer.name} - {selectedCustomer.phone}</span>
-                ) : (
-                  <span>Müşteri seçin...</span>
-                )}
-                <Search className="ml-2 h-4 w-4" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>Müşteri Seç</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <Input
-                  placeholder="Müşteri ara..."
-                  value={customerSearch}
-                  onChange={(e) => setCustomerSearch(e.target.value)}
-                />
-                <ScrollArea className="h-[300px]">
-                  <div className="space-y-2">
-                    {filteredCustomers.map((customer) => (
-                      <Button
-                        key={customer.id}
-                        variant="ghost"
-                        className="w-full justify-start"
-                        onClick={() => {
-                          setCustomerId(customer.id.toString());
-                          setCustomerSearch('');
-                        }}
-                      >
-                        <div className="text-left">
-                          <div>{customer.name}</div>
-                          <div className="text-sm text-muted-foreground">{customer.phone}</div>
-                        </div>
-                      </Button>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <CustomerSelectionDialog
+            customers={customers}
+            selectedCustomer={selectedCustomer}
+            customerSearch={customerSearch}
+            setCustomerSearch={setCustomerSearch}
+            onCustomerSelect={(id) => setCustomerId(id)}
+          />
         </div>
 
         <div>
