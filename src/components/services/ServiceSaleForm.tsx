@@ -5,7 +5,8 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { getServiceSales, setServiceSales, getServices, getCustomers, type Service, type ServiceSale, setCustomerRecords, getCustomerRecords, type CustomerRecord } from "@/utils/localStorage";
-import CustomerSelect from '../common/CustomerSelect';
+import { useQuery } from "@tanstack/react-query";
+import CustomerSelectionDialog from '../common/CustomerSelectionDialog';
 
 interface ServiceSaleFormProps {
   showForm: boolean;
@@ -17,17 +18,27 @@ interface ServiceSaleFormProps {
 const ServiceSaleForm = ({ showForm, setShowForm, services, sales }: ServiceSaleFormProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [customerSearch, setCustomerSearch] = useState('');
   const [saleData, setSaleData] = useState({
     serviceId: '',
     customerId: '',
   });
+
+  const { data: customers = [] } = useQuery({
+    queryKey: ['customers'],
+    queryFn: () => {
+      console.log('Fetching customers for service sale form');
+      return getCustomers();
+    },
+  });
+
+  const selectedCustomer = customers.find(c => c.id.toString() === saleData.customerId);
 
   const handleSale = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
       const service = services.find(item => item.id === Number(saleData.serviceId));
-      const customers = getCustomers();
       const customer = customers.find(c => c.id === Number(saleData.customerId));
       
       if (!service) {
@@ -118,9 +129,12 @@ const ServiceSaleForm = ({ showForm, setShowForm, services, sales }: ServiceSale
 
         <div>
           <Label>Müşteri</Label>
-          <CustomerSelect
-            value={saleData.customerId}
-            onValueChange={(value) => setSaleData({ ...saleData, customerId: value })}
+          <CustomerSelectionDialog
+            customers={customers}
+            selectedCustomer={selectedCustomer}
+            customerSearch={customerSearch}
+            setCustomerSearch={setCustomerSearch}
+            onCustomerSelect={(customerId) => setSaleData(prev => ({ ...prev, customerId }))}
           />
         </div>
 
