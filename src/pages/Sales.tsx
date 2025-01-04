@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
-import { getStock, getServices } from "@/utils/localStorage";
+import { getStock, getServices, getSales, getServiceSales } from "@/utils/localStorage";
 import SaleForm from "@/components/stock/SaleForm";
 import ServiceSaleForm from "@/components/services/ServiceSaleForm";
 import SalesTable from "@/components/stock/SalesTable";
@@ -25,6 +25,22 @@ const Sales = () => {
     queryFn: () => {
       console.log('Fetching services for sales');
       return getServices();
+    },
+  });
+
+  const { data: sales = [] } = useQuery({
+    queryKey: ['sales'],
+    queryFn: () => {
+      console.log('Fetching product sales');
+      return getSales();
+    },
+  });
+
+  const { data: serviceSales = [] } = useQuery({
+    queryKey: ['serviceSales'],
+    queryFn: () => {
+      console.log('Fetching service sales');
+      return getServiceSales();
     },
   });
 
@@ -54,11 +70,11 @@ const Sales = () => {
                 showForm={showProductSaleForm}
                 setShowForm={setShowProductSaleForm}
                 stock={stock}
-                sales={[]}
+                sales={sales}
               />
             )}
 
-            <SalesTable sales={[]} />
+            <SalesTable sales={sales} />
           </Card>
         </TabsContent>
 
@@ -76,11 +92,11 @@ const Sales = () => {
                 showForm={showServiceSaleForm}
                 setShowForm={setShowServiceSaleForm}
                 services={services}
-                sales={[]}
+                sales={serviceSales}
               />
             )}
 
-            <ServiceSalesTable sales={[]} />
+            <ServiceSalesTable sales={serviceSales} />
           </Card>
         </TabsContent>
       </Tabs>

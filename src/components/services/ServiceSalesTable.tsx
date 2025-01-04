@@ -8,6 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { type ServiceSale } from "@/utils/localStorage";
+import { formatCurrency } from '@/utils/format';
 
 interface ServiceSalesTableProps {
   sales: ServiceSale[];
@@ -29,14 +30,14 @@ const ServiceSalesTable = ({ sales }: ServiceSalesTableProps) => {
         {sales.length === 0 ? (
           <TableRow>
             <TableCell colSpan={5} className="text-center text-muted-foreground">
-              Henüz satış kaydı bulunmamaktadır.
+              Henüz hizmet satışı kaydı bulunmamaktadır.
             </TableCell>
           </TableRow>
         ) : (
           sales.map((sale) => (
             <TableRow key={sale.id}>
               <TableCell>{sale.serviceName}</TableCell>
-              <TableCell>{sale.price} ₺</TableCell>
+              <TableCell>{formatCurrency(sale.price)}</TableCell>
               <TableCell>{sale.customerName}</TableCell>
               <TableCell>{sale.customerPhone}</TableCell>
               <TableCell>{new Date(sale.saleDate).toLocaleDateString()}</TableCell>
