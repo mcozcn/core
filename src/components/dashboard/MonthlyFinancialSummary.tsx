@@ -1,14 +1,16 @@
 import React from 'react';
 import { Card } from "@/components/ui/card";
-import { Payment } from '@/utils/localStorage';
+import { Payment, CustomerRecord, Cost } from '@/utils/localStorage';
 import { formatCurrency } from '@/utils/format';
 
 interface MonthlyFinancialSummaryProps {
   payments: Payment[];
+  customerRecords: CustomerRecord[];
+  costs: Cost[];
 }
 
-const MonthlyFinancialSummary = ({ payments }: MonthlyFinancialSummaryProps) => {
-  console.log('MonthlyFinancialSummary received payments:', payments);
+const MonthlyFinancialSummary = ({ payments, customerRecords, costs }: MonthlyFinancialSummaryProps) => {
+  console.log('MonthlyFinancialSummary received data:', { payments, customerRecords, costs });
 
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
@@ -19,15 +21,28 @@ const MonthlyFinancialSummary = ({ payments }: MonthlyFinancialSummaryProps) => 
            paymentDate.getFullYear() === currentYear;
   });
 
-  console.log('Filtered monthly payments:', monthlyPayments);
+  const monthlyRecords = customerRecords.filter(record => {
+    const recordDate = new Date(record.date);
+    return recordDate.getMonth() === currentMonth && 
+           recordDate.getFullYear() === currentYear;
+  });
 
-  const totalCredit = monthlyPayments
-    .filter(p => p.type === 'credit')
-    .reduce((sum, p) => sum + p.amount, 0);
+  const monthlyCosts = costs.filter(cost => {
+    const costDate = new Date(cost.date);
+    return costDate.getMonth() === currentMonth && 
+           costDate.getFullYear() === currentYear;
+  });
 
-  const totalDebit = monthlyPayments
-    .filter(p => p.type === 'debit')
-    .reduce((sum, p) => sum + p.amount, 0);
+  console.log('Filtered monthly data:', { monthlyPayments, monthlyRecords, monthlyCosts });
+
+  // Calculate total income (payments and customer payments)
+  const totalCredit = monthlyRecords
+    .filter(r => r.recordType === 'payment' || (r.recordType === 'debt' && r.isPaid))
+    .reduce((sum, r) => sum + Math.abs(r.amount), 0);
+
+  // Calculate total expenses (costs)
+  const totalDebit = monthlyCosts
+    .reduce((sum, c) => sum + c.amount, 0);
 
   console.log('Calculated totals:', { totalCredit, totalDebit });
 
