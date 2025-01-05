@@ -10,13 +10,21 @@ import { getCustomerRecords, getPayments } from "@/utils/localStorage";
 const DashboardOverview = () => {
   const { data: customerRecords = [] } = useQuery({
     queryKey: ['customerRecords'],
-    queryFn: getCustomerRecords,
+    queryFn: () => {
+      console.log('Fetching customer records');
+      return getCustomerRecords();
+    }
   });
 
   const { data: payments = [] } = useQuery({
     queryKey: ['payments'],
-    queryFn: getPayments,
+    queryFn: () => {
+      console.log('Fetching payments');
+      return getPayments();
+    }
   });
+
+  console.log('Dashboard payments:', payments);
 
   return (
     <div className="space-y-6">
