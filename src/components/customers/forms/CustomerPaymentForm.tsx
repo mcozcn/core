@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useQueryClient } from "@tanstack/react-query";
 import { getCustomerRecords, setCustomerRecords, type CustomerRecord } from '@/utils/localStorage';
 
@@ -15,6 +16,7 @@ interface CustomerPaymentFormProps {
 const CustomerPaymentForm = ({ customerId, onSuccess }: CustomerPaymentFormProps) => {
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'credit'>('cash');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -31,7 +33,8 @@ const CustomerPaymentForm = ({ customerId, onSuccess }: CustomerPaymentFormProps
       date: new Date(),
       isPaid: true,
       description,
-      recordType: 'payment'
+      recordType: 'payment',
+      paymentMethod
     };
 
     console.log('Yeni ödeme kaydı oluşturuluyor:', newRecord);
@@ -42,11 +45,12 @@ const CustomerPaymentForm = ({ customerId, onSuccess }: CustomerPaymentFormProps
 
     toast({
       title: "Ödeme kaydedildi",
-      description: `${amount} ₺ tutarında ödeme kaydedildi.`,
+      description: `${amount} ₺ tutarında ${paymentMethod === 'cash' ? 'nakit' : 'kredi kartı'} ödemesi kaydedildi.`,
     });
 
     setAmount('');
     setDescription('');
+    setPaymentMethod('cash');
 
     if (onSuccess) {
       onSuccess();
@@ -64,6 +68,20 @@ const CustomerPaymentForm = ({ customerId, onSuccess }: CustomerPaymentFormProps
           placeholder="Tutarı girin"
           required
         />
+      </div>
+
+      <div>
+        <Label>Ödeme Yöntemi</Label>
+        <RadioGroup value={paymentMethod} onValueChange={(value: 'cash' | 'credit') => setPaymentMethod(value)} className="flex space-x-4">
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="cash" id="cash" />
+            <Label htmlFor="cash">Nakit</Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="credit" id="credit" />
+            <Label htmlFor="credit">Kredi Kartı</Label>
+          </div>
+        </RadioGroup>
       </div>
 
       <div>

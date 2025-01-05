@@ -101,6 +101,7 @@ export interface CustomerRecord {
   description?: string;
   recordType: 'debt' | 'payment';
   discount?: number;
+  paymentMethod?: 'cash' | 'credit';
 }
 
 export interface Payment {

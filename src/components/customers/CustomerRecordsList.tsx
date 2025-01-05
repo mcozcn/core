@@ -28,6 +28,11 @@ const CustomerRecordsList = ({ searchTerm = '', records }: CustomerRecordsListPr
     record.itemName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const getPaymentMethodText = (record: CustomerRecord) => {
+    if (record.type !== 'payment' || !record.paymentMethod) return '-';
+    return record.paymentMethod === 'cash' ? 'Nakit' : 'Kredi Kartı';
+  };
+
   return (
     <Card>
       <Table>
@@ -36,6 +41,7 @@ const CustomerRecordsList = ({ searchTerm = '', records }: CustomerRecordsListPr
             <TableHead>İşlem</TableHead>
             <TableHead>Tutar</TableHead>
             <TableHead>Tür</TableHead>
+            <TableHead>Ödeme Yöntemi</TableHead>
             <TableHead>Tarih</TableHead>
             <TableHead>Açıklama</TableHead>
           </TableRow>
@@ -43,7 +49,7 @@ const CustomerRecordsList = ({ searchTerm = '', records }: CustomerRecordsListPr
         <TableBody>
           {filteredRecords.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={5} className="text-center text-muted-foreground">
+              <TableCell colSpan={6} className="text-center text-muted-foreground">
                 {searchTerm ? 'Arama sonucu bulunamadı.' : 'Henüz kayıt bulunmamaktadır.'}
               </TableCell>
             </TableRow>
@@ -53,6 +59,7 @@ const CustomerRecordsList = ({ searchTerm = '', records }: CustomerRecordsListPr
                 <TableCell>{record.itemName}</TableCell>
                 <TableCell>{record.amount} ₺</TableCell>
                 <TableCell>{record.type}</TableCell>
+                <TableCell>{getPaymentMethodText(record)}</TableCell>
                 <TableCell>{new Date(record.date).toLocaleDateString('tr-TR')}</TableCell>
                 <TableCell>{record.description || '-'}</TableCell>
               </TableRow>
