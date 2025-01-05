@@ -2,7 +2,7 @@ import React from 'react';
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
-import { getCustomerRecords, getPayments } from "@/utils/localStorage";
+import { getCustomerRecords, getPayments, getCosts } from "@/utils/localStorage";
 import CustomerRecordsList from "@/components/customers/CustomerRecordsList";
 import MonthlyFinancialSummary from "@/components/dashboard/MonthlyFinancialSummary";
 
@@ -17,6 +17,13 @@ const Financial = () => {
     queryFn: getPayments,
   });
 
+  const { data: costs = [] } = useQuery({
+    queryKey: ['costs'],
+    queryFn: getCosts,
+  });
+
+  console.log('Financial page data:', { customerRecords, payments, costs });
+
   return (
     <div className="p-8 pl-72 animate-fadeIn">
       <div className="mb-8">
@@ -24,7 +31,11 @@ const Financial = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-8">
-        <MonthlyFinancialSummary payments={payments} />
+        <MonthlyFinancialSummary 
+          payments={payments} 
+          customerRecords={customerRecords}
+          costs={costs}
+        />
         
         <Card>
           <Tabs defaultValue="all" className="w-full">
