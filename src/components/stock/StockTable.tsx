@@ -9,7 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useQuery } from "@tanstack/react-query";
-import { getProducts, type Product } from "@/utils/localStorage";
+import { getStock, type StockItem } from "@/utils/localStorage";
 import { AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/use-toast";
@@ -18,22 +18,22 @@ interface StockTableProps {
   searchTerm?: string;
 }
 
-const CRITICAL_STOCK_LEVEL = 5; // Kritik stok seviyesi
+const CRITICAL_STOCK_LEVEL = 5;
 
 const StockTable = ({ searchTerm = '' }: StockTableProps) => {
   const { toast } = useToast();
-  const { data: products = [] } = useQuery({
-    queryKey: ['products'],
-    queryFn: getProducts,
+  const { data: stock = [] } = useQuery({
+    queryKey: ['stock'],
+    queryFn: getStock,
   });
 
-  const filteredProducts = products.filter(product =>
+  const filteredProducts = stock.filter(product =>
     product.productName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Kritik stok seviyesindeki ürünler için uyarı göster
   React.useEffect(() => {
-    const lowStockProducts = products.filter(product => product.quantity <= CRITICAL_STOCK_LEVEL);
+    const lowStockProducts = stock.filter(product => product.quantity <= CRITICAL_STOCK_LEVEL);
     if (lowStockProducts.length > 0) {
       toast({
         title: "Kritik Stok Uyarısı!",
@@ -41,7 +41,7 @@ const StockTable = ({ searchTerm = '' }: StockTableProps) => {
         variant: "destructive",
       });
     }
-  }, [products, toast]);
+  }, [stock, toast]);
 
   return (
     <Card>

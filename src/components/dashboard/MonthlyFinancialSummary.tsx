@@ -8,6 +8,8 @@ interface MonthlyFinancialSummaryProps {
 }
 
 const MonthlyFinancialSummary = ({ payments }: MonthlyFinancialSummaryProps) => {
+  console.log('Received payments:', payments); // Debug log
+
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
 
@@ -17,6 +19,8 @@ const MonthlyFinancialSummary = ({ payments }: MonthlyFinancialSummaryProps) => 
            paymentDate.getFullYear() === currentYear;
   });
 
+  console.log('Filtered monthly payments:', monthlyPayments); // Debug log
+
   const totalCredit = monthlyPayments
     .filter(p => p.type === 'credit')
     .reduce((sum, p) => sum + p.amount, 0);
@@ -24,6 +28,8 @@ const MonthlyFinancialSummary = ({ payments }: MonthlyFinancialSummaryProps) => 
   const totalDebit = monthlyPayments
     .filter(p => p.type === 'debit')
     .reduce((sum, p) => sum + p.amount, 0);
+
+  console.log('Calculated totals:', { totalCredit, totalDebit }); // Debug log
 
   return (
     <Card className="p-6">
