@@ -10,6 +10,7 @@ import { addDays } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { RotateCcw } from "lucide-react";
 import { DateRange } from "react-day-picker";
+import { tr } from 'date-fns/locale';
 
 const Financial = () => {
   const [dateRange, setDateRange] = useState<DateRange>({
@@ -70,7 +71,7 @@ const Financial = () => {
       </div>
 
       <div className="flex items-center gap-4 mb-6">
-        <DatePickerWithRange date={dateRange} setDate={setDateRange} />
+        <DatePickerWithRange date={dateRange} setDate={setDateRange} locale={tr} />
         <Button variant="outline" size="icon" onClick={resetDateFilter} title="Filtreyi Sıfırla">
           <RotateCcw className="h-4 w-4" />
         </Button>

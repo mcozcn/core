@@ -1,9 +1,11 @@
 "use client"
 
 import * as React from "react"
-import { format } from "date-fns"
+import { addDays, format } from "date-fns"
 import { Calendar as CalendarIcon } from "lucide-react"
 import { DateRange } from "react-day-picker"
+import { tr } from 'date-fns/locale'
+
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
@@ -15,14 +17,16 @@ import {
 
 interface DatePickerWithRangeProps {
   className?: string
-  date: DateRange
-  setDate: (date: DateRange) => void
+  date: DateRange | undefined
+  setDate: (date: DateRange | undefined) => void
+  locale?: Locale
 }
 
 export function DatePickerWithRange({
   className,
   date,
   setDate,
+  locale = tr,
 }: DatePickerWithRangeProps) {
   return (
     <div className={cn("grid gap-2", className)}>
@@ -40,11 +44,11 @@ export function DatePickerWithRange({
             {date?.from ? (
               date.to ? (
                 <>
-                  {format(date.from, "LLL dd, y")} -{" "}
-                  {format(date.to, "LLL dd, y")}
+                  {format(date.from, "LLL dd, y", { locale })} -{" "}
+                  {format(date.to, "LLL dd, y", { locale })}
                 </>
               ) : (
-                format(date.from, "LLL dd, y")
+                format(date.from, "LLL dd, y", { locale })
               )
             ) : (
               <span>Tarih seçin</span>
@@ -59,6 +63,7 @@ export function DatePickerWithRange({
             selected={date}
             onSelect={setDate}
             numberOfMonths={2}
+            locale={locale}
           />
         </PopoverContent>
       </Popover>

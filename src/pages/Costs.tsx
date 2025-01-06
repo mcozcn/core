@@ -9,14 +9,15 @@ import AddCostForm from "@/components/costs/AddCostForm";
 import CostsTable from "@/components/costs/CostsTable";
 import { useQuery } from "@tanstack/react-query";
 import { getCosts } from "@/utils/localStorage";
+import { tr } from 'date-fns/locale';
 
 const Costs = () => {
-  const [showForm, setShowForm] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange>({
-    from: undefined,
-    to: undefined
+    from: new Date(),
+    to: addDays(new Date(), 7)
   });
-  
+  const [showForm, setShowForm] = useState(false);
+
   const { data: costs = [] } = useQuery({
     queryKey: ['costs'],
     queryFn: getCosts,
@@ -24,20 +25,10 @@ const Costs = () => {
 
   const resetDateFilter = () => {
     setDateRange({
-      from: undefined,
-      to: undefined
+      from: new Date(),
+      to: addDays(new Date(), 7)
     });
   };
-
-  const filteredCosts = costs.filter(cost => {
-    if (!dateRange.from) return true;
-    
-    const costDate = new Date(cost.date);
-    const from = dateRange.from;
-    const to = dateRange.to || from;
-
-    return costDate >= from && costDate <= to;
-  });
 
   return (
     <div className="p-8 pl-72 animate-fadeIn">
@@ -49,7 +40,7 @@ const Costs = () => {
       </div>
 
       <div className="mb-6 flex items-center gap-4">
-        <DatePickerWithRange date={dateRange} setDate={setDateRange} />
+        <DatePickerWithRange date={dateRange} setDate={setDateRange} locale={tr} />
         <Button 
           variant="outline" 
           size="icon" 
@@ -60,15 +51,8 @@ const Costs = () => {
         </Button>
       </div>
 
-      <AddCostForm 
-        showForm={showForm} 
-        setShowForm={setShowForm} 
-        costs={costs}
-      />
-
-      <Card>
-        <CostsTable costs={filteredCosts} />
-      </Card>
+      {showForm && <AddCostForm onSuccess={() => setShowForm(false)} />}
+      <CostsTable costs={costs} />
     </div>
   );
 };
