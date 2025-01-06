@@ -9,12 +9,10 @@ import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { addDays } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { RotateCcw } from "lucide-react";
+import { DateRange } from "react-day-picker";
 
 const Financial = () => {
-  const [dateRange, setDateRange] = useState<{
-    from: Date;
-    to: Date;
-  }>({
+  const [dateRange, setDateRange] = useState<DateRange>({
     from: new Date(),
     to: addDays(new Date(), 7)
   });
@@ -44,17 +42,23 @@ const Financial = () => {
   // Filter records based on date range
   const filteredRecords = customerRecords.filter(record => {
     const recordDate = new Date(record.date);
-    return recordDate >= dateRange.from && recordDate <= dateRange.to;
+    return dateRange.from && dateRange.to && 
+           recordDate >= dateRange.from && 
+           recordDate <= dateRange.to;
   });
 
   const filteredPayments = payments.filter(payment => {
     const paymentDate = new Date(payment.date);
-    return paymentDate >= dateRange.from && paymentDate <= dateRange.to;
+    return dateRange.from && dateRange.to && 
+           paymentDate >= dateRange.from && 
+           paymentDate <= dateRange.to;
   });
 
   const filteredCosts = costs.filter(cost => {
     const costDate = new Date(cost.date);
-    return costDate >= dateRange.from && costDate <= dateRange.to;
+    return dateRange.from && dateRange.to && 
+           costDate >= dateRange.from && 
+           costDate <= dateRange.to;
   });
 
   console.log('Financial page data:', { filteredRecords, filteredPayments, filteredCosts, dateRange });
