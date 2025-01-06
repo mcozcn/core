@@ -51,7 +51,13 @@ const Costs = () => {
         </Button>
       </div>
 
-      {showForm && <AddCostForm onSuccess={() => setShowForm(false)} />}
+      {showForm && (
+        <AddCostForm 
+          showForm={showForm} 
+          setShowForm={setShowForm} 
+          costs={costs}
+        />
+      )}
       <CostsTable costs={costs} />
     </div>
   );
