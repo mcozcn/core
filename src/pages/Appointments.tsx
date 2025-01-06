@@ -3,18 +3,20 @@ import AppointmentCalendar from '@/components/appointments/AppointmentCalendar';
 import AppointmentList from '@/components/appointments/AppointmentList';
 import AppointmentForm from '@/components/appointments/AppointmentForm';
 import SearchInput from '@/components/common/SearchInput';
+import { Button } from '@/components/ui/button';
+import { Sun, Moon } from 'lucide-react';
+import { useTheme } from 'next-themes';
 
 const Appointments = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const { theme, setTheme } = useTheme();
 
   const handleSuccess = () => {
-    // Reset form or update list
     console.log('Appointment created successfully');
   };
 
   const handleCancel = () => {
-    // Handle cancel
     console.log('Appointment creation cancelled');
   };
 
@@ -22,6 +24,19 @@ const Appointments = () => {
     <div className="p-8 pl-72 animate-fadeIn">
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-4xl font-serif">Randevu Yönetimi</h1>
+        <Button
+          variant="outline"
+          size="icon"
+          className="w-10 h-10"
+          onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+        >
+          {theme === 'light' ? (
+            <Moon className="h-5 w-5" />
+          ) : (
+            <Sun className="h-5 w-5" />
+          )}
+          <span className="sr-only">Tema değiştir</span>
+        </Button>
       </div>
 
       <div className="mb-6">
