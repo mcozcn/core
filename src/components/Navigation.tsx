@@ -11,7 +11,7 @@ const Navigation = () => {
     { to: "/services", label: "Hizmetler", icon: Scissors },
     { to: "/stock", label: "Stok Yönetimi", icon: Package },
     { to: "/sales", label: "Satışlar", icon: ShoppingCart },
-    { to: "/costs", label: "Maliyetler", icon: DollarSign },
+    { to: "/costs", label: "Masraflar", icon: DollarSign },
     { to: "/financial", label: "Finansal Takip", icon: CreditCard },
     { to: "/backup", label: "Yedekleme", icon: Database },
   ];
