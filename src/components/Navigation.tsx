@@ -19,8 +19,10 @@ const Navigation = () => {
     { to: "/backup", label: "Yedekleme", icon: Database },
   ];
 
+  console.log('Current theme:', theme); // Tema durumunu kontrol etmek için
+
   return (
-    <nav className="fixed top-0 left-0 h-full w-64 bg-white dark:bg-gray-900 shadow-lg p-6">
+    <nav className="fixed top-0 left-0 h-full w-64 bg-background border-r border-border shadow-lg p-6">
       <div className="mb-4">
         <img 
           src="/lovable-uploads/b98e8cd9-86a0-4af7-b322-84c8d9d63a3d.png" 
@@ -30,17 +32,21 @@ const Navigation = () => {
         <Button
           variant="outline"
           size="icon"
-          className="w-10 h-10 mx-auto mb-4 block"
-          onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+          className="w-10 h-10 mx-auto mb-4 block hover:bg-accent"
+          onClick={() => {
+            const newTheme = theme === 'dark' ? 'light' : 'dark';
+            console.log('Switching theme to:', newTheme); // Tema değişimini kontrol etmek için
+            setTheme(newTheme);
+          }}
         >
-          {theme === 'light' ? (
-            <Moon className="h-5 w-5" />
-          ) : (
+          {theme === 'dark' ? (
             <Sun className="h-5 w-5" />
+          ) : (
+            <Moon className="h-5 w-5" />
           )}
           <span className="sr-only">Tema değiştir</span>
         </Button>
-        <p className="text-sm text-gray-500 dark:text-gray-400 text-center">Salon Yönetimi</p>
+        <p className="text-sm text-muted-foreground text-center">Salon Yönetimi</p>
       </div>
       
       <div className="space-y-2">
@@ -50,8 +56,8 @@ const Navigation = () => {
             to={to}
             className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
               location.pathname === to
-                ? "bg-primary text-white"
-                : "text-gray-600 dark:text-gray-300 hover:bg-accent dark:hover:bg-accent/10"
+                ? "bg-primary text-primary-foreground"
+                : "text-foreground hover:bg-accent hover:text-accent-foreground"
             }`}
           >
             <Icon size={20} />
