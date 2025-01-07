@@ -1,24 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/components/ui/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useQuery } from "@tanstack/react-query";
-import CustomerSelectionDialog from '../common/CustomerSelectionDialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import CustomerSelect from '../common/CustomerSelect';
+import SaleItemSelector from './SaleItemSelector';
+import { Plus } from "lucide-react";
 import {
   getStock,
   getServices,
-  getCustomers,
   getSales,
   getServiceSales,
   setStock,
@@ -32,154 +23,167 @@ import {
   type ServiceSale,
   type CustomerRecord
 } from '@/utils/localStorage';
+import { UnifiedSaleFormData, SaleItem } from './types';
 
-const UnifiedSaleForm = ({ showForm, setShowForm }: { showForm: boolean; setShowForm: (show: boolean) => void }) => {
+interface UnifiedSaleFormProps {
+  showForm: boolean;
+  setShowForm: (show: boolean) => void;
+}
+
+const UnifiedSaleForm = ({ showForm, setShowForm }: UnifiedSaleFormProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [customerSearch, setCustomerSearch] = useState('');
-  const [saleType, setSaleType] = useState<'product' | 'service'>('product');
-  const [saleData, setSaleData] = useState({
-    itemId: '',
-    quantity: '1',
+  const [formData, setFormData] = useState<UnifiedSaleFormData>({
     customerId: '',
-    discount: '0'
+    items: [{ type: 'product', itemId: '', quantity: 1, discount: 0 }]
   });
 
   const { data: stock = [] } = useQuery({
     queryKey: ['stock'],
-    queryFn: getStock,
+    queryFn: getStock
   });
 
   const { data: services = [] } = useQuery({
     queryKey: ['services'],
-    queryFn: getServices,
-  });
-
-  const { data: customers = [] } = useQuery({
-    queryKey: ['customers'],
-    queryFn: () => {
-      console.log('Fetching customers for unified sale form');
-      return getCustomers();
-    },
+    queryFn: getServices
   });
 
   const { data: sales = [] } = useQuery({
     queryKey: ['sales'],
-    queryFn: getSales,
+    queryFn: getSales
   });
 
   const { data: serviceSales = [] } = useQuery({
     queryKey: ['serviceSales'],
-    queryFn: getServiceSales,
+    queryFn: getServiceSales
   });
 
-  const selectedCustomer = customers.find(c => c.id.toString() === saleData.customerId);
+  const handleAddItem = () => {
+    setFormData(prev => ({
+      ...prev,
+      items: [...prev.items, { type: 'product', itemId: '', quantity: 1, discount: 0 }]
+    }));
+  };
+
+  const handleRemoveItem = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      items: prev.items.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleUpdateItem = (index: number, item: SaleItem) => {
+    setFormData(prev => ({
+      ...prev,
+      items: prev.items.map((oldItem, i) => i === index ? item : oldItem)
+    }));
+  };
 
   const handleSale = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
-      if (saleType === 'product') {
-        const product = stock.find(item => item.productId.toString() === saleData.itemId);
-        if (!product) throw new Error("Ürün bulunamadı");
-        if (product.quantity < Number(saleData.quantity)) throw new Error("Yetersiz stok");
+      // Process each item in the sale
+      for (const item of formData.items) {
+        if (item.type === 'product') {
+          const product = stock.find(p => p.productId.toString() === item.itemId);
+          if (!product) throw new Error("Ürün bulunamadı");
+          if (product.quantity < (item.quantity || 0)) throw new Error(`${product.productName} için yetersiz stok`);
 
-        const totalPrice = (product.price * Number(saleData.quantity)) - Number(saleData.discount);
+          const totalPrice = (product.price * (item.quantity || 0)) - item.discount;
 
-        const newSale: Sale = {
-          id: Date.now(),
-          productId: product.productId,
-          productName: product.productName,
-          quantity: Number(saleData.quantity),
-          totalPrice,
-          discount: Number(saleData.discount),
-          customerName: selectedCustomer?.name || '',
-          customerPhone: selectedCustomer?.phone || '',
-          saleDate: new Date(),
-        };
+          // Create product sale record
+          const newSale: Sale = {
+            id: Date.now() + Math.random(), // Ensure unique ID
+            productId: product.productId,
+            productName: product.productName,
+            quantity: item.quantity || 0,
+            totalPrice,
+            discount: item.discount,
+            customerName: '',  // Will be set from customer records
+            customerPhone: '', // Will be set from customer records
+            saleDate: new Date(),
+          };
 
-        // Update stock
-        const updatedStock = stock.map(item =>
-          item.productId === product.productId
-            ? { ...item, quantity: item.quantity - Number(saleData.quantity), lastUpdated: new Date() }
-            : item
-        );
+          // Update stock
+          const updatedStock = stock.map(stockItem =>
+            stockItem.productId === product.productId
+              ? { ...stockItem, quantity: stockItem.quantity - (item.quantity || 0), lastUpdated: new Date() }
+              : stockItem
+          );
 
-        setStock(updatedStock);
-        setSales([...sales, newSale]);
-        queryClient.setQueryData(['stock'], updatedStock);
-        queryClient.setQueryData(['sales'], [...sales, newSale]);
+          setStock(updatedStock);
+          setSales([...sales, newSale]);
+          queryClient.setQueryData(['stock'], updatedStock);
+          queryClient.setQueryData(['sales'], [...sales, newSale]);
 
-        // Add to customer records
-        const newRecord: CustomerRecord = {
-          id: Date.now(),
-          customerId: Number(saleData.customerId),
-          type: 'product',
-          itemId: product.productId,
-          itemName: product.productName,
-          amount: totalPrice,
-          date: new Date(),
-          isPaid: false,
-          description: `Ürün satışı: ${product.productName} (${saleData.quantity} adet)`,
-          recordType: 'debt'
-        };
+          // Add to customer records
+          const newRecord: CustomerRecord = {
+            id: Date.now() + Math.random(),
+            customerId: Number(formData.customerId),
+            type: 'product',
+            itemId: product.productId,
+            itemName: product.productName,
+            amount: totalPrice,
+            date: new Date(),
+            isPaid: false,
+            description: `Ürün satışı: ${product.productName} (${item.quantity} adet)`,
+            recordType: 'debt'
+          };
 
-        const existingRecords = getCustomerRecords();
-        setCustomerRecords([...existingRecords, newRecord]);
-        queryClient.invalidateQueries({ queryKey: ['customerRecords'] });
+          const existingRecords = getCustomerRecords();
+          setCustomerRecords([...existingRecords, newRecord]);
+          queryClient.invalidateQueries({ queryKey: ['customerRecords'] });
 
-        toast({
-          title: "Satış başarılı",
-          description: `${product.productName} satışı gerçekleştirildi.`,
-        });
-      } else {
-        const service = services.find(item => item.id.toString() === saleData.itemId);
-        if (!service) throw new Error("Hizmet bulunamadı");
+        } else {
+          const service = services.find(s => s.id.toString() === item.itemId);
+          if (!service) throw new Error("Hizmet bulunamadı");
 
-        const newSale: ServiceSale = {
-          id: Date.now(),
-          serviceId: service.id,
-          serviceName: service.name,
-          price: service.price - Number(saleData.discount),
-          customerName: selectedCustomer?.name || '',
-          customerPhone: selectedCustomer?.phone || '',
-          saleDate: new Date(),
-        };
+          // Create service sale record
+          const newServiceSale: ServiceSale = {
+            id: Date.now() + Math.random(),
+            serviceId: service.id,
+            serviceName: service.name,
+            price: service.price - item.discount,
+            customerName: '',  // Will be set from customer records
+            customerPhone: '', // Will be set from customer records
+            saleDate: new Date(),
+          };
 
-        setServiceSales([...serviceSales, newSale]);
-        queryClient.setQueryData(['serviceSales'], [...serviceSales, newSale]);
+          setServiceSales([...serviceSales, newServiceSale]);
+          queryClient.setQueryData(['serviceSales'], [...serviceSales, newServiceSale]);
 
-        // Add to customer records
-        const newRecord: CustomerRecord = {
-          id: Date.now(),
-          customerId: Number(saleData.customerId),
-          type: 'service',
-          itemId: service.id,
-          itemName: service.name,
-          amount: service.price - Number(saleData.discount),
-          date: new Date(),
-          isPaid: false,
-          description: `Hizmet satışı: ${service.name}`,
-          recordType: 'debt'
-        };
+          // Add to customer records
+          const newRecord: CustomerRecord = {
+            id: Date.now() + Math.random(),
+            customerId: Number(formData.customerId),
+            type: 'service',
+            itemId: service.id,
+            itemName: service.name,
+            amount: service.price - item.discount,
+            date: new Date(),
+            isPaid: false,
+            description: `Hizmet satışı: ${service.name}`,
+            recordType: 'debt'
+          };
 
-        const existingRecords = getCustomerRecords();
-        setCustomerRecords([...existingRecords, newRecord]);
-        queryClient.invalidateQueries({ queryKey: ['customerRecords'] });
-
-        toast({
-          title: "Satış başarılı",
-          description: `${service.name} satışı gerçekleştirildi.`,
-        });
+          const existingRecords = getCustomerRecords();
+          setCustomerRecords([...existingRecords, newRecord]);
+          queryClient.invalidateQueries({ queryKey: ['customerRecords'] });
+        }
       }
 
-      setSaleData({
-        itemId: '',
-        quantity: '1',
+      toast({
+        title: "Satış başarılı",
+        description: "Tüm satışlar başarıyla kaydedildi.",
+      });
+
+      setFormData({
         customerId: '',
-        discount: '0'
+        items: [{ type: 'product', itemId: '', quantity: 1, discount: 0 }]
       });
       setShowForm(false);
+
     } catch (error) {
       console.error('Error processing sale:', error);
       toast({
@@ -192,94 +196,38 @@ const UnifiedSaleForm = ({ showForm, setShowForm }: { showForm: boolean; setShow
 
   if (!showForm) return null;
 
-  const items = saleType === 'product' ? stock : services;
-
   return (
     <Card className="p-6 mb-8">
       <form onSubmit={handleSale} className="space-y-4">
         <div>
-          <Label>Satış Türü</Label>
-          <RadioGroup
-            value={saleType}
-            onValueChange={(value) => {
-              setSaleType(value as 'product' | 'service');
-              setSaleData(prev => ({ ...prev, itemId: '', quantity: '1' }));
-            }}
-            className="flex space-x-4"
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="product" id="product" />
-              <Label htmlFor="product">Ürün</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="service" id="service" />
-              <Label htmlFor="service">Hizmet</Label>
-            </div>
-          </RadioGroup>
-        </div>
-
-        <div>
-          <Label>Müşteri</Label>
-          <CustomerSelectionDialog
-            customers={customers}
-            selectedCustomer={selectedCustomer}
-            customerSearch={customerSearch}
-            setCustomerSearch={setCustomerSearch}
-            onCustomerSelect={(customerId) => setSaleData(prev => ({ ...prev, customerId }))}
+          <CustomerSelect
+            value={formData.customerId}
+            onValueChange={(value) => setFormData(prev => ({ ...prev, customerId: value }))}
           />
         </div>
 
-        <div>
-          <Label>{saleType === 'product' ? 'Ürün' : 'Hizmet'}</Label>
-          <Select
-            value={saleData.itemId}
-            onValueChange={(value) => setSaleData({ ...saleData, itemId: value })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={saleType === 'product' ? 'Ürün seçin' : 'Hizmet seçin'} />
-            </SelectTrigger>
-            <SelectContent>
-              {saleType === 'product' ? (
-                stock.map((item) => (
-                  <SelectItem key={item.productId} value={item.productId.toString()}>
-                    {item.productName} - Stok: {item.quantity} - {item.price} ₺
-                  </SelectItem>
-                ))
-              ) : (
-                services.map((service) => (
-                  <SelectItem key={service.id} value={service.id.toString()}>
-                    {service.name} - {service.price} ₺
-                  </SelectItem>
-                ))
-              )}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {saleType === 'product' && (
-          <div>
-            <Label>Miktar</Label>
-            <Input
-              type="number"
-              value={saleData.quantity}
-              onChange={(e) => setSaleData({ ...saleData, quantity: e.target.value })}
-              placeholder="Satış miktarını girin"
-              min="1"
-              required
+        <div className="space-y-4">
+          {formData.items.map((item, index) => (
+            <SaleItemSelector
+              key={index}
+              item={item}
+              index={index}
+              stock={stock}
+              services={services}
+              onUpdate={handleUpdateItem}
+              onRemove={handleRemoveItem}
             />
-          </div>
-        )}
-
-        <div>
-          <Label>İndirim Tutarı (₺)</Label>
-          <Input
-            type="number"
-            value={saleData.discount}
-            onChange={(e) => setSaleData({ ...saleData, discount: e.target.value })}
-            placeholder="İndirim tutarını girin"
-            min="0"
-          />
+          ))}
         </div>
+
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleAddItem}
+          className="w-full"
+        >
+          <Plus className="mr-2 h-4 w-4" /> Yeni Ürün/Hizmet Ekle
+        </Button>
 
         <div className="flex gap-2">
           <Button type="submit" className="flex-1">
