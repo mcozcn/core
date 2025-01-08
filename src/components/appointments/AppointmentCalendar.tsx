@@ -11,13 +11,13 @@ interface AppointmentCalendarProps {
 
 const AppointmentCalendar = ({ selectedDate, onSelect }: AppointmentCalendarProps) => {
   return (
-    <Card className="p-4 bg-accent/50 dark:bg-accent/10">
+    <Card className="p-4 bg-accent/50 dark:bg-accent/10 w-full h-full flex items-center justify-center">
       <Calendar
         mode="single"
         selected={selectedDate}
         onSelect={onSelect}
         disabled={(date) => date < addDays(new Date(), -1)}
-        className="rounded-md border dark:border-accent"
+        className="rounded-md border dark:border-accent w-full max-w-[350px]"
         locale={tr}
       />
     </Card>
