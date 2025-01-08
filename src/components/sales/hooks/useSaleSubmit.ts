@@ -62,18 +62,18 @@ export const useSaleSubmit = (onSuccess: () => void) => {
           queryClient.setQueryData(['stock'], updatedStock);
           queryClient.setQueryData(['sales'], [...sales, newSale]);
 
-          // Add to customer records
+          // Add to customer records with explicit type
           const newRecord = {
             id: Date.now() + Math.random(),
             customerId: Number(formData.customerId),
-            type: 'product',
+            type: 'product' as const,
             itemId: product.productId,
             itemName: product.productName,
             amount: totalPrice,
             date: new Date(),
             isPaid: false,
             description: `Ürün satışı: ${product.productName} (${item.quantity} adet)`,
-            recordType: 'debt'
+            recordType: 'debt' as const
           };
 
           setCustomerRecords([...existingRecords, newRecord]);
@@ -102,18 +102,18 @@ export const useSaleSubmit = (onSuccess: () => void) => {
           setServiceSales([...serviceSales, newServiceSale]);
           queryClient.setQueryData(['serviceSales'], [...serviceSales, newServiceSale]);
 
-          // Add to customer records
+          // Add to customer records with explicit type
           const newRecord = {
             id: Date.now() + Math.random(),
             customerId: Number(formData.customerId),
-            type: 'service',
+            type: 'service' as const,
             itemId: service.id,
             itemName: service.name,
             amount: service.price - item.discount,
             date: new Date(),
             isPaid: false,
             description: `Hizmet satışı: ${service.name}`,
-            recordType: 'debt'
+            recordType: 'debt' as const
           };
 
           setCustomerRecords([...existingRecords, newRecord]);
