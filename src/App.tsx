@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useEffect } from "react";
 import Navigation from "./components/Navigation";
 import Dashboard from "./pages/Dashboard";
 import Customers from "./pages/Customers";
@@ -16,27 +17,33 @@ import Backup from "./pages/Backup";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Navigation />
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/customers" element={<Customers />} />
-          <Route path="/appointments" element={<Appointments />} />
-          <Route path="/services" element={<Services />} />
-          <Route path="/stock" element={<Stock />} />
-          <Route path="/sales" element={<Sales />} />
-          <Route path="/costs" element={<Costs />} />
-          <Route path="/financial" element={<Financial />} />
-          <Route path="/backup" element={<Backup />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  useEffect(() => {
+    document.documentElement.classList.add('dark');
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Navigation />
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/customers" element={<Customers />} />
+            <Route path="/appointments" element={<Appointments />} />
+            <Route path="/services" element={<Services />} />
+            <Route path="/stock" element={<Stock />} />
+            <Route path="/sales" element={<Sales />} />
+            <Route path="/costs" element={<Costs />} />
+            <Route path="/financial" element={<Financial />} />
+            <Route path="/backup" element={<Backup />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
