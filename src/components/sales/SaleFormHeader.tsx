@@ -1,5 +1,7 @@
 import React from 'react';
-import CustomerSelect from '../common/CustomerSelect';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useQuery } from "@tanstack/react-query";
+import { getCustomers } from "@/utils/localStorage";
 
 interface SaleFormHeaderProps {
   customerId: string;
@@ -7,12 +9,26 @@ interface SaleFormHeaderProps {
 }
 
 const SaleFormHeader = ({ customerId, onCustomerChange }: SaleFormHeaderProps) => {
+  const { data: customers = [] } = useQuery({
+    queryKey: ['customers'],
+    queryFn: getCustomers,
+    initialData: [],
+  });
+
   return (
-    <div>
-      <CustomerSelect
-        value={customerId}
-        onValueChange={onCustomerChange}
-      />
+    <div className="space-y-2">
+      <Select value={customerId} onValueChange={onCustomerChange}>
+        <SelectTrigger>
+          <SelectValue placeholder="Müşteri seçin" />
+        </SelectTrigger>
+        <SelectContent>
+          {customers.map((customer) => (
+            <SelectItem key={customer.id} value={customer.id.toString()}>
+              {customer.name} - {customer.phone}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 };

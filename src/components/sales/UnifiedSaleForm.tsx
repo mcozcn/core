@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import CustomerSelect from '../common/CustomerSelect';
+import SaleFormHeader from './SaleFormHeader';
 import SaleItemSelector from './SaleItemSelector';
 import { useSaleSubmit } from './hooks/useSaleSubmit';
 import { SaleFormProps, UnifiedSaleFormData } from './types';
@@ -47,12 +47,10 @@ const UnifiedSaleForm = ({ showForm, setShowForm }: SaleFormProps) => {
   return (
     <Card className="p-6 mb-8">
       <form onSubmit={(e) => { e.preventDefault(); handleSubmit(formData); }} className="space-y-4">
-        <div>
-          <CustomerSelect
-            value={formData.customerId}
-            onValueChange={(value) => setFormData(prev => ({ ...prev, customerId: value }))}
-          />
-        </div>
+        <SaleFormHeader
+          customerId={formData.customerId}
+          onCustomerChange={(value) => setFormData(prev => ({ ...prev, customerId: value }))}
+        />
 
         <div className="space-y-4">
           {formData.items.map((item, index) => (
