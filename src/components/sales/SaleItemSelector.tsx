@@ -1,34 +1,25 @@
 import React from 'react';
-import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
+import { getStock, getServices } from "@/utils/localStorage";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { SaleItem } from './types';
-import { StockItem, Service } from '@/utils/localStorage';
+import { Button } from "@/components/ui/button";
+import { SaleItemSelectorProps } from './types';
 
-interface SaleItemSelectorProps {
-  item: SaleItem;
-  index: number;
-  stock: StockItem[];
-  services: Service[];
-  onUpdate: (index: number, item: SaleItem) => void;
-  onRemove: (index: number) => void;
-}
+const SaleItemSelector = ({ item, index, onUpdate, onRemove }: SaleItemSelectorProps) => {
+  const { data: stock = [] } = useQuery({
+    queryKey: ['stock'],
+    queryFn: getStock,
+    initialData: [],
+  });
 
-const SaleItemSelector = ({
-  item,
-  index,
-  stock,
-  services,
-  onUpdate,
-  onRemove
-}: SaleItemSelectorProps) => {
+  const { data: services = [] } = useQuery({
+    queryKey: ['services'],
+    queryFn: getServices,
+    initialData: [],
+  });
+
   const items = item.type === 'product' ? stock : services;
 
   return (
