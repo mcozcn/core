@@ -35,7 +35,7 @@ const CustomerSelect = ({ value = '', onValueChange }: CustomerSelectProps) => {
         return result || []; // Ensure we always return an array
       } catch (err) {
         console.error('Error fetching customers:', err);
-        throw err;
+        return []; // Return empty array on error instead of throwing
       }
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -62,7 +62,7 @@ const CustomerSelect = ({ value = '', onValueChange }: CustomerSelectProps) => {
     );
   }
 
-  const selectedCustomer = customers.find(customer => customer.id.toString() === value);
+  const selectedCustomer = customers?.find(customer => customer.id.toString() === value);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -82,7 +82,7 @@ const CustomerSelect = ({ value = '', onValueChange }: CustomerSelectProps) => {
           <CommandInput placeholder="Müşteri ara..." />
           <CommandEmpty>Müşteri bulunamadı.</CommandEmpty>
           <CommandGroup className="max-h-[300px] overflow-y-auto">
-            {Array.isArray(customers) && customers.map((customer) => (
+            {(customers || []).map((customer) => (
               <CommandItem
                 key={customer.id}
                 value={customer.name}
