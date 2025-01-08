@@ -27,21 +27,21 @@ const CustomerSelect = ({ value = '', onValueChange }: CustomerSelectProps) => {
 
   const { data: customers = [], isLoading, error } = useQuery({
     queryKey: ['customers'],
-    queryFn: () => {
+    queryFn: async () => {
       console.log('Fetching customers for select');
       try {
-        const result = getCustomers();
+        const result = await getCustomers();
         console.log('Fetched customers:', result);
-        return result || []; // Ensure we always return an array
+        return result || [];
       } catch (err) {
         console.error('Error fetching customers:', err);
-        return []; // Return empty array on error instead of throwing
+        return [];
       }
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    retry: 2,
-    initialData: [], // Provide initial empty array
+    initialData: [], // Ensure we always have an array
   });
+
+  const selectedCustomer = customers.find(customer => customer.id.toString() === value);
 
   if (isLoading) {
     return (
@@ -62,8 +62,6 @@ const CustomerSelect = ({ value = '', onValueChange }: CustomerSelectProps) => {
     );
   }
 
-  const selectedCustomer = customers?.find(customer => customer.id.toString() === value);
-
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -82,7 +80,7 @@ const CustomerSelect = ({ value = '', onValueChange }: CustomerSelectProps) => {
           <CommandInput placeholder="Müşteri ara..." />
           <CommandEmpty>Müşteri bulunamadı.</CommandEmpty>
           <CommandGroup className="max-h-[300px] overflow-y-auto">
-            {(customers || []).map((customer) => (
+            {customers.map((customer) => (
               <CommandItem
                 key={customer.id}
                 value={customer.name}

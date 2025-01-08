@@ -40,22 +40,26 @@ const UnifiedSaleForm = ({ showForm, setShowForm }: UnifiedSaleFormProps) => {
 
   const { data: stock = [] } = useQuery({
     queryKey: ['stock'],
-    queryFn: getStock
+    queryFn: getStock,
+    initialData: [],
   });
 
   const { data: services = [] } = useQuery({
     queryKey: ['services'],
-    queryFn: getServices
+    queryFn: getServices,
+    initialData: [],
   });
 
   const { data: sales = [] } = useQuery({
     queryKey: ['sales'],
-    queryFn: getSales
+    queryFn: getSales,
+    initialData: [],
   });
 
   const { data: serviceSales = [] } = useQuery({
     queryKey: ['serviceSales'],
-    queryFn: getServiceSales
+    queryFn: getServiceSales,
+    initialData: [],
   });
 
   const handleAddItem = () => {
@@ -81,6 +85,7 @@ const UnifiedSaleForm = ({ showForm, setShowForm }: UnifiedSaleFormProps) => {
 
   const handleSale = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Processing sale with data:', formData);
 
     try {
       // Process each item in the sale
