@@ -27,6 +27,7 @@ export const useSaleSubmit = (onSuccess: () => void) => {
       const sales = getSales();
       const serviceSales = getServiceSales();
       const existingRecords = getCustomerRecords();
+      const newRecords = [];
 
       // Process each item in the sale
       for (const item of formData.items) {
@@ -76,8 +77,7 @@ export const useSaleSubmit = (onSuccess: () => void) => {
             recordType: 'debt' as const
           };
 
-          setCustomerRecords([...existingRecords, newRecord]);
-          queryClient.invalidateQueries({ queryKey: ['customerRecords'] });
+          newRecords.push(newRecord);
 
         } else {
           const services = await queryClient.fetchQuery({
@@ -116,10 +116,13 @@ export const useSaleSubmit = (onSuccess: () => void) => {
             recordType: 'debt' as const
           };
 
-          setCustomerRecords([...existingRecords, newRecord]);
-          queryClient.invalidateQueries({ queryKey: ['customerRecords'] });
+          newRecords.push(newRecord);
         }
       }
+
+      // Tüm kayıtları bir kerede ekle
+      setCustomerRecords([...existingRecords, ...newRecords]);
+      queryClient.invalidateQueries({ queryKey: ['customerRecords'] });
 
       toast({
         title: "Satış başarılı",
