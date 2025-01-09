@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
@@ -77,12 +77,6 @@ const Financial = () => {
     return recordDate >= dateRange.from && recordDate <= dateRange.to;
   });
 
-  const filteredPayments = payments.filter(payment => {
-    if (!dateRange.from || !dateRange.to) return true;
-    const paymentDate = new Date(payment.date);
-    return paymentDate >= dateRange.from && paymentDate <= dateRange.to;
-  });
-
   const filteredCosts = costs.filter(cost => {
     if (!dateRange.from || !dateRange.to) return true;
     const costDate = new Date(cost.date);
@@ -91,11 +85,9 @@ const Financial = () => {
 
   console.log('Financial page data:', { 
     filteredRecords, 
-    filteredPayments, 
     filteredCosts,
     dateRange,
     totalRecords: customerRecords.length,
-    totalPayments: payments.length,
     totalCosts: costs.length
   });
 
@@ -129,7 +121,6 @@ const Financial = () => {
 
       <div className="grid grid-cols-1 gap-8">
         <MonthlyFinancialSummary 
-          payments={filteredPayments} 
           customerRecords={filteredRecords}
           costs={filteredCosts}
         />

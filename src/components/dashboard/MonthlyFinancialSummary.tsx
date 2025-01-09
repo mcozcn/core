@@ -1,15 +1,13 @@
-import React from 'react';
+import { formatCurrency } from "@/utils/format";
 import { Card } from "@/components/ui/card";
-import { Payment, CustomerRecord, Cost } from '@/utils/localStorage';
-import { formatCurrency } from '@/utils/format';
+import { CustomerRecord, Cost } from '@/utils/localStorage';
 
 interface MonthlyFinancialSummaryProps {
-  payments: Payment[];
   customerRecords: CustomerRecord[];
   costs: Cost[];
 }
 
-const MonthlyFinancialSummary = ({ payments, customerRecords, costs }: MonthlyFinancialSummaryProps) => {
+const MonthlyFinancialSummary = ({ customerRecords, costs }: MonthlyFinancialSummaryProps) => {
   // Toplam tahsilat hesaplama (ödemeler)
   const totalPayments = customerRecords
     .filter(r => r.type === 'payment')
@@ -28,7 +26,6 @@ const MonthlyFinancialSummary = ({ payments, customerRecords, costs }: MonthlyFi
     totalCosts,
     totalDebts,
     recordsCount: customerRecords.length,
-    paymentsCount: payments.length,
     costsCount: costs.length
   });
 
