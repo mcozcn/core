@@ -138,7 +138,7 @@ const Financial = () => {
             <TabsList className="w-full justify-start">
               <TabsTrigger value="all">Tüm Kayıtlar</TabsTrigger>
               <TabsTrigger value="payments">Tahsilatlar</TabsTrigger>
-              <TabsTrigger value="costs">Masraflar</TabsTrigger>
+              <TabsTrigger value="debts">Borçlar</TabsTrigger>
             </TabsList>
 
             <TabsContent value="all">
@@ -151,9 +151,11 @@ const Financial = () => {
               />
             </TabsContent>
 
-            <TabsContent value="costs">
+            <TabsContent value="debts">
               <CustomerRecordsList 
-                records={filteredRecords.filter(record => record.type === 'cost')} 
+                records={filteredRecords.filter(record => 
+                  record.type === 'service' || record.type === 'product'
+                )} 
               />
             </TabsContent>
           </Tabs>
