@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { RotateCcw } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import { tr } from 'date-fns/locale';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 const Financial = () => {
   const [dateRange, setDateRange] = useState<DateRange>({
@@ -25,36 +25,42 @@ const Financial = () => {
   const { data: customerRecords = [], isLoading: isLoadingRecords } = useQuery({
     queryKey: ['customerRecords'],
     queryFn: getCustomerRecords,
-    onError: () => {
-      toast({
-        variant: "destructive",
-        title: "Hata",
-        description: "Müşteri kayıtları yüklenirken bir hata oluştu.",
-      });
+    meta: {
+      onError: () => {
+        toast({
+          variant: "destructive",
+          title: "Hata",
+          description: "Müşteri kayıtları yüklenirken bir hata oluştu.",
+        });
+      }
     }
   });
 
   const { data: payments = [], isLoading: isLoadingPayments } = useQuery({
     queryKey: ['payments'],
     queryFn: getPayments,
-    onError: () => {
-      toast({
-        variant: "destructive",
-        title: "Hata",
-        description: "Ödeme kayıtları yüklenirken bir hata oluştu.",
-      });
+    meta: {
+      onError: () => {
+        toast({
+          variant: "destructive",
+          title: "Hata",
+          description: "Ödeme kayıtları yüklenirken bir hata oluştu.",
+        });
+      }
     }
   });
 
   const { data: costs = [], isLoading: isLoadingCosts } = useQuery({
     queryKey: ['costs'],
     queryFn: getCosts,
-    onError: () => {
-      toast({
-        variant: "destructive",
-        title: "Hata",
-        description: "Masraf kayıtları yüklenirken bir hata oluştu.",
-      });
+    meta: {
+      onError: () => {
+        toast({
+          variant: "destructive",
+          title: "Hata",
+          description: "Masraf kayıtları yüklenirken bir hata oluştu.",
+        });
+      }
     }
   });
 
