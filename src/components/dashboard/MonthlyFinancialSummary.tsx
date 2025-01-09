@@ -10,34 +10,40 @@ interface MonthlyFinancialSummaryProps {
 }
 
 const MonthlyFinancialSummary = ({ payments, customerRecords, costs }: MonthlyFinancialSummaryProps) => {
-  console.log('MonthlyFinancialSummary received data:', { payments, customerRecords, costs });
-
-  // Toplam gelir hesaplama (ödemeler ve müşteri ödemeleri)
+  // Toplam tahsilat hesaplama
   const totalCredit = customerRecords
-    .filter(r => r.recordType === 'payment' || (r.recordType === 'debt' && r.isPaid))
-    .reduce((sum, r) => sum + Math.abs(r.amount), 0);
+    .filter(r => r.type === 'payment')
+    .reduce((sum, r) => sum + r.amount, 0);
 
-  // Toplam gider hesaplama
+  // Toplam masraf hesaplama
   const totalDebit = costs.reduce((sum, c) => sum + c.amount, 0);
 
-  console.log('Calculated totals:', { totalCredit, totalDebit });
+  console.log('MonthlyFinancialSummary calculations:', {
+    totalCredit,
+    totalDebit,
+    recordsCount: customerRecords.length,
+    paymentsCount: payments.length,
+    costsCount: costs.length
+  });
 
   return (
     <Card className="p-6">
       <h2 className="text-xl font-serif mb-4">Finansal Özet</h2>
-      <div className="space-y-4">
-        <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-          <span className="font-medium">Toplam Tahsilat</span>
-          <span className="text-green-600 font-semibold">{formatCurrency(totalCredit)}</span>
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="flex flex-col p-4 bg-green-50 rounded-lg">
+          <span className="text-sm text-green-600 mb-1">Toplam Tahsilat</span>
+          <span className="text-2xl font-semibold text-green-700">{formatCurrency(totalCredit)}</span>
         </div>
-        <div className="flex justify-between items-center p-3 bg-red-50 rounded-lg">
-          <span className="font-medium">Toplam Gider</span>
-          <span className="text-red-600 font-semibold">{formatCurrency(totalDebit)}</span>
+        
+        <div className="flex flex-col p-4 bg-red-50 rounded-lg">
+          <span className="text-sm text-red-600 mb-1">Toplam Gider</span>
+          <span className="text-2xl font-semibold text-red-700">{formatCurrency(totalDebit)}</span>
         </div>
-        <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-          <span className="font-medium">Net Durum</span>
-          <span className={`font-semibold ${
-            totalCredit - totalDebit >= 0 ? 'text-green-600' : 'text-red-600'
+        
+        <div className="flex flex-col p-4 bg-blue-50 rounded-lg">
+          <span className="text-sm text-blue-600 mb-1">Net Durum</span>
+          <span className={`text-2xl font-semibold ${
+            totalCredit - totalDebit >= 0 ? 'text-green-700' : 'text-red-700'
           }`}>
             {formatCurrency(totalCredit - totalDebit)}
           </span>

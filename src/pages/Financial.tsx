@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { getCustomerRecords, getPayments, getCosts } from "@/utils/localStorage";
 import CustomerRecordsList from "@/components/customers/CustomerRecordsList";
 import MonthlyFinancialSummary from "@/components/dashboard/MonthlyFinancialSummary";
@@ -19,9 +19,7 @@ const Financial = () => {
     to: addDays(new Date(), 7)
   });
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
-  // Verileri çekmek için useQuery kullanımı
   const { data: customerRecords = [], isLoading: isLoadingRecords } = useQuery({
     queryKey: ['customerRecords'],
     queryFn: getCustomerRecords,
@@ -93,7 +91,7 @@ const Financial = () => {
   console.log('Financial page data:', { 
     filteredRecords, 
     filteredPayments, 
-    filteredCosts, 
+    filteredCosts,
     dateRange,
     totalRecords: customerRecords.length,
     totalPayments: payments.length,
@@ -135,27 +133,27 @@ const Financial = () => {
           costs={filteredCosts}
         />
         
-        <Card>
+        <Card className="p-4">
           <Tabs defaultValue="all" className="w-full">
             <TabsList className="w-full justify-start">
               <TabsTrigger value="all">Tüm Kayıtlar</TabsTrigger>
-              <TabsTrigger value="unpaid">Ödenmemiş</TabsTrigger>
-              <TabsTrigger value="paid">Ödenmiş</TabsTrigger>
+              <TabsTrigger value="payments">Tahsilatlar</TabsTrigger>
+              <TabsTrigger value="costs">Masraflar</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="all" className="p-4">
+            <TabsContent value="all">
               <CustomerRecordsList records={filteredRecords} />
             </TabsContent>
 
-            <TabsContent value="unpaid" className="p-4">
+            <TabsContent value="payments">
               <CustomerRecordsList 
-                records={filteredRecords.filter(record => !record.isPaid)} 
+                records={filteredRecords.filter(record => record.type === 'payment')} 
               />
             </TabsContent>
 
-            <TabsContent value="paid" className="p-4">
+            <TabsContent value="costs">
               <CustomerRecordsList 
-                records={filteredRecords.filter(record => record.isPaid)} 
+                records={filteredRecords.filter(record => record.type === 'cost')} 
               />
             </TabsContent>
           </Tabs>

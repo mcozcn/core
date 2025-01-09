@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import { useQuery } from "@tanstack/react-query";
 import { getCustomerRecords, type CustomerRecord } from '@/utils/localStorage';
+import { formatCurrency } from '@/utils/format';
 
 interface CustomerRecordsListProps {
   searchTerm?: string;
@@ -32,6 +33,12 @@ const CustomerRecordsList = ({ searchTerm = '', records }: CustomerRecordsListPr
     if (record.type !== 'payment' || !record.paymentMethod) return '-';
     return record.paymentMethod === 'cash' ? 'Nakit' : 'Kredi Kartı';
   };
+
+  console.log('CustomerRecordsList:', {
+    recordsCount: recordsToUse.length,
+    filteredCount: filteredRecords.length,
+    searchTerm
+  });
 
   return (
     <Card>
@@ -57,7 +64,7 @@ const CustomerRecordsList = ({ searchTerm = '', records }: CustomerRecordsListPr
             filteredRecords.map((record) => (
               <TableRow key={record.id}>
                 <TableCell>{record.itemName}</TableCell>
-                <TableCell>{record.amount} ₺</TableCell>
+                <TableCell>{formatCurrency(record.amount)}</TableCell>
                 <TableCell>{record.type}</TableCell>
                 <TableCell>{getPaymentMethodText(record)}</TableCell>
                 <TableCell>{new Date(record.date).toLocaleDateString('tr-TR')}</TableCell>
