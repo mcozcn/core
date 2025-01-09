@@ -16,14 +16,6 @@ const DashboardOverview = () => {
     }
   });
 
-  const { data: payments = [] } = useQuery({
-    queryKey: ['payments'],
-    queryFn: () => {
-      console.log('Fetching payments');
-      return getPayments();
-    }
-  });
-
   const { data: costs = [] } = useQuery({
     queryKey: ['costs'],
     queryFn: () => {
@@ -32,14 +24,13 @@ const DashboardOverview = () => {
     }
   });
 
-  console.log('Dashboard data:', { payments, customerRecords, costs });
+  console.log('Dashboard data:', { customerRecords, costs });
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <UpcomingPayments records={customerRecords} />
         <MonthlyFinancialSummary 
-          payments={payments} 
           customerRecords={customerRecords}
           costs={costs}
         />
