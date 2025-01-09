@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getCustomerRecords, getPayments, getCosts } from "@/utils/localStorage";
 import CustomerRecordsList from "@/components/customers/CustomerRecordsList";
 import MonthlyFinancialSummary from "@/components/dashboard/MonthlyFinancialSummary";
@@ -11,26 +11,51 @@ import { Button } from "@/components/ui/button";
 import { RotateCcw } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import { tr } from 'date-fns/locale';
+import { useToast } from "@/components/ui/use-toast";
 
 const Financial = () => {
   const [dateRange, setDateRange] = useState<DateRange>({
     from: new Date(),
     to: addDays(new Date(), 7)
   });
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const { data: customerRecords = [] } = useQuery({
+  // Verileri çekmek için useQuery kullanımı
+  const { data: customerRecords = [], isLoading: isLoadingRecords } = useQuery({
     queryKey: ['customerRecords'],
     queryFn: getCustomerRecords,
+    onError: () => {
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Müşteri kayıtları yüklenirken bir hata oluştu.",
+      });
+    }
   });
 
-  const { data: payments = [] } = useQuery({
+  const { data: payments = [], isLoading: isLoadingPayments } = useQuery({
     queryKey: ['payments'],
     queryFn: getPayments,
+    onError: () => {
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Ödeme kayıtları yüklenirken bir hata oluştu.",
+      });
+    }
   });
 
-  const { data: costs = [] } = useQuery({
+  const { data: costs = [], isLoading: isLoadingCosts } = useQuery({
     queryKey: ['costs'],
     queryFn: getCosts,
+    onError: () => {
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Masraf kayıtları yüklenirken bir hata oluştu.",
+      });
+    }
   });
 
   const resetDateFilter = () => {
@@ -40,29 +65,44 @@ const Financial = () => {
     });
   };
 
-  // Filter records based on date range
+  // Tarih aralığına göre kayıtları filtreleme
   const filteredRecords = customerRecords.filter(record => {
+    if (!dateRange.from || !dateRange.to) return true;
     const recordDate = new Date(record.date);
-    return dateRange.from && dateRange.to && 
-           recordDate >= dateRange.from && 
-           recordDate <= dateRange.to;
+    return recordDate >= dateRange.from && recordDate <= dateRange.to;
   });
 
   const filteredPayments = payments.filter(payment => {
+    if (!dateRange.from || !dateRange.to) return true;
     const paymentDate = new Date(payment.date);
-    return dateRange.from && dateRange.to && 
-           paymentDate >= dateRange.from && 
-           paymentDate <= dateRange.to;
+    return paymentDate >= dateRange.from && paymentDate <= dateRange.to;
   });
 
   const filteredCosts = costs.filter(cost => {
+    if (!dateRange.from || !dateRange.to) return true;
     const costDate = new Date(cost.date);
-    return dateRange.from && dateRange.to && 
-           costDate >= dateRange.from && 
-           costDate <= dateRange.to;
+    return costDate >= dateRange.from && costDate <= dateRange.to;
   });
 
-  console.log('Financial page data:', { filteredRecords, filteredPayments, filteredCosts, dateRange });
+  console.log('Financial page data:', { 
+    filteredRecords, 
+    filteredPayments, 
+    filteredCosts, 
+    dateRange,
+    totalRecords: customerRecords.length,
+    totalPayments: payments.length,
+    totalCosts: costs.length
+  });
+
+  if (isLoadingRecords || isLoadingPayments || isLoadingCosts) {
+    return (
+      <div className="p-8 pl-72 animate-fadeIn">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg text-muted-foreground">Yükleniyor...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8 pl-72 animate-fadeIn">
@@ -72,7 +112,12 @@ const Financial = () => {
 
       <div className="flex items-center gap-4 mb-6">
         <DatePickerWithRange date={dateRange} setDate={setDateRange} locale={tr} />
-        <Button variant="outline" size="icon" onClick={resetDateFilter} title="Filtreyi Sıfırla">
+        <Button 
+          variant="outline" 
+          size="icon" 
+          onClick={resetDateFilter} 
+          title="Filtreyi Sıfırla"
+        >
           <RotateCcw className="h-4 w-4" />
         </Button>
       </div>
@@ -86,23 +131,23 @@ const Financial = () => {
         
         <Card>
           <Tabs defaultValue="all" className="w-full">
-            <TabsList>
+            <TabsList className="w-full justify-start">
               <TabsTrigger value="all">Tüm Kayıtlar</TabsTrigger>
               <TabsTrigger value="unpaid">Ödenmemiş</TabsTrigger>
               <TabsTrigger value="paid">Ödenmiş</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="all">
+            <TabsContent value="all" className="p-4">
               <CustomerRecordsList records={filteredRecords} />
             </TabsContent>
 
-            <TabsContent value="unpaid">
+            <TabsContent value="unpaid" className="p-4">
               <CustomerRecordsList 
                 records={filteredRecords.filter(record => !record.isPaid)} 
               />
             </TabsContent>
 
-            <TabsContent value="paid">
+            <TabsContent value="paid" className="p-4">
               <CustomerRecordsList 
                 records={filteredRecords.filter(record => record.isPaid)} 
               />
