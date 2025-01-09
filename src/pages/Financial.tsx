@@ -12,6 +12,7 @@ import { RotateCcw } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import { tr } from 'date-fns/locale';
 import { useToast } from "@/hooks/use-toast";
+import CostsTable from "@/components/costs/CostsTable";
 
 const Financial = () => {
   const [dateRange, setDateRange] = useState<DateRange>({
@@ -138,7 +139,7 @@ const Financial = () => {
             <TabsList className="w-full justify-start">
               <TabsTrigger value="all">Tüm Kayıtlar</TabsTrigger>
               <TabsTrigger value="payments">Tahsilatlar</TabsTrigger>
-              <TabsTrigger value="debts">Borçlar</TabsTrigger>
+              <TabsTrigger value="costs">Masraflar</TabsTrigger>
             </TabsList>
 
             <TabsContent value="all">
@@ -151,12 +152,8 @@ const Financial = () => {
               />
             </TabsContent>
 
-            <TabsContent value="debts">
-              <CustomerRecordsList 
-                records={filteredRecords.filter(record => 
-                  record.type === 'service' || record.type === 'product'
-                )} 
-              />
+            <TabsContent value="costs">
+              <CostsTable costs={filteredCosts} />
             </TabsContent>
           </Tabs>
         </Card>
