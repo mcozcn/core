@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Calendar, Users, Scissors, BarChart3, Package, DollarSign, CreditCard, ShoppingCart, Database, LogOut } from "lucide-react";
-import { logout, getCurrentUser } from "@/utils/auth";
+import { Calendar, Users, Scissors, BarChart3, Package, DollarSign, CreditCard, ShoppingCart, Database, LogOut, UserCog } from "lucide-react";
+import { logout, getCurrentUser, hasAccess } from "@/utils/auth";
 import { useToast } from "@/components/ui/use-toast";
 
 const Navigation = () => {
@@ -20,6 +20,11 @@ const Navigation = () => {
     { to: "/financial", label: "Finansal Takip", icon: CreditCard },
     { to: "/backup", label: "Yedekleme", icon: Database },
   ];
+
+  // Admin için kullanıcı yönetimi linki
+  if (currentUser?.role === 'admin') {
+    links.push({ to: "/user-management", label: "Kullanıcı Yönetimi", icon: UserCog });
+  }
 
   const handleLogout = () => {
     logout();
@@ -48,18 +53,20 @@ const Navigation = () => {
       
       <div className="space-y-2">
         {links.map(({ to, label, icon: Icon }) => (
-          <Link
-            key={to}
-            to={to}
-            className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-              location.pathname === to
-                ? "bg-primary text-primary-foreground"
-                : "text-foreground hover:bg-accent hover:text-accent-foreground"
-            }`}
-          >
-            <Icon size={20} />
-            <span>{label}</span>
-          </Link>
+          hasAccess(to.replace('/', '') || 'dashboard') && (
+            <Link
+              key={to}
+              to={to}
+              className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                location.pathname === to
+                  ? "bg-primary text-primary-foreground"
+                  : "text-foreground hover:bg-accent hover:text-accent-foreground"
+              }`}
+            >
+              <Icon size={20} />
+              <span>{label}</span>
+            </Link>
+          )
         ))}
       </div>
 

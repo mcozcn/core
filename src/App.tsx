@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { getCurrentUser } from "./utils/auth";
+import { getCurrentUser, hasAccess } from "./utils/auth";
 import Navigation from "./components/Navigation";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -15,14 +15,19 @@ import Sales from "./pages/Sales";
 import Costs from "./pages/Costs";
 import Financial from "./pages/Financial";
 import Backup from "./pages/Backup";
+import UserManagement from "./pages/UserManagement";
 
 const queryClient = new QueryClient();
 
-const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
+const PrivateRoute = ({ children, page }: { children: React.ReactNode; page: string }) => {
   const user = getCurrentUser();
   
   if (!user) {
     return <Navigate to="/login" />;
+  }
+
+  if (!hasAccess(page)) {
+    return <Navigate to="/" />;
   }
   
   return <>{children}</>;
@@ -40,7 +45,7 @@ const App = () => (
           <Route
             path="/"
             element={
-              <PrivateRoute>
+              <PrivateRoute page="dashboard">
                 <>
                   <Navigation />
                   <Dashboard />
@@ -52,7 +57,7 @@ const App = () => (
           <Route
             path="/customers"
             element={
-              <PrivateRoute>
+              <PrivateRoute page="customers">
                 <>
                   <Navigation />
                   <Customers />
@@ -64,7 +69,7 @@ const App = () => (
           <Route
             path="/appointments"
             element={
-              <PrivateRoute>
+              <PrivateRoute page="appointments">
                 <>
                   <Navigation />
                   <Appointments />
@@ -76,7 +81,7 @@ const App = () => (
           <Route
             path="/services"
             element={
-              <PrivateRoute>
+              <PrivateRoute page="services">
                 <>
                   <Navigation />
                   <Services />
@@ -88,7 +93,7 @@ const App = () => (
           <Route
             path="/stock"
             element={
-              <PrivateRoute>
+              <PrivateRoute page="stock">
                 <>
                   <Navigation />
                   <Stock />
@@ -100,7 +105,7 @@ const App = () => (
           <Route
             path="/sales"
             element={
-              <PrivateRoute>
+              <PrivateRoute page="sales">
                 <>
                   <Navigation />
                   <Sales />
@@ -112,7 +117,7 @@ const App = () => (
           <Route
             path="/costs"
             element={
-              <PrivateRoute>
+              <PrivateRoute page="costs">
                 <>
                   <Navigation />
                   <Costs />
@@ -124,7 +129,7 @@ const App = () => (
           <Route
             path="/financial"
             element={
-              <PrivateRoute>
+              <PrivateRoute page="financial">
                 <>
                   <Navigation />
                   <Financial />
@@ -136,10 +141,22 @@ const App = () => (
           <Route
             path="/backup"
             element={
-              <PrivateRoute>
+              <PrivateRoute page="backup">
                 <>
                   <Navigation />
                   <Backup />
+                </>
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/user-management"
+            element={
+              <PrivateRoute page="user-management">
+                <>
+                  <Navigation />
+                  <UserManagement />
                 </>
               </PrivateRoute>
             }

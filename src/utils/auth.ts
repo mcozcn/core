@@ -5,6 +5,7 @@ export interface User {
   username: string;
   password: string;
   role: UserRole;
+  allowedPages?: string[];
 }
 
 export interface AuthState {
@@ -14,7 +15,6 @@ export interface AuthState {
 
 const STORAGE_KEY = 'auth_state';
 
-// Başlangıç durumu - varsayılan admin kullanıcısı
 const initialState: AuthState = {
   currentUser: null,
   users: [
@@ -22,7 +22,8 @@ const initialState: AuthState = {
       id: 1,
       username: 'admin',
       password: 'admin123',
-      role: 'admin'
+      role: 'admin',
+      allowedPages: ['dashboard', 'appointments', 'customers', 'services', 'stock', 'sales', 'costs', 'financial', 'backup', 'user-management']
     }
   ]
 };
@@ -66,7 +67,8 @@ export const register = (username: string, password: string, role: UserRole = 'u
     id: state.users.length + 1,
     username,
     password,
-    role
+    role,
+    allowedPages: ['dashboard']
   };
   
   state.users.push(newUser);
@@ -78,9 +80,9 @@ export const getCurrentUser = (): User | null => {
   return getAuthState().currentUser;
 };
 
-export const hasAccess = (requiredRole: UserRole): boolean => {
+export const hasAccess = (page: string): boolean => {
   const currentUser = getCurrentUser();
   if (!currentUser) return false;
   if (currentUser.role === 'admin') return true;
-  return currentUser.role === requiredRole;
+  return currentUser.allowedPages?.includes(page) || false;
 };
