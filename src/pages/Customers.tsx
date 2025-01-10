@@ -33,7 +33,7 @@ const Customers = () => {
 
   return (
     <div className="p-8 pl-72 animate-fadeIn">
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-8 sticky top-0 z-10 bg-background pt-4 pb-4 flex items-center justify-between">
         <h1 className="text-4xl font-serif">Müşteri İşlemleri</h1>
         {!selectedCustomerId && !showAddForm && (
           <Button onClick={() => setShowAddForm(true)}>
