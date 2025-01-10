@@ -11,6 +11,7 @@ import {
   setServiceSales,
   getCustomerRecords,
   setCustomerRecords,
+  getCustomers,
 } from '@/utils/localStorage';
 
 export const useSaleSubmit = (onSuccess: () => void) => {
@@ -27,7 +28,13 @@ export const useSaleSubmit = (onSuccess: () => void) => {
       const sales = getSales();
       const serviceSales = getServiceSales();
       const existingRecords = getCustomerRecords();
+      const customers = getCustomers();
+      const customer = customers.find(c => c.id === Number(formData.customerId));
       const newRecords = [];
+
+      if (!customer) {
+        throw new Error("Müşteri bulunamadı");
+      }
 
       // Process each item in the sale
       for (const item of formData.items) {
@@ -46,8 +53,8 @@ export const useSaleSubmit = (onSuccess: () => void) => {
             quantity: item.quantity || 0,
             totalPrice,
             discount: item.discount,
-            customerName: '',
-            customerPhone: '',
+            customerName: customer.name,
+            customerPhone: customer.phone,
             saleDate: new Date(),
           };
 
@@ -63,10 +70,11 @@ export const useSaleSubmit = (onSuccess: () => void) => {
           queryClient.setQueryData(['stock'], updatedStock);
           queryClient.setQueryData(['sales'], [...sales, newSale]);
 
-          // Add to customer records with explicit type
+          // Add to customer records with detailed information
           const newRecord = {
             id: Date.now() + Math.random(),
             customerId: Number(formData.customerId),
+            customerName: customer.name,
             type: 'product' as const,
             itemId: product.productId,
             itemName: product.productName,
@@ -74,7 +82,9 @@ export const useSaleSubmit = (onSuccess: () => void) => {
             date: new Date(),
             isPaid: false,
             description: `Ürün satışı: ${product.productName} (${item.quantity} adet)`,
-            recordType: 'debt' as const
+            recordType: 'debt' as const,
+            discount: item.discount,
+            quantity: item.quantity
           };
 
           newRecords.push(newRecord);
@@ -88,41 +98,47 @@ export const useSaleSubmit = (onSuccess: () => void) => {
           const service = services.find(s => s.id.toString() === item.itemId);
           if (!service) throw new Error("Hizmet bulunamadı");
 
+          const totalPrice = service.price - item.discount;
+
           // Create service sale record
           const newServiceSale = {
             id: Date.now() + Math.random(),
             serviceId: service.id,
             serviceName: service.name,
-            price: service.price - item.discount,
-            customerName: '',
-            customerPhone: '',
+            price: totalPrice,
+            customerName: customer.name,
+            customerPhone: customer.phone,
             saleDate: new Date(),
           };
 
           setServiceSales([...serviceSales, newServiceSale]);
           queryClient.setQueryData(['serviceSales'], [...serviceSales, newServiceSale]);
 
-          // Add to customer records with explicit type
+          // Add to customer records with detailed information
           const newRecord = {
             id: Date.now() + Math.random(),
             customerId: Number(formData.customerId),
+            customerName: customer.name,
             type: 'service' as const,
             itemId: service.id,
             itemName: service.name,
-            amount: service.price - item.discount,
+            amount: totalPrice,
             date: new Date(),
             isPaid: false,
             description: `Hizmet satışı: ${service.name}`,
-            recordType: 'debt' as const
+            recordType: 'debt' as const,
+            discount: item.discount
           };
 
           newRecords.push(newRecord);
         }
       }
 
-      // Tüm kayıtları bir kerede ekle
+      // Add all records at once
       setCustomerRecords([...existingRecords, ...newRecords]);
       queryClient.invalidateQueries({ queryKey: ['customerRecords'] });
+
+      console.log('New records added:', newRecords);
 
       toast({
         title: "Satış başarılı",

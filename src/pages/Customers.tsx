@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getCustomers, getCustomerRecords } from "@/utils/localStorage";
 import SearchInput from '@/components/common/SearchInput';
@@ -10,10 +11,12 @@ import CustomerDebtForm from '@/components/customers/forms/CustomerDebtForm';
 import CustomerPaymentForm from '@/components/customers/forms/CustomerPaymentForm';
 import CustomerRecordsList from '@/components/customers/CustomerRecordsList';
 import { cn } from "@/lib/utils";
+import { Plus } from "lucide-react";
 
 const Customers = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
+  const [showAddForm, setShowAddForm] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: customers = [] } = useQuery({
@@ -32,6 +35,11 @@ const Customers = () => {
     <div className="p-8 pl-72 animate-fadeIn">
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-4xl font-serif">Müşteri İşlemleri</h1>
+        {!selectedCustomerId && !showAddForm && (
+          <Button onClick={() => setShowAddForm(true)}>
+            <Plus className="mr-2 h-4 w-4" /> Yeni Müşteri
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -54,7 +62,10 @@ const Customers = () => {
                 .map((customer) => (
                   <div
                     key={customer.id}
-                    onClick={() => setSelectedCustomerId(customer.id)}
+                    onClick={() => {
+                      setSelectedCustomerId(customer.id);
+                      setShowAddForm(false);
+                    }}
                     className={cn(
                       "p-3 rounded-lg cursor-pointer transition-colors",
                       selectedCustomerId === customer.id
@@ -71,7 +82,14 @@ const Customers = () => {
         </div>
 
         <div className="lg:col-span-2">
-          {selectedCustomer ? (
+          {showAddForm ? (
+            <Card className="p-6">
+              <AddCustomerForm onSuccess={() => {
+                queryClient.invalidateQueries({ queryKey: ['customers'] });
+                setShowAddForm(false);
+              }} />
+            </Card>
+          ) : selectedCustomer ? (
             <div className="space-y-6">
               <CustomerDetails 
                 customerId={selectedCustomer.id}
@@ -113,9 +131,9 @@ const Customers = () => {
               </Tabs>
             </div>
           ) : (
-            <Card className="p-6">
-              <AddCustomerForm onSuccess={() => queryClient.invalidateQueries({ queryKey: ['customers'] })} />
-            </Card>
+            <div className="text-center text-muted-foreground py-8">
+              Lütfen bir müşteri seçin veya yeni müşteri ekleyin
+            </div>
           )}
         </div>
       </div>
