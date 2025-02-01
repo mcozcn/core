@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
-import { addDays, format, startOfWeek, eachHourOfInterval, setHours, setMinutes } from "date-fns";
+import { addDays, format, startOfWeek, eachHourOfInterval, setHours, setMinutes, getHours } from "date-fns";
 import { tr } from 'date-fns/locale';
 import { getCurrentUser, getAuthState } from "@/utils/auth";
 
