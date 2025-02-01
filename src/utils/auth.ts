@@ -6,6 +6,12 @@ export interface User {
   password: string;
   role: UserRole;
   allowedPages?: string[];
+  displayName?: string;
+  color?: string;
+  canEdit?: boolean;
+  canDelete?: boolean;
+  createdAt: Date;
+  createdBy?: number;
 }
 
 export interface AuthState {
@@ -23,6 +29,10 @@ const initialState: AuthState = {
       username: 'admin',
       password: 'admin123',
       role: 'admin',
+      displayName: 'Admin',
+      canEdit: true,
+      canDelete: true,
+      createdAt: new Date(),
       allowedPages: ['dashboard', 'appointments', 'customers', 'services', 'stock', 'sales', 'costs', 'financial', 'backup', 'user-management']
     }
   ]
@@ -56,8 +66,16 @@ export const logout = (): void => {
   setAuthState(state);
 };
 
-export const register = (username: string, password: string, role: UserRole = 'user'): User | null => {
+export const register = (
+  username: string, 
+  password: string, 
+  role: UserRole = 'user',
+  displayName?: string,
+  color?: string,
+  allowedPages: string[] = ['dashboard']
+): User | null => {
   const state = getAuthState();
+  const currentUser = getCurrentUser();
   
   if (state.users.some(u => u.username === username)) {
     return null;
@@ -68,7 +86,13 @@ export const register = (username: string, password: string, role: UserRole = 'u
     username,
     password,
     role,
-    allowedPages: ['dashboard']
+    displayName,
+    color,
+    canEdit: false,
+    canDelete: false,
+    createdAt: new Date(),
+    createdBy: currentUser?.id,
+    allowedPages
   };
   
   state.users.push(newUser);
@@ -85,4 +109,29 @@ export const hasAccess = (page: string): boolean => {
   if (!currentUser) return false;
   if (currentUser.role === 'admin') return true;
   return currentUser.allowedPages?.includes(page) || false;
+};
+
+export const hasPermission = (permission: 'edit' | 'delete'): boolean => {
+  const currentUser = getCurrentUser();
+  if (!currentUser) return false;
+  if (currentUser.role === 'admin') return true;
+  return permission === 'edit' ? currentUser.canEdit || false : currentUser.canDelete || false;
+};
+
+export const updateUserPermissions = (
+  userId: number, 
+  updates: Partial<Pick<User, 'allowedPages' | 'canEdit' | 'canDelete' | 'color'>>
+): boolean => {
+  const state = getAuthState();
+  const userIndex = state.users.findIndex(u => u.id === userId);
+  
+  if (userIndex === -1) return false;
+  
+  state.users[userIndex] = {
+    ...state.users[userIndex],
+    ...updates
+  };
+  
+  setAuthState(state);
+  return true;
 };
