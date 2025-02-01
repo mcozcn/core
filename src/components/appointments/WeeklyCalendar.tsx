@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { addDays, format, startOfWeek, eachHourOfInterval, setHours, setMinutes, getHours } from "date-fns";
 import { tr } from 'date-fns/locale';
@@ -8,12 +8,12 @@ interface Appointment {
   id: number;
   customerId: number;
   customerName: string;
-  date: Date;
-  services: string[];
-  notes?: string;
-  userId: number;
+  date: string;
+  time: string;
+  service: string;
   status: 'active' | 'cancelled';
-  cancellationReason?: string;
+  cancellationNote?: string;
+  createdAt: Date;
 }
 
 interface WeeklyCalendarProps {
@@ -24,13 +24,11 @@ const WeeklyCalendar = ({ appointments }: WeeklyCalendarProps) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const users = getAuthState().users;
 
-  // İş saatleri aralığını oluştur (09:00-19:00)
   const workingHours = eachHourOfInterval({
     start: setHours(setMinutes(new Date(), 0), 9),
     end: setHours(setMinutes(new Date(), 0), 19),
   });
 
-  // Haftanın günlerini oluştur
   const weekDays = Array.from({ length: 7 }, (_, i) => 
     addDays(startOfWeek(selectedDate, { locale: tr }), i)
   );
@@ -38,7 +36,6 @@ const WeeklyCalendar = ({ appointments }: WeeklyCalendarProps) => {
   return (
     <Card className="p-4 overflow-auto">
       <div className="min-w-[800px]">
-        {/* Başlık satırı - Günler */}
         <div className="grid grid-cols-8 gap-2 mb-4">
           <div className="font-semibold text-center">Saat</div>
           {weekDays.map((day) => (
@@ -50,7 +47,6 @@ const WeeklyCalendar = ({ appointments }: WeeklyCalendarProps) => {
           ))}
         </div>
 
-        {/* Saat satırları */}
         {workingHours.map((hour) => (
           <div key={hour.toString()} className="grid grid-cols-8 gap-2 mb-2">
             <div className="text-center py-2 text-sm">
@@ -58,8 +54,10 @@ const WeeklyCalendar = ({ appointments }: WeeklyCalendarProps) => {
             </div>
             {weekDays.map((day) => {
               const dayAppointments = appointments.filter(apt => {
-                const aptDate = new Date(apt.date);
-                return format(aptDate, 'yyyy-MM-dd HH') === format(setHours(day, getHours(hour)), 'yyyy-MM-dd HH');
+                const aptHour = apt.time.split(':')[0];
+                const currentHour = format(hour, 'HH');
+                return format(new Date(apt.date), 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd') &&
+                       aptHour === currentHour;
               });
 
               return (
@@ -68,15 +66,16 @@ const WeeklyCalendar = ({ appointments }: WeeklyCalendarProps) => {
                   className="min-h-[60px] border rounded-md p-1"
                 >
                   {dayAppointments.map((apt) => {
-                    const user = users.find(u => u.id === apt.userId);
+                    const user = users.find(u => u.id === apt.customerId);
                     return (
                       <div
                         key={apt.id}
-                        className="text-xs p-1 mb-1 rounded"
+                        className={`text-xs p-1 mb-1 rounded ${apt.status === 'cancelled' ? 'opacity-50' : ''}`}
                         style={{
                           backgroundColor: user?.color || '#gray',
                           color: 'white'
                         }}
+                        title={apt.status === 'cancelled' ? `İptal Nedeni: ${apt.cancellationNote || 'Belirtilmedi'}` : undefined}
                       >
                         {apt.customerName}
                         {apt.status === 'cancelled' && ' (İptal)'}
