@@ -18,6 +18,7 @@ export interface Appointment {
   service: string;
   status: 'pending' | 'confirmed' | 'cancelled';
   note?: string;
+  cancellationNote?: string;
   createdAt: Date;
 }
 

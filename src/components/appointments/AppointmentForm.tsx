@@ -60,7 +60,7 @@ const AppointmentForm = ({ selectedDate, onSuccess, onCancel }: AppointmentFormP
         date: selectedDate.toISOString().split('T')[0],
         time: appointmentTime,
         service: service.name,
-        status: 'active',
+        status: 'pending',
         createdAt: new Date(),
       };
       

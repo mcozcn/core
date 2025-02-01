@@ -55,7 +55,7 @@ const AppointmentList = ({ searchTerm = '' }: AppointmentListProps) => {
       if (apt.id === selectedAppointment.id) {
         return {
           ...apt,
-          status: 'cancelled',
+          status: 'cancelled' as const,
           cancellationNote,
         };
       }
