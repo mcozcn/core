@@ -25,13 +25,28 @@ const CustomerRecordsList = ({ searchTerm = '', records }: CustomerRecordsListPr
 
   const recordsToUse = records || fetchedRecords;
   
-  const filteredRecords = recordsToUse.filter(record =>
-    record.itemName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredRecords = recordsToUse
+    .filter(record =>
+      record.itemName.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const getPaymentMethodText = (record: CustomerRecord) => {
     if (record.type !== 'payment' || !record.paymentMethod) return '-';
     return record.paymentMethod === 'cash' ? 'Nakit' : 'Kredi Kartı';
+  };
+
+  const getRecordTypeText = (record: CustomerRecord) => {
+    switch (record.type) {
+      case 'payment':
+        return 'Ödeme';
+      case 'service':
+        return 'Hizmet';
+      case 'product':
+        return 'Ürün';
+      default:
+        return record.type;
+    }
   };
 
   console.log('CustomerRecordsList:', {
@@ -65,7 +80,7 @@ const CustomerRecordsList = ({ searchTerm = '', records }: CustomerRecordsListPr
               <TableRow key={record.id}>
                 <TableCell>{record.itemName}</TableCell>
                 <TableCell>{formatCurrency(record.amount)}</TableCell>
-                <TableCell>{record.type}</TableCell>
+                <TableCell>{getRecordTypeText(record)}</TableCell>
                 <TableCell>{getPaymentMethodText(record)}</TableCell>
                 <TableCell>{new Date(record.date).toLocaleDateString('tr-TR')}</TableCell>
                 <TableCell>{record.description || '-'}</TableCell>
