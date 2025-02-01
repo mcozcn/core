@@ -27,7 +27,8 @@ const CustomerRecordsList = ({ searchTerm = '', records }: CustomerRecordsListPr
   
   const filteredRecords = recordsToUse
     .filter(record =>
-      record.itemName.toLowerCase().includes(searchTerm.toLowerCase())
+      record.itemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      record.description?.toLowerCase().includes(searchTerm.toLowerCase())
     )
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
@@ -47,6 +48,13 @@ const CustomerRecordsList = ({ searchTerm = '', records }: CustomerRecordsListPr
       default:
         return record.type;
     }
+  };
+
+  const getAmountClass = (record: CustomerRecord) => {
+    if (record.type === 'payment') {
+      return 'text-green-600 font-medium';
+    }
+    return 'text-red-600 font-medium';
   };
 
   console.log('CustomerRecordsList:', {
@@ -79,7 +87,9 @@ const CustomerRecordsList = ({ searchTerm = '', records }: CustomerRecordsListPr
             filteredRecords.map((record) => (
               <TableRow key={record.id}>
                 <TableCell>{record.itemName}</TableCell>
-                <TableCell>{formatCurrency(record.amount)}</TableCell>
+                <TableCell className={getAmountClass(record)}>
+                  {formatCurrency(record.amount)}
+                </TableCell>
                 <TableCell>{getRecordTypeText(record)}</TableCell>
                 <TableCell>{getPaymentMethodText(record)}</TableCell>
                 <TableCell>{new Date(record.date).toLocaleDateString('tr-TR')}</TableCell>
