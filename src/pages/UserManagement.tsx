@@ -1,45 +1,47 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getAuthState, setAuthState } from "@/utils/auth";
-import CreateUserForm from "@/components/users/CreateUserForm";
-import UsersList from "@/components/users/UsersList";
+import React from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import CreateUserForm from '@/components/users/CreateUserForm';
+import UsersList from '@/components/users/UsersList';
+import UserPerformanceComponent from '@/components/users/UserPerformance';
+import { getCurrentUser } from '@/utils/auth';
 
 const UserManagement = () => {
-  const authState = getAuthState();
-
-  const handleCreateUserSuccess = () => {
-    // Yeni state'i al ve sayfayı güncelle
-    const updatedState = getAuthState();
-    setAuthState(updatedState);
-  };
-
-  const handleDeleteUser = (userId: number) => {
-    const updatedState = getAuthState();
-    updatedState.users = updatedState.users.filter(u => u.id !== userId);
-    setAuthState(updatedState);
-  };
+  const currentUser = getCurrentUser();
+  const isAdmin = currentUser?.role === 'admin';
 
   return (
     <div className="p-8 pl-72 animate-fadeIn">
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>Yeni Personel Oluştur</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <CreateUserForm onSuccess={handleCreateUserSuccess} />
-        </CardContent>
-      </Card>
+      <div className="mb-8">
+        <h1 className="text-4xl font-serif">Kullanıcı Yönetimi</h1>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Mevcut Personeller</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <UsersList 
-            users={authState.users}
-            onDeleteUser={handleDeleteUser}
-          />
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="performance" className="w-full">
+        <TabsList>
+          <TabsTrigger value="performance">Performans</TabsTrigger>
+          {isAdmin && (
+            <>
+              <TabsTrigger value="users">Kullanıcılar</TabsTrigger>
+              <TabsTrigger value="create">Yeni Kullanıcı</TabsTrigger>
+            </>
+          )}
+        </TabsList>
+
+        <TabsContent value="performance">
+          <UserPerformanceComponent />
+        </TabsContent>
+
+        {isAdmin && (
+          <>
+            <TabsContent value="users">
+              <UsersList />
+            </TabsContent>
+
+            <TabsContent value="create">
+              <CreateUserForm />
+            </TabsContent>
+          </>
+        )}
+      </Tabs>
     </div>
   );
 };

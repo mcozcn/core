@@ -129,6 +129,23 @@ export interface User {
   createdAt: Date;
 }
 
+export interface UserPerformance {
+  userId: number;
+  appointmentCount: number;
+  salesCount: number;
+  totalSales: number;
+  lastUpdated: Date;
+}
+
+export interface UserActivity {
+  id: number;
+  userId: number;
+  username: string;
+  action: string;
+  details: string;
+  timestamp: Date;
+}
+
 const getFromStorage = <T>(key: string): T[] => {
   const data = localStorage.getItem(key);
   return data ? JSON.parse(data) : [];
@@ -203,6 +220,18 @@ export const getUsers = (): User[] =>
 
 export const setUsers = (users: User[]): void =>
   setToStorage('users', users);
+
+export const getUserPerformance = (): UserPerformance[] => 
+  getFromStorage<UserPerformance>('userPerformance');
+
+export const setUserPerformance = (performance: UserPerformance[]): void =>
+  setToStorage('userPerformance', performance);
+
+export const getUserActivities = (): UserActivity[] =>
+  getFromStorage<UserActivity>('userActivities');
+
+export const setUserActivities = (activities: UserActivity[]): void =>
+  setToStorage('userActivities', activities);
 
 export const getCurrentUser = (): User | null => {
   const data = localStorage.getItem('currentUser');
