@@ -66,6 +66,25 @@ export const logout = (): void => {
   setAuthState(state);
 };
 
+export const getCurrentUser = (): User | null => {
+  return getAuthState().currentUser;
+};
+
+export const getAllUsers = (): User[] => {
+  return getAuthState().users;
+};
+
+export const deleteUser = (userId: number): boolean => {
+  const state = getAuthState();
+  const userIndex = state.users.findIndex(u => u.id === userId);
+  
+  if (userIndex === -1) return false;
+  
+  state.users.splice(userIndex, 1);
+  setAuthState(state);
+  return true;
+};
+
 export const register = (
   username: string, 
   password: string, 
@@ -98,10 +117,6 @@ export const register = (
   state.users.push(newUser);
   setAuthState(state);
   return newUser;
-};
-
-export const getCurrentUser = (): User | null => {
-  return getAuthState().currentUser;
 };
 
 export const hasAccess = (page: string): boolean => {
