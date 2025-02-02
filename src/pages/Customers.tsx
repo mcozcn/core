@@ -3,13 +3,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getCustomers, getCustomerRecords } from "@/utils/localStorage";
+import { getCustomers, getCustomerRecords, getAppointments } from "@/utils/localStorage";
 import SearchInput from '@/components/common/SearchInput';
 import AddCustomerForm from '@/components/customers/AddCustomerForm';
 import CustomerDetails from '@/components/customers/CustomerDetails';
 import CustomerDebtForm from '@/components/customers/forms/CustomerDebtForm';
 import CustomerPaymentForm from '@/components/customers/forms/CustomerPaymentForm';
 import CustomerRecordsList from '@/components/customers/CustomerRecordsList';
+import CustomerAppointmentsList from '@/components/customers/CustomerAppointmentsList';
 import { cn } from "@/lib/utils";
 import { Plus } from "lucide-react";
 
@@ -27,6 +28,11 @@ const Customers = () => {
   const { data: records = [] } = useQuery({
     queryKey: ['customerRecords'],
     queryFn: getCustomerRecords,
+  });
+
+  const { data: appointments = [] } = useQuery({
+    queryKey: ['appointments'],
+    queryFn: getAppointments,
   });
 
   const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
@@ -97,6 +103,7 @@ const Customers = () => {
               <Tabs defaultValue="records" className="w-full">
                 <TabsList>
                   <TabsTrigger value="records">Kayıtlar</TabsTrigger>
+                  <TabsTrigger value="appointments">Randevular</TabsTrigger>
                   <TabsTrigger value="debt">Borç Ekle</TabsTrigger>
                   <TabsTrigger value="payment">Ödeme Al</TabsTrigger>
                 </TabsList>
@@ -105,6 +112,14 @@ const Customers = () => {
                   <Card className="p-6">
                     <CustomerRecordsList 
                       records={records.filter(record => record.customerId === selectedCustomer.id)}
+                    />
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="appointments">
+                  <Card className="p-6">
+                    <CustomerAppointmentsList 
+                      appointments={appointments.filter(apt => apt.customerId === selectedCustomer.id)}
                     />
                   </Card>
                 </TabsContent>
