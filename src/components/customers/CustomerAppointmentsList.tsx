@@ -10,6 +10,14 @@ import {
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/use-toast";
+import { useState } from "react";
+import { getAppointments, setAppointments } from "@/utils/localStorage";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface CustomerAppointmentsListProps {
   appointments: Array<{
@@ -24,11 +32,40 @@ interface CustomerAppointmentsListProps {
 }
 
 const CustomerAppointmentsList = ({ appointments }: CustomerAppointmentsListProps) => {
+  const [selectedAppointment, setSelectedAppointment] = useState<number | null>(null);
+  const [cancellationNote, setCancellationNote] = useState("");
+  const [showCancellationDialog, setShowCancellationDialog] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   const sortedAppointments = [...appointments].sort((a, b) => {
     const dateA = new Date(`${a.date}T${a.time}`);
     const dateB = new Date(`${b.date}T${b.time}`);
     return dateB.getTime() - dateA.getTime();
   });
+
+  const handleCancelAppointment = () => {
+    if (!selectedAppointment) return;
+
+    const allAppointments = getAppointments();
+    const updatedAppointments = allAppointments.map(apt => 
+      apt.id === selectedAppointment 
+        ? { ...apt, status: 'cancelled' as const, cancellationNote } 
+        : apt
+    );
+
+    setAppointments(updatedAppointments);
+    queryClient.setQueryData(['appointments'], updatedAppointments);
+
+    toast({
+      title: "Randevu iptal edildi",
+      description: "Randevu başarıyla iptal edildi.",
+    });
+
+    setShowCancellationDialog(false);
+    setCancellationNote("");
+    setSelectedAppointment(null);
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -44,42 +81,83 @@ const CustomerAppointmentsList = ({ appointments }: CustomerAppointmentsListProp
   };
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Tarih</TableHead>
-          <TableHead>Saat</TableHead>
-          <TableHead>Hizmet</TableHead>
-          <TableHead>Durum</TableHead>
-          <TableHead>Not</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {sortedAppointments.length === 0 ? (
+    <>
+      <Table>
+        <TableHeader>
           <TableRow>
-            <TableCell colSpan={5} className="text-center text-muted-foreground">
-              Henüz randevu bulunmamaktadır.
-            </TableCell>
+            <TableHead>Tarih</TableHead>
+            <TableHead>Saat</TableHead>
+            <TableHead>Hizmet</TableHead>
+            <TableHead>Durum</TableHead>
+            <TableHead>Not</TableHead>
+            <TableHead>İşlemler</TableHead>
           </TableRow>
-        ) : (
-          sortedAppointments.map((appointment) => (
-            <TableRow key={appointment.id}>
-              <TableCell>
-                {format(new Date(appointment.date), 'PPP', { locale: tr })}
-              </TableCell>
-              <TableCell>{appointment.time}</TableCell>
-              <TableCell>{appointment.service}</TableCell>
-              <TableCell>{getStatusBadge(appointment.status)}</TableCell>
-              <TableCell>
-                {appointment.status === 'cancelled' 
-                  ? `İptal Nedeni: ${appointment.cancellationNote || 'Belirtilmedi'}`
-                  : appointment.note || '-'}
+        </TableHeader>
+        <TableBody>
+          {sortedAppointments.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center text-muted-foreground">
+                Henüz randevu bulunmamaktadır.
               </TableCell>
             </TableRow>
-          ))
-        )}
-      </TableBody>
-    </Table>
+          ) : (
+            sortedAppointments.map((appointment) => (
+              <TableRow key={appointment.id}>
+                <TableCell>
+                  {format(new Date(appointment.date), 'PPP', { locale: tr })}
+                </TableCell>
+                <TableCell>{appointment.time}</TableCell>
+                <TableCell>{appointment.service}</TableCell>
+                <TableCell>{getStatusBadge(appointment.status)}</TableCell>
+                <TableCell>
+                  {appointment.status === 'cancelled' 
+                    ? `İptal Nedeni: ${appointment.cancellationNote || 'Belirtilmedi'}`
+                    : appointment.note || '-'}
+                </TableCell>
+                <TableCell>
+                  {appointment.status === 'pending' && (
+                    <Dialog open={showCancellationDialog} onOpenChange={setShowCancellationDialog}>
+                      <DialogTrigger asChild>
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          onClick={() => setSelectedAppointment(appointment.id)}
+                        >
+                          İptal Et
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Randevu İptali</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="cancellationNote">İptal Nedeni</Label>
+                            <Textarea
+                              id="cancellationNote"
+                              value={cancellationNote}
+                              onChange={(e) => setCancellationNote(e.target.value)}
+                              placeholder="İptal nedenini yazın..."
+                            />
+                          </div>
+                          <Button 
+                            variant="destructive" 
+                            onClick={handleCancelAppointment}
+                            className="w-full"
+                          >
+                            Randevuyu İptal Et
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </>
   );
 };
 
