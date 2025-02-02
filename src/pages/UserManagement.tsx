@@ -1,13 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CreateUserForm from '@/components/users/CreateUserForm';
 import UsersList from '@/components/users/UsersList';
 import UserPerformanceComponent from '@/components/users/UserPerformance';
-import { getCurrentUser } from '@/utils/auth';
+import { getCurrentUser, getAllUsers, deleteUser, User } from '@/utils/auth';
 
 const UserManagement = () => {
   const currentUser = getCurrentUser();
   const isAdmin = currentUser?.role === 'admin';
+  const [users, setUsers] = useState<User[]>(getAllUsers().filter(user => user.role !== 'admin'));
+
+  const handleDeleteUser = (userId: number) => {
+    deleteUser(userId);
+    setUsers(getAllUsers().filter(user => user.role !== 'admin'));
+  };
+
+  const handleUserCreated = () => {
+    setUsers(getAllUsers().filter(user => user.role !== 'admin'));
+  };
 
   return (
     <div className="p-8 pl-72 animate-fadeIn">
@@ -33,11 +43,14 @@ const UserManagement = () => {
         {isAdmin && (
           <>
             <TabsContent value="users">
-              <UsersList />
+              <UsersList 
+                users={users}
+                onDeleteUser={handleDeleteUser}
+              />
             </TabsContent>
 
             <TabsContent value="create">
-              <CreateUserForm />
+              <CreateUserForm onSuccess={handleUserCreated} />
             </TabsContent>
           </>
         )}
