@@ -1,66 +1,60 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { login, register } from '@/utils/auth';
+import { getUsers, setCurrentUser } from '@/utils/localStorage';
 
 const Login = () => {
-  const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (isLogin) {
-      const user = login(username, password);
+    setIsLoading(true);
+
+    try {
+      const users = getUsers();
+      const user = users.find(u => u.username === username && u.password === password);
+
       if (user) {
+        setCurrentUser(user);
         toast({
-          title: "Başarılı",
-          description: "Giriş yapıldı",
+          title: "Giriş başarılı",
+          description: "Hoş geldiniz!",
         });
         navigate('/');
       } else {
         toast({
           variant: "destructive",
-          title: "Hata",
-          description: "Kullanıcı adı veya şifre hatalı",
+          title: "Giriş başarısız",
+          description: "Kullanıcı adı veya şifre hatalı.",
         });
       }
-    } else {
-      const user = register(username, password);
-      if (user) {
-        toast({
-          title: "Başarılı",
-          description: "Kayıt başarılı, giriş yapabilirsiniz",
-        });
-        setIsLogin(true);
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Hata",
-          description: "Bu kullanıcı adı zaten kullanılıyor",
-        });
-      }
+    } catch (error) {
+      console.error('Login error:', error);
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Giriş yapılırken bir hata oluştu.",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md p-6 space-y-6">
-        <h1 className="text-2xl font-bold text-center">
-          {isLogin ? 'Giriş Yap' : 'Kayıt Ol'}
-        </h1>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <Card className="w-full max-w-md p-6">
+        <h1 className="text-2xl font-serif mb-6 text-center">Giriş Yap</h1>
+        <form onSubmit={handleLogin} className="space-y-4">
           <div className="space-y-2">
-            <label htmlFor="username" className="text-sm font-medium">
-              Kullanıcı Adı
-            </label>
+            <Label htmlFor="username">Kullanıcı Adı</Label>
             <Input
               id="username"
               type="text"
@@ -69,11 +63,8 @@ const Login = () => {
               required
             />
           </div>
-          
           <div className="space-y-2">
-            <label htmlFor="password" className="text-sm font-medium">
-              Şifre
-            </label>
+            <Label htmlFor="password">Şifre</Label>
             <Input
               id="password"
               type="password"
@@ -82,21 +73,14 @@ const Login = () => {
               required
             />
           </div>
-
-          <Button type="submit" className="w-full">
-            {isLogin ? 'Giriş Yap' : 'Kayıt Ol'}
+          <Button 
+            type="submit" 
+            className="w-full"
+            disabled={isLoading}
+          >
+            {isLoading ? "Giriş yapılıyor..." : "Giriş Yap"}
           </Button>
         </form>
-
-        <div className="text-center">
-          <button
-            type="button"
-            onClick={() => setIsLogin(!isLogin)}
-            className="text-primary hover:underline"
-          >
-            {isLogin ? 'Hesap oluştur' : 'Giriş yap'}
-          </button>
-        </div>
       </Card>
     </div>
   );

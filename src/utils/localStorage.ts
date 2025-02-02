@@ -118,6 +118,17 @@ export interface Payment {
 // For backward compatibility, we'll alias StockItem as Product
 export type Product = StockItem;
 
+export interface User {
+  id: number;
+  username: string;
+  password: string;
+  role: 'admin' | 'staff';
+  name: string;
+  email: string;
+  color?: string;
+  createdAt: Date;
+}
+
 const getFromStorage = <T>(key: string): T[] => {
   const data = localStorage.getItem(key);
   return data ? JSON.parse(data) : [];
@@ -186,3 +197,22 @@ export const getProducts = (): Product[] =>
 
 export const setProducts = (products: Product[]): void =>
   setToStorage(STORAGE_KEYS.STOCK, products);
+
+export const getUsers = (): User[] =>
+  getFromStorage<User>('users');
+
+export const setUsers = (users: User[]): void =>
+  setToStorage('users', users);
+
+export const getCurrentUser = (): User | null => {
+  const data = localStorage.getItem('currentUser');
+  return data ? JSON.parse(data) : null;
+};
+
+export const setCurrentUser = (user: User | null): void => {
+  if (user) {
+    localStorage.setItem('currentUser', JSON.stringify(user));
+  } else {
+    localStorage.removeItem('currentUser');
+  }
+};
