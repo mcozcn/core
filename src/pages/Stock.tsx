@@ -1,58 +1,76 @@
-import React, { useState } from 'react';
-import AddProductForm from '@/components/stock/AddProductForm';
-import StockEntryForm from '@/components/stock/StockEntryForm';
-import StockTable from '@/components/stock/StockTable';
-import SearchInput from '@/components/common/SearchInput';
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 import { getStock } from "@/utils/localStorage";
-import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import StockTable from "@/components/stock/StockTable";
+import StockEntryForm from "@/components/stock/StockEntryForm";
+import SaleForm from "@/components/stock/SaleForm";
+import SalesTable from "@/components/stock/SalesTable";
+import StockMovementsTable from "@/components/stock/StockMovementsTable";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Stock = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [showEntryForm, setShowEntryForm] = useState(false);
-  
+  const [showStockEntryForm, setShowStockEntryForm] = useState(false);
+  const [showSaleForm, setShowSaleForm] = useState(false);
+
   const { data: stock = [] } = useQuery({
     queryKey: ['stock'],
-    queryFn: getStock,
+    queryFn: () => {
+      console.log('Fetching stock from localStorage');
+      return getStock();
+    },
   });
 
   return (
-    <div className="p-8 pl-72 animate-fadeIn">
-      <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-4xl font-serif">Stok Yönetimi</h1>
-        <div className="space-x-2">
-          <Button onClick={() => setShowAddForm(true)} className="gap-2">
-            <Plus className="h-4 w-4" /> Yeni Ürün
+    <div className="p-8 pl-72 space-y-8 animate-fadeIn">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-serif">Stok Yönetimi</h1>
+        <div className="space-x-4">
+          <Button onClick={() => setShowStockEntryForm(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Stok Girişi
           </Button>
-          <Button onClick={() => setShowEntryForm(true)} variant="secondary" className="gap-2">
-            <Plus className="h-4 w-4" /> Stok Girişi
+          <Button onClick={() => setShowSaleForm(true)} variant="secondary">
+            <Plus className="w-4 h-4 mr-2" />
+            Satış
           </Button>
         </div>
       </div>
 
-      <div className="mb-6">
-        <SearchInput
-          value={searchTerm}
-          onChange={setSearchTerm}
-          placeholder="Ürün ara..."
-        />
-      </div>
+      <Tabs defaultValue="stock">
+        <TabsList>
+          <TabsTrigger value="stock">Stok Durumu</TabsTrigger>
+          <TabsTrigger value="movements">Stok Hareketleri</TabsTrigger>
+          <TabsTrigger value="sales">Satışlar</TabsTrigger>
+        </TabsList>
 
-      <div className="space-y-6">
-        <AddProductForm 
-          showForm={showAddForm}
-          setShowForm={setShowAddForm}
-          stock={stock}
-        />
+        <TabsContent value="stock">
+          <StockTable stock={stock} />
+        </TabsContent>
+
+        <TabsContent value="movements">
+          <StockMovementsTable />
+        </TabsContent>
+
+        <TabsContent value="sales">
+          <SalesTable />
+        </TabsContent>
+      </Tabs>
+
+      {showStockEntryForm && (
         <StockEntryForm
-          showForm={showEntryForm}
-          setShowForm={setShowEntryForm}
-          stock={stock}
+          showForm={showStockEntryForm}
+          onClose={() => setShowStockEntryForm(false)}
         />
-        <StockTable searchTerm={searchTerm} />
-      </div>
+      )}
+
+      {showSaleForm && (
+        <SaleForm
+          showForm={showSaleForm}
+          onClose={() => setShowSaleForm(false)}
+        />
+      )}
     </div>
   );
 };
