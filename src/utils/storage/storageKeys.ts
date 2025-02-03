@@ -11,4 +11,5 @@ export const STORAGE_KEYS = {
   USERS: 'users',
   USER_PERFORMANCE: 'userPerformance',
   USER_ACTIVITIES: 'userActivities',
+  STOCK_MOVEMENTS: 'stockMovements',
 } as const;

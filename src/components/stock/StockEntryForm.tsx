@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { getStock, setStock, type StockItem } from "@/utils/localStorage";
+import { getStock, setStock, addStockMovement, type StockItem } from "@/utils/localStorage";
 
 interface StockEntryFormProps {
   showForm: boolean;
@@ -35,27 +35,26 @@ const StockEntryForm = ({ showForm, setShowForm, stock }: StockEntryFormProps) =
       }
 
       const quantity = Number(formData.quantity);
+      const cost = Number(formData.cost) || selectedProduct.cost;
       
-      // Update stock
-      const updatedStock = stock.map(item => 
-        item.productId === selectedProduct.productId 
-          ? { 
-              ...item, 
-              quantity: item.quantity + quantity,
-              cost: Number(formData.cost) || item.cost,
-              lastUpdated: new Date() 
-            }
-          : item
-      );
-
-      console.log('Stok girişi yapılıyor:', {
-        product: selectedProduct.productName,
+      // Stok hareketi ekle
+      await addStockMovement({
+        productId: selectedProduct.productId,
+        type: 'in',
         quantity,
-        cost: formData.cost
+        cost,
+        date: new Date(formData.date),
+        description: formData.notes || 'Stok girişi'
       });
 
-      setStock(updatedStock);
-      queryClient.setQueryData(['stock'], updatedStock);
+      // Query cache'i güncelle
+      queryClient.invalidateQueries({ queryKey: ['stock'] });
+
+      console.log('Stok girişi yapıldı:', {
+        product: selectedProduct.productName,
+        quantity,
+        cost
+      });
 
       toast({
         title: "Stok girişi başarılı",

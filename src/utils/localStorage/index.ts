@@ -12,7 +12,8 @@ import type {
   Cost,
   User,
   UserPerformance,
-  UserActivity
+  UserActivity,
+  StockMovement
 } from '../storage/types';
 
 // Current User
@@ -44,7 +45,54 @@ export const setServices = (services: Service[]) => setToStorage(STORAGE_KEYS.SE
 // Stock/Products
 export const getStock = (): StockItem[] => getFromStorage(STORAGE_KEYS.STOCK);
 export const setStock = (stock: StockItem[]) => setToStorage(STORAGE_KEYS.STOCK, stock);
-export const getProducts = (): StockItem[] => getStock(); // Alias for getStock
+export const getProducts = (): StockItem[] => getStock();
+
+// Stock Movements
+export const getStockMovements = (): StockMovement[] => getFromStorage(STORAGE_KEYS.STOCK_MOVEMENTS);
+export const setStockMovements = (movements: StockMovement[]) => setToStorage(STORAGE_KEYS.STOCK_MOVEMENTS, movements);
+
+export const addStockMovement = (movement: Omit<StockMovement, 'id' | 'createdAt'>) => {
+  const movements = getStockMovements();
+  const newMovement: StockMovement = {
+    ...movement,
+    id: Date.now(),
+    createdAt: new Date()
+  };
+  
+  const stock = getStock();
+  const product = stock.find(item => item.productId === movement.productId);
+  
+  if (!product) {
+    throw new Error('Ürün bulunamadı');
+  }
+
+  // Stok miktarını güncelle
+  const updatedStock = stock.map(item => {
+    if (item.productId === movement.productId) {
+      const newQuantity = movement.type === 'in' 
+        ? item.quantity + movement.quantity 
+        : item.quantity - movement.quantity;
+      
+      // Ortalama maliyet hesaplama (sadece giriş hareketlerinde)
+      const newCost = movement.type === 'in'
+        ? ((item.quantity * item.cost) + (movement.quantity * movement.cost)) / (item.quantity + movement.quantity)
+        : item.cost;
+
+      return {
+        ...item,
+        quantity: newQuantity,
+        cost: newCost,
+        lastUpdated: new Date()
+      };
+    }
+    return item;
+  });
+
+  setStock(updatedStock);
+  setStockMovements([...movements, newMovement]);
+
+  return newMovement;
+};
 
 // Sales
 export const getSales = (): Sale[] => getFromStorage(STORAGE_KEYS.SALES);
@@ -91,5 +139,6 @@ export type {
   Cost,
   User,
   UserPerformance,
-  UserActivity
+  UserActivity,
+  StockMovement
 };

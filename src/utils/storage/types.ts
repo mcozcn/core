@@ -132,3 +132,14 @@ export interface UserActivity {
   details: string;
   timestamp: Date;
 }
+
+export interface StockMovement {
+  id: number;
+  productId: number;
+  type: 'in' | 'out';
+  quantity: number;
+  cost: number;
+  date: Date;
+  description: string;
+  createdAt: Date;
+}
