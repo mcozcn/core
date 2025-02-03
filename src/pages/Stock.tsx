@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { getStock } from "@/utils/localStorage";
+import { getStock, getSales } from "@/utils/localStorage";
 import StockTable from "@/components/stock/StockTable";
 import StockEntryForm from "@/components/stock/StockEntryForm";
 import SaleForm from "@/components/stock/SaleForm";
@@ -19,6 +19,14 @@ const Stock = () => {
     queryFn: () => {
       console.log('Fetching stock from localStorage');
       return getStock();
+    },
+  });
+
+  const { data: sales = [] } = useQuery({
+    queryKey: ['sales'],
+    queryFn: () => {
+      console.log('Fetching sales from localStorage');
+      return getSales();
     },
   });
 
@@ -46,7 +54,7 @@ const Stock = () => {
         </TabsList>
 
         <TabsContent value="stock">
-          <StockTable stock={stock} />
+          <StockTable searchTerm="" />
         </TabsContent>
 
         <TabsContent value="movements">
@@ -54,21 +62,24 @@ const Stock = () => {
         </TabsContent>
 
         <TabsContent value="sales">
-          <SalesTable />
+          <SalesTable sales={sales} />
         </TabsContent>
       </Tabs>
 
       {showStockEntryForm && (
         <StockEntryForm
           showForm={showStockEntryForm}
-          onClose={() => setShowStockEntryForm(false)}
+          setShowForm={setShowStockEntryForm}
+          stock={stock}
         />
       )}
 
       {showSaleForm && (
         <SaleForm
           showForm={showSaleForm}
-          onClose={() => setShowSaleForm(false)}
+          setShowForm={setShowSaleForm}
+          stock={stock}
+          sales={sales}
         />
       )}
     </div>
