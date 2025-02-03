@@ -8,6 +8,7 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { getAppointments, setAppointments, type Appointment, getCustomers, getServices } from "@/utils/localStorage";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import CustomerSelectionDialog from '../common/CustomerSelectionDialog';
+import { format } from 'date-fns';
 
 interface AppointmentFormProps {
   selectedDate: Date;
@@ -53,11 +54,16 @@ const AppointmentForm = ({ selectedDate, onSuccess, onCancel }: AppointmentFormP
         throw new Error("Hizmet bulunamadı");
       }
 
+      // Format the date correctly using the selected date
+      const formattedDate = format(selectedDate, 'yyyy-MM-dd');
+      console.log('Selected date:', selectedDate);
+      console.log('Formatted date for appointment:', formattedDate);
+
       const newAppointment: Appointment = {
         id: Date.now(),
         customerId: Number(customerId),
         customerName: customer.name,
-        date: selectedDate.toISOString().split('T')[0],
+        date: formattedDate,
         time: appointmentTime,
         service: service.name,
         status: 'pending',
