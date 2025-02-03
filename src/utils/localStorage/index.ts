@@ -15,6 +15,20 @@ import type {
   UserActivity
 } from '../storage/types';
 
+// Current User
+export const getCurrentUser = (): User | null => {
+  const data = localStorage.getItem('currentUser');
+  return data ? JSON.parse(data) : null;
+};
+
+export const setCurrentUser = (user: User | null) => {
+  if (user) {
+    localStorage.setItem('currentUser', JSON.stringify(user));
+  } else {
+    localStorage.removeItem('currentUser');
+  }
+};
+
 // Appointments
 export const getAppointments = (): Appointment[] => getFromStorage(STORAGE_KEYS.APPOINTMENTS);
 export const setAppointments = (appointments: Appointment[]) => setToStorage(STORAGE_KEYS.APPOINTMENTS, appointments);
@@ -27,9 +41,10 @@ export const setCustomers = (customers: Customer[]) => setToStorage(STORAGE_KEYS
 export const getServices = (): Service[] => getFromStorage(STORAGE_KEYS.SERVICES);
 export const setServices = (services: Service[]) => setToStorage(STORAGE_KEYS.SERVICES, services);
 
-// Stock
+// Stock/Products
 export const getStock = (): StockItem[] => getFromStorage(STORAGE_KEYS.STOCK);
 export const setStock = (stock: StockItem[]) => setToStorage(STORAGE_KEYS.STOCK, stock);
+export const getProducts = (): StockItem[] => getStock(); // Alias for getStock
 
 // Sales
 export const getSales = (): Sale[] => getFromStorage(STORAGE_KEYS.SALES);
