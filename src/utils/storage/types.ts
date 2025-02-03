@@ -92,6 +92,7 @@ export interface CustomerRecord {
   recordType: 'debt' | 'payment';
   discount?: number;
   paymentMethod?: 'cash' | 'credit';
+  quantity?: number;
 }
 
 export interface Payment {
@@ -103,8 +104,6 @@ export interface Payment {
   description: string;
   relatedRecordId?: number;
 }
-
-export type Product = StockItem;
 
 export interface User {
   id: number;

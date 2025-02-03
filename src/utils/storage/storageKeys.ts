@@ -7,4 +7,8 @@ export const STORAGE_KEYS = {
   SERVICE_SALES: 'serviceSales',
   CUSTOMER_RECORDS: 'customerRecords',
   PAYMENTS: 'payments',
+  COSTS: 'costs',
+  USERS: 'users',
+  USER_PERFORMANCE: 'userPerformance',
+  USER_ACTIVITIES: 'userActivities',
 } as const;
