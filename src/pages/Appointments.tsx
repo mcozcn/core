@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import AppointmentCalendar from '@/components/appointments/AppointmentCalendar';
 import AppointmentList from '@/components/appointments/AppointmentList';
 import AppointmentForm from '@/components/appointments/AppointmentForm';
 import WeeklyCalendar from '@/components/appointments/WeeklyCalendar';
 import SearchInput from '@/components/common/SearchInput';
+import { Calendar } from "@/components/ui/calendar";
+import { Card } from "@/components/ui/card";
 
 const Appointments = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -39,19 +40,22 @@ const Appointments = () => {
             />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="space-y-6">
-              <AppointmentForm 
-                selectedDate={selectedDate}
-                onSuccess={handleSuccess}
-                onCancel={handleCancel}
+          <div className="space-y-6">
+            <Card className="p-4">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(date) => date && setSelectedDate(date)}
+                className="rounded-md"
               />
-              <AppointmentList searchTerm={searchTerm} />
-            </div>
-            <AppointmentCalendar 
+            </Card>
+            
+            <AppointmentForm 
               selectedDate={selectedDate}
-              onSelect={setSelectedDate}
+              onSuccess={handleSuccess}
+              onCancel={handleCancel}
             />
+            <AppointmentList searchTerm={searchTerm} />
           </div>
         </TabsContent>
 
