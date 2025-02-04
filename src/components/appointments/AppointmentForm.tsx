@@ -9,6 +9,7 @@ import { getAppointments, setAppointments, type Appointment, getCustomers, getSe
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import CustomerSelectionDialog from '../common/CustomerSelectionDialog';
 import { format } from 'date-fns';
+import { getAllUsers } from '@/utils/auth';
 
 interface AppointmentFormProps {
   selectedDate: Date;
@@ -21,6 +22,7 @@ const AppointmentForm = ({ selectedDate, onSuccess, onCancel }: AppointmentFormP
   const [customerSearch, setCustomerSearch] = useState('');
   const [appointmentTime, setAppointmentTime] = useState('');
   const [serviceId, setServiceId] = useState('');
+  const [staffId, setStaffId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -35,7 +37,9 @@ const AppointmentForm = ({ selectedDate, onSuccess, onCancel }: AppointmentFormP
     queryFn: getCustomers,
   });
 
+  const staff = getAllUsers();
   const selectedCustomer = customers.find(c => c.id.toString() === customerId);
+  const selectedStaff = staff.find(s => s.id.toString() === staffId);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +49,7 @@ const AppointmentForm = ({ selectedDate, onSuccess, onCancel }: AppointmentFormP
       const appointments = getAppointments();
       const customer = customers.find(c => c.id === Number(customerId));
       const service = services.find(s => s.id === Number(serviceId));
+      const staff = getAllUsers().find(s => s.id === Number(staffId));
 
       if (!customer) {
         throw new Error("Müşteri bulunamadı");
@@ -54,7 +59,10 @@ const AppointmentForm = ({ selectedDate, onSuccess, onCancel }: AppointmentFormP
         throw new Error("Hizmet bulunamadı");
       }
 
-      // Format the date correctly using the selected date
+      if (!staff) {
+        throw new Error("Personel bulunamadı");
+      }
+
       const formattedDate = format(selectedDate, 'yyyy-MM-dd');
       console.log('Selected date:', selectedDate);
       console.log('Formatted date for appointment:', formattedDate);
@@ -63,6 +71,9 @@ const AppointmentForm = ({ selectedDate, onSuccess, onCancel }: AppointmentFormP
         id: Date.now(),
         customerId: Number(customerId),
         customerName: customer.name,
+        staffId: Number(staffId),
+        staffName: staff.displayName,
+        staffColor: staff.color,
         date: formattedDate,
         time: appointmentTime,
         service: service.name,
@@ -106,6 +117,30 @@ const AppointmentForm = ({ selectedDate, onSuccess, onCancel }: AppointmentFormP
             setCustomerSearch={setCustomerSearch}
             onCustomerSelect={(id) => setCustomerId(id)}
           />
+        </div>
+
+        <div>
+          <Label>Personel</Label>
+          <Select value={staffId} onValueChange={setStaffId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Personel seçin" />
+            </SelectTrigger>
+            <SelectContent>
+              {staff.map((person) => (
+                <SelectItem 
+                  key={person.id} 
+                  value={person.id.toString()}
+                  className="flex items-center gap-2"
+                >
+                  <div 
+                    className="w-3 h-3 rounded-full" 
+                    style={{ backgroundColor: person.color }}
+                  />
+                  {person.displayName} - {person.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div>

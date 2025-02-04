@@ -1,17 +1,19 @@
 import { useState } from 'react';
 import { Card } from "@/components/ui/card";
-import { addDays, format, startOfWeek, eachHourOfInterval, setHours, setMinutes, getHours } from "date-fns";
+import { addDays, format, startOfWeek, eachHourOfInterval, setHours, setMinutes } from "date-fns";
 import { tr } from 'date-fns/locale';
-import { getCurrentUser, getAuthState } from "@/utils/auth";
 
 interface Appointment {
   id: number;
   customerId: number;
   customerName: string;
+  staffId: number;
+  staffName: string;
+  staffColor: string;
   date: string;
   time: string;
   service: string;
-  status: 'active' | 'cancelled';
+  status: 'pending' | 'confirmed' | 'cancelled';
   cancellationNote?: string;
   createdAt: Date;
 }
@@ -22,7 +24,6 @@ interface WeeklyCalendarProps {
 
 const WeeklyCalendar = ({ appointments }: WeeklyCalendarProps) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const users = getAuthState().users;
 
   const workingHours = eachHourOfInterval({
     start: setHours(setMinutes(new Date(), 0), 9),
@@ -65,23 +66,20 @@ const WeeklyCalendar = ({ appointments }: WeeklyCalendarProps) => {
                   key={day.toString()}
                   className="min-h-[60px] border rounded-md p-1"
                 >
-                  {dayAppointments.map((apt) => {
-                    const user = users.find(u => u.id === apt.customerId);
-                    return (
-                      <div
-                        key={apt.id}
-                        className={`text-xs p-1 mb-1 rounded ${apt.status === 'cancelled' ? 'opacity-50' : ''}`}
-                        style={{
-                          backgroundColor: user?.color || '#gray',
-                          color: 'white'
-                        }}
-                        title={apt.status === 'cancelled' ? `İptal Nedeni: ${apt.cancellationNote || 'Belirtilmedi'}` : undefined}
-                      >
-                        {apt.customerName}
-                        {apt.status === 'cancelled' && ' (İptal)'}
-                      </div>
-                    );
-                  })}
+                  {dayAppointments.map((apt) => (
+                    <div
+                      key={apt.id}
+                      className={`text-xs p-1 mb-1 rounded ${apt.status === 'cancelled' ? 'opacity-50' : ''}`}
+                      style={{
+                        backgroundColor: apt.staffColor || '#gray',
+                        color: 'white'
+                      }}
+                      title={apt.status === 'cancelled' ? `İptal Nedeni: ${apt.cancellationNote || 'Belirtilmedi'}` : undefined}
+                    >
+                      {apt.customerName} ({apt.staffName})
+                      {apt.status === 'cancelled' && ' (İptal)'}
+                    </div>
+                  ))}
                 </div>
               );
             })}
