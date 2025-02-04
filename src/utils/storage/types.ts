@@ -2,6 +2,9 @@ export interface Appointment {
   id: number;
   customerId: number;
   customerName: string;
+  staffId: number;
+  staffName: string;
+  staffColor: string;
   date: string;
   time: string;
   service: string;

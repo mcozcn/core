@@ -30,37 +30,36 @@ const CreateUserForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const [showColorPicker, setShowColorPicker] = useState(false);
   const { toast } = useToast();
 
-  const handleCreateUser = () => {
-    if (!newUsername || !newPassword || !displayName) {
-      toast({
-        variant: "destructive",
-        title: "Hata",
-        description: "Tüm alanları doldurun",
-      });
-      return;
-    }
+const handleCreateUser = () => {
+  if (!newUsername || !newPassword || !displayName) {
+    toast({
+      variant: "destructive",
+      title: "Hata",
+      description: "Tüm alanları doldurun",
+    });
+    return;
+  }
 
-    const newUser = register(
-      newUsername, 
-      newPassword, 
-      "user", 
-      displayName,
-      selectedColor,
-      selectedPages
-    );
+  const newUser = register(
+    displayName,
+    "Personel",
+    "staff",
+    selectedColor,
+    selectedPages
+  );
 
-    if (newUser) {
-      toast({
-        title: "Başarılı",
-        description: "Kullanıcı oluşturuldu",
-      });
-      setNewUsername("");
-      setNewPassword("");
-      setDisplayName("");
-      setSelectedPages(["dashboard"]);
-      onSuccess();
-    }
-  };
+  if (newUser) {
+    toast({
+      title: "Başarılı",
+      description: "Kullanıcı oluşturuldu",
+    });
+    setNewUsername("");
+    setNewPassword("");
+    setDisplayName("");
+    setSelectedPages(["dashboard"]);
+    onSuccess();
+  }
+};
 
   const handlePageToggle = (pageId: string) => {
     setSelectedPages(current =>
