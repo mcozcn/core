@@ -1,0 +1,97 @@
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
+import { User, deleteUser } from "@/utils/auth";
+import { useToast } from "@/components/ui/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useState } from "react";
+
+interface PersonnelListProps {
+  personnel: User[];
+  onUpdate: () => void;
+}
+
+const PersonnelList = ({ personnel, onUpdate }: PersonnelListProps) => {
+  const { toast } = useToast();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [selectedPersonnel, setSelectedPersonnel] = useState<User | null>(null);
+
+  const handleDeleteClick = (person: User) => {
+    setSelectedPersonnel(person);
+    setShowDeleteDialog(true);
+  };
+
+  const handleDelete = () => {
+    if (selectedPersonnel) {
+      deleteUser(selectedPersonnel.id);
+      onUpdate();
+      setShowDeleteDialog(false);
+      setSelectedPersonnel(null);
+      
+      toast({
+        title: "Başarılı",
+        description: "Personel silindi",
+      });
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      {personnel.map((person) => (
+        <Card key={person.id} className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <div className="flex items-center space-x-2">
+                <p className="font-medium">{person.displayName}</p>
+                <div 
+                  className="w-4 h-4 rounded-full" 
+                  style={{ backgroundColor: person.color }}
+                />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {person.title}
+              </p>
+            </div>
+            
+            <Button
+              variant="destructive"
+              size="icon"
+              onClick={() => handleDeleteClick(person)}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </Card>
+      ))}
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Personeli Sil</AlertDialogTitle>
+            <AlertDialogDescription>
+              {selectedPersonnel?.displayName} isimli personeli silmek istediğinizden emin misiniz?
+              Bu işlem geri alınamaz.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>İptal</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>
+              Sil
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+};
+
+export default PersonnelList;

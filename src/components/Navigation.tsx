@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Calendar, Users, Scissors, BarChart3, Package, DollarSign, CreditCard, ShoppingCart, Database, LogOut, UserCog } from "lucide-react";
+import { Calendar, Users, Scissors, BarChart3, Package, DollarSign, CreditCard, ShoppingCart, Database, LogOut } from "lucide-react";
 import { logout, getCurrentUser, hasAccess } from "@/utils/auth";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -19,12 +19,8 @@ const Navigation = () => {
     { to: "/costs", label: "Masraflar", icon: DollarSign },
     { to: "/financial", label: "Finansal Takip", icon: CreditCard },
     { to: "/backup", label: "Yedekleme", icon: Database },
+    { to: "/personnel", label: "Personel Yönetimi", icon: Users },
   ];
-
-  // Admin için kullanıcı yönetimi linki
-  if (currentUser?.role === 'admin') {
-    links.push({ to: "/user-management", label: "Kullanıcı Yönetimi", icon: UserCog });
-  }
 
   const handleLogout = () => {
     logout();
@@ -46,7 +42,7 @@ const Navigation = () => {
         <p className="text-sm text-muted-foreground text-center">Salon Yönetimi</p>
         {currentUser && (
           <p className="text-sm text-primary text-center mt-2">
-            {currentUser.username} ({currentUser.role})
+            {currentUser.displayName} ({currentUser.title})
           </p>
         )}
       </div>
