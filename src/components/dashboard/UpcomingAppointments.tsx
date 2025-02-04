@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,14 @@ import { Check, X } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/components/ui/use-toast";
 import { getAppointments, setAppointments, type Appointment } from '@/utils/localStorage';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 interface UpcomingAppointmentsProps {
   appointments: Appointment[];
@@ -14,8 +22,20 @@ interface UpcomingAppointmentsProps {
 const UpcomingAppointments = ({ appointments }: UpcomingAppointmentsProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [cancellationNote, setCancellationNote] = useState('');
 
   const handleStatusChange = (appointmentId: number, newStatus: 'confirmed' | 'cancelled') => {
+    if (newStatus === 'cancelled') {
+      const appointment = appointments.find(apt => apt.id === appointmentId);
+      if (appointment) {
+        setSelectedAppointment(appointment);
+        setShowCancelDialog(true);
+      }
+      return;
+    }
+
     const allAppointments = getAppointments();
     const updatedAppointments = allAppointments.map(apt => 
       apt.id === appointmentId ? { ...apt, status: newStatus } : apt
@@ -30,64 +50,128 @@ const UpcomingAppointments = ({ appointments }: UpcomingAppointmentsProps) => {
     });
   };
 
+  const handleConfirmCancellation = () => {
+    if (!selectedAppointment) return;
+
+    const allAppointments = getAppointments();
+    const updatedAppointments = allAppointments.map(apt => 
+      apt.id === selectedAppointment.id 
+        ? { ...apt, status: 'cancelled' as const, cancellationNote } 
+        : apt
+    );
+
+    setAppointments(updatedAppointments);
+    queryClient.setQueryData(['appointments'], updatedAppointments);
+
+    toast({
+      title: "Randevu iptal edildi",
+      description: "Randevu başarıyla iptal edildi.",
+    });
+
+    setShowCancelDialog(false);
+    setCancellationNote('');
+    setSelectedAppointment(null);
+  };
+
   const upcomingAppointments = appointments
     .filter(apt => new Date(`${apt.date}T${apt.time}`) > new Date())
     .sort((a, b) => new Date(`${a.date}T${a.time}`).getTime() - new Date(`${b.date}T${b.time}`).getTime())
     .slice(0, 5);
 
   return (
-    <Card className="p-6">
-      <h2 className="text-xl font-serif mb-4">Yaklaşan Randevular</h2>
-      <div className="space-y-4">
-        {upcomingAppointments.map((appointment) => (
-          <div key={appointment.id} className="flex items-center justify-between p-3 bg-accent rounded-lg">
-            <div>
-              <div className="font-medium">{appointment.customerName}</div>
-              <div className="text-sm text-gray-500">
-                {appointment.date} - {appointment.time}
-              </div>
-              <div className="text-sm text-primary">{appointment.service}</div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Badge variant={
-                appointment.status === 'confirmed' ? 'secondary' :
-                appointment.status === 'cancelled' ? 'destructive' :
-                'default'
-              }>
-                {appointment.status === 'confirmed' ? 'Onaylandı' :
-                 appointment.status === 'cancelled' ? 'İptal Edildi' :
-                 'Beklemede'}
-              </Badge>
-              {appointment.status === 'pending' && (
-                <div className="flex space-x-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="text-green-600"
-                    onClick={() => handleStatusChange(appointment.id, 'confirmed')}
-                  >
-                    <Check className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="text-red-600"
-                    onClick={() => handleStatusChange(appointment.id, 'cancelled')}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
+    <>
+      <Card className="p-6">
+        <h2 className="text-xl font-serif mb-4">Yaklaşan Randevular</h2>
+        <div className="space-y-4">
+          {upcomingAppointments.map((appointment) => (
+            <div key={appointment.id} className="flex items-center justify-between p-3 bg-accent rounded-lg">
+              <div>
+                <div className="font-medium">{appointment.customerName}</div>
+                <div className="text-sm text-gray-500">
+                  {appointment.date} - {appointment.time}
                 </div>
-              )}
+                <div className="text-sm text-primary">{appointment.service}</div>
+                {appointment.cancellationNote && (
+                  <div className="text-sm text-red-500">
+                    İptal Nedeni: {appointment.cancellationNote}
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center space-x-2">
+                <Badge variant={
+                  appointment.status === 'confirmed' ? 'secondary' :
+                  appointment.status === 'cancelled' ? 'destructive' :
+                  'default'
+                }>
+                  {appointment.status === 'confirmed' ? 'Onaylandı' :
+                   appointment.status === 'cancelled' ? 'İptal Edildi' :
+                   'Beklemede'}
+                </Badge>
+                {appointment.status === 'pending' && (
+                  <div className="flex space-x-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-green-600"
+                      onClick={() => handleStatusChange(appointment.id, 'confirmed')}
+                    >
+                      <Check className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-red-600"
+                      onClick={() => handleStatusChange(appointment.id, 'cancelled')}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+          {upcomingAppointments.length === 0 && (
+            <div className="text-center text-muted-foreground">
+              Yaklaşan randevu bulunmamaktadır.
+            </div>
+          )}
+        </div>
+      </Card>
+
+      <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Randevu İptali</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">İptal Nedeni</label>
+              <Textarea
+                value={cancellationNote}
+                onChange={(e) => setCancellationNote(e.target.value)}
+                placeholder="İptal nedenini yazın..."
+                className="min-h-[100px]"
+              />
             </div>
           </div>
-        ))}
-        {upcomingAppointments.length === 0 && (
-          <div className="text-center text-muted-foreground">
-            Yaklaşan randevu bulunmamaktadır.
-          </div>
-        )}
-      </div>
-    </Card>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowCancelDialog(false);
+                setCancellationNote('');
+                setSelectedAppointment(null);
+              }}
+            >
+              Vazgeç
+            </Button>
+            <Button variant="destructive" onClick={handleConfirmCancellation}>
+              İptal Et
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
