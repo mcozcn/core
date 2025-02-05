@@ -2,6 +2,7 @@ export type UserRole = 'admin' | 'staff';
 
 export interface User {
   id: number;
+  username: string;  // Added this property
   displayName: string;
   title: string;
   role?: UserRole;
@@ -22,6 +23,7 @@ const initialState: AuthState = {
   users: [
     {
       id: 1,
+      username: 'staff1',  // Added username
       displayName: 'Örnek Personel',
       title: 'Kuaför',
       role: 'staff',
@@ -47,6 +49,11 @@ export const getAllUsers = (): User[] => {
   return getAuthState().users;
 };
 
+export const getCurrentUser = (): User | null => {
+  const users = getAllUsers();
+  return users.length > 0 ? users[0] : null;
+};
+
 export const deleteUser = (userId: number): boolean => {
   const state = getAuthState();
   const userIndex = state.users.findIndex(u => u.id === userId);
@@ -69,6 +76,7 @@ export const register = (
   
   const newUser: User = {
     id: Date.now(),
+    username: `staff${state.users.length + 1}`,  // Generate username
     displayName,
     title,
     role,
