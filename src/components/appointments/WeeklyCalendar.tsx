@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Card } from "@/components/ui/card";
-import { addDays, format, startOfWeek, eachHourOfInterval, setHours, setMinutes } from "date-fns";
+import { addDays, format, startOfWeek, eachHourOfInterval, setHours, setMinutes, parseISO } from "date-fns";
 import { tr } from 'date-fns/locale';
 
 interface Appointment {
@@ -34,6 +34,8 @@ const WeeklyCalendar = ({ appointments }: WeeklyCalendarProps) => {
     addDays(startOfWeek(selectedDate, { locale: tr }), i)
   );
 
+  console.log('Weekly Calendar Appointments:', appointments);
+
   return (
     <Card className="p-4 overflow-auto">
       <div className="min-w-[800px]">
@@ -54,12 +56,21 @@ const WeeklyCalendar = ({ appointments }: WeeklyCalendarProps) => {
               {format(hour, 'HH:mm')}
             </div>
             {weekDays.map((day) => {
+              const formattedDay = format(day, 'yyyy-MM-dd');
+              console.log('Checking appointments for day:', formattedDay);
+              
               const dayAppointments = appointments.filter(apt => {
                 const aptHour = apt.time.split(':')[0];
                 const currentHour = format(hour, 'HH');
-                return format(new Date(apt.date), 'yyyy-MM-dd') === format(day, 'yyyy-MM-dd') &&
-                       aptHour === currentHour;
+                console.log('Comparing dates:', {
+                  appointmentDate: apt.date,
+                  formattedDay,
+                  match: apt.date === formattedDay
+                });
+                return apt.date === formattedDay && aptHour === currentHour;
               });
+
+              console.log('Found appointments:', dayAppointments);
 
               return (
                 <div
@@ -74,7 +85,7 @@ const WeeklyCalendar = ({ appointments }: WeeklyCalendarProps) => {
                         backgroundColor: apt.staffColor || '#gray',
                         color: 'white'
                       }}
-                      title={apt.status === 'cancelled' ? `İptal Nedeni: ${apt.cancellationNote || 'Belirtilmedi'}` : undefined}
+                      title={`${apt.service} - ${apt.time}${apt.status === 'cancelled' ? ` (İptal Nedeni: ${apt.cancellationNote || 'Belirtilmedi'})` : ''}`}
                     >
                       {apt.customerName} ({apt.staffName})
                       {apt.status === 'cancelled' && ' (İptal)'}
