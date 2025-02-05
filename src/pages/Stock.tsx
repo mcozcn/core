@@ -8,11 +8,13 @@ import StockEntryForm from "@/components/stock/StockEntryForm";
 import SaleForm from "@/components/stock/SaleForm";
 import SalesTable from "@/components/stock/SalesTable";
 import StockMovementsTable from "@/components/stock/StockMovementsTable";
+import AddProductForm from "@/components/stock/AddProductForm";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Stock = () => {
   const [showStockEntryForm, setShowStockEntryForm] = useState(false);
   const [showSaleForm, setShowSaleForm] = useState(false);
+  const [showAddProductForm, setShowAddProductForm] = useState(false);
 
   const { data: stock = [] } = useQuery({
     queryKey: ['stock'],
@@ -43,6 +45,10 @@ const Stock = () => {
             <Plus className="w-4 h-4 mr-2" />
             Satış
           </Button>
+          <Button onClick={() => setShowAddProductForm(true)} variant="outline">
+            <Plus className="w-4 h-4 mr-2" />
+            Yeni Ürün
+          </Button>
         </div>
       </div>
 
@@ -51,6 +57,7 @@ const Stock = () => {
           <TabsTrigger value="stock">Stok Durumu</TabsTrigger>
           <TabsTrigger value="movements">Stok Hareketleri</TabsTrigger>
           <TabsTrigger value="sales">Satışlar</TabsTrigger>
+          <TabsTrigger value="products">Yeni Ürün Girişi</TabsTrigger>
         </TabsList>
 
         <TabsContent value="stock">
@@ -63,6 +70,14 @@ const Stock = () => {
 
         <TabsContent value="sales">
           <SalesTable sales={sales} />
+        </TabsContent>
+
+        <TabsContent value="products">
+          <AddProductForm
+            showForm={true}
+            setShowForm={setShowAddProductForm}
+            stock={stock}
+          />
         </TabsContent>
       </Tabs>
 
@@ -80,6 +95,14 @@ const Stock = () => {
           setShowForm={setShowSaleForm}
           stock={stock}
           sales={sales}
+        />
+      )}
+
+      {showAddProductForm && (
+        <AddProductForm
+          showForm={showAddProductForm}
+          setShowForm={setShowAddProductForm}
+          stock={stock}
         />
       )}
     </div>
