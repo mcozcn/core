@@ -2,10 +2,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { getCurrentUser, hasAccess } from "./utils/auth";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navigation from "./components/Navigation";
-import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Customers from "./pages/Customers";
 import Appointments from "./pages/Appointments";
@@ -15,23 +13,9 @@ import Sales from "./pages/Sales";
 import Costs from "./pages/Costs";
 import Financial from "./pages/Financial";
 import Backup from "./pages/Backup";
-import UserManagement from "./pages/UserManagement";
+import PersonnelManagement from "./pages/PersonnelManagement";
 
 const queryClient = new QueryClient();
-
-const PrivateRoute = ({ children, page }: { children: React.ReactNode; page: string }) => {
-  const user = getCurrentUser();
-  
-  if (!user) {
-    return <Navigate to="/login" />;
-  }
-
-  if (!hasAccess(page)) {
-    return <Navigate to="/" />;
-  }
-  
-  return <>{children}</>;
-};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -40,125 +24,103 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/login" element={<Login />} />
-          
           <Route
             path="/"
             element={
-              <PrivateRoute page="dashboard">
-                <>
-                  <Navigation />
-                  <Dashboard />
-                </>
-              </PrivateRoute>
+              <>
+                <Navigation />
+                <Dashboard />
+              </>
             }
           />
           
           <Route
             path="/customers"
             element={
-              <PrivateRoute page="customers">
-                <>
-                  <Navigation />
-                  <Customers />
-                </>
-              </PrivateRoute>
+              <>
+                <Navigation />
+                <Customers />
+              </>
             }
           />
           
           <Route
             path="/appointments"
             element={
-              <PrivateRoute page="appointments">
-                <>
-                  <Navigation />
-                  <Appointments />
-                </>
-              </PrivateRoute>
+              <>
+                <Navigation />
+                <Appointments />
+              </>
             }
           />
           
           <Route
             path="/services"
             element={
-              <PrivateRoute page="services">
-                <>
-                  <Navigation />
-                  <Services />
-                </>
-              </PrivateRoute>
+              <>
+                <Navigation />
+                <Services />
+              </>
             }
           />
           
           <Route
             path="/stock"
             element={
-              <PrivateRoute page="stock">
-                <>
-                  <Navigation />
-                  <Stock />
-                </>
-              </PrivateRoute>
+              <>
+                <Navigation />
+                <Stock />
+              </>
             }
           />
           
           <Route
             path="/sales"
             element={
-              <PrivateRoute page="sales">
-                <>
-                  <Navigation />
-                  <Sales />
-                </>
-              </PrivateRoute>
+              <>
+                <Navigation />
+                <Sales />
+              </>
             }
           />
           
           <Route
             path="/costs"
             element={
-              <PrivateRoute page="costs">
-                <>
-                  <Navigation />
-                  <Costs />
-                </>
-              </PrivateRoute>
+              <>
+                <Navigation />
+                <Costs />
+              </>
             }
           />
           
           <Route
             path="/financial"
             element={
-              <PrivateRoute page="financial">
-                <>
-                  <Navigation />
-                  <Financial />
-                </>
-              </PrivateRoute>
+              <>
+                <Navigation />
+                <Financial />
+              </>
             }
           />
           
           <Route
             path="/backup"
             element={
-              <PrivateRoute page="backup">
-                <>
-                  <Navigation />
-                  <Backup />
-                </>
-              </PrivateRoute>
+              <>
+                <Navigation />
+                <Backup />
+              </>
             }
           />
 
           <Route
-            path="/user-management"
+            path="/personnel"
             element={
-              <PrivateRoute page="user-management">
-                <>
-                  <Navigation />
-                  <UserManagement />
-                </>
-              </PrivateRoute>
+              <>
+                <Navigation />
+                <PersonnelManagement />
+              </>
             }
           />
         </Routes>

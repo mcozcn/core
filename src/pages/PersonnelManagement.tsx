@@ -1,13 +1,13 @@
-import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import CreatePersonnelForm from '@/components/personnel/CreatePersonnelForm';
-import PersonnelList from '@/components/personnel/PersonnelList';
-import { getAllUsers } from '@/utils/auth';
+import CreatePersonnelForm from "@/components/personnel/CreatePersonnelForm";
+import PersonnelList from "@/components/personnel/PersonnelList";
+import { getAllUsers } from "@/utils/auth";
+import { useState } from "react";
 
 const PersonnelManagement = () => {
-  const [personnel, setPersonnel] = React.useState(getAllUsers());
+  const [personnel, setPersonnel] = useState(getAllUsers());
 
-  const handlePersonnelCreated = () => {
+  const handlePersonnelUpdate = () => {
     setPersonnel(getAllUsers());
   };
 
@@ -24,11 +24,11 @@ const PersonnelManagement = () => {
         </TabsList>
 
         <TabsContent value="list">
-          <PersonnelList personnel={personnel} onUpdate={() => setPersonnel(getAllUsers())} />
+          <PersonnelList personnel={personnel} onUpdate={handlePersonnelUpdate} />
         </TabsContent>
 
         <TabsContent value="create">
-          <CreatePersonnelForm onSuccess={handlePersonnelCreated} />
+          <CreatePersonnelForm onSuccess={handlePersonnelUpdate} />
         </TabsContent>
       </Tabs>
     </div>

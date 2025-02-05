@@ -2,7 +2,6 @@ export type UserRole = 'admin' | 'staff';
 
 export interface User {
   id: number;
-  username?: string;
   displayName: string;
   title: string;
   role?: UserRole;
@@ -15,7 +14,6 @@ export interface User {
 
 export interface AuthState {
   users: User[];
-  currentUser?: User;
 }
 
 const STORAGE_KEY = 'auth_state';
@@ -33,8 +31,7 @@ const initialState: AuthState = {
       createdAt: new Date(),
       allowedPages: ['dashboard', 'appointments', 'customers', 'services', 'stock', 'sales', 'costs', 'financial', 'backup']
     }
-  ],
-  currentUser: undefined
+  ]
 };
 
 export const getAuthState = (): AuthState => {
@@ -48,25 +45,6 @@ export const setAuthState = (state: AuthState): void => {
 
 export const getAllUsers = (): User[] => {
   return getAuthState().users;
-};
-
-export const getCurrentUser = (): User | undefined => {
-  return getAuthState().currentUser;
-};
-
-export const hasAccess = (page: string): boolean => {
-  const currentUser = getCurrentUser();
-  if (!currentUser) return false;
-  
-  if (currentUser.role === 'admin') return true;
-  
-  return currentUser.allowedPages?.includes(page) || false;
-};
-
-export const logout = (): void => {
-  const state = getAuthState();
-  state.currentUser = undefined;
-  setAuthState(state);
 };
 
 export const deleteUser = (userId: number): boolean => {
