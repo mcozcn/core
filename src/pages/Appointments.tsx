@@ -5,10 +5,17 @@ import AppointmentForm from '@/components/appointments/AppointmentForm';
 import WeeklyCalendar from '@/components/appointments/WeeklyCalendar';
 import SearchInput from '@/components/common/SearchInput';
 import DateSelectionDialog from '@/components/common/DateSelectionDialog';
+import { useQuery } from '@tanstack/react-query';
+import { getAppointments } from '@/utils/localStorage';
 
 const Appointments = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+
+  const { data: appointments = [] } = useQuery({
+    queryKey: ['appointments'],
+    queryFn: getAppointments,
+  });
 
   const handleSuccess = () => {
     console.log('Appointment created successfully');
@@ -53,7 +60,7 @@ const Appointments = () => {
         </TabsContent>
 
         <TabsContent value="weekly">
-          <WeeklyCalendar appointments={[]} />
+          <WeeklyCalendar appointments={appointments} />
         </TabsContent>
       </Tabs>
     </div>
