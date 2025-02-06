@@ -56,7 +56,7 @@ const WeeklyCalendar = ({ appointments }: WeeklyCalendarProps) => {
         </Button>
       </div>
       
-      <div className="min-w-[800px]">
+      <div className="min-w-[800px] print:m-0 print:w-full print:min-w-full">
         <div className="grid grid-cols-8 gap-2 mb-4">
           <div className="font-semibold text-center">Saat</div>
           {weekDays.map((day) => (
