@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Printer } from "lucide-react";
 import { addDays, format, startOfWeek, eachHourOfInterval, setHours, setMinutes, parseISO } from "date-fns";
 import { tr } from 'date-fns/locale';
 
@@ -25,6 +27,10 @@ interface WeeklyCalendarProps {
 const WeeklyCalendar = ({ appointments }: WeeklyCalendarProps) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   const workingHours = eachHourOfInterval({
     start: setHours(setMinutes(new Date(), 0), 9),
     end: setHours(setMinutes(new Date(), 0), 19),
@@ -38,6 +44,18 @@ const WeeklyCalendar = ({ appointments }: WeeklyCalendarProps) => {
 
   return (
     <Card className="p-4 overflow-auto">
+      <div className="flex justify-between items-center mb-4 print:hidden">
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={handlePrint}
+          className="gap-2"
+        >
+          <Printer className="h-4 w-4" />
+          Yazdır
+        </Button>
+      </div>
+      
       <div className="min-w-[800px]">
         <div className="grid grid-cols-8 gap-2 mb-4">
           <div className="font-semibold text-center">Saat</div>
