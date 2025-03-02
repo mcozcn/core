@@ -50,7 +50,7 @@ const Dashboard = () => {
 
   return (
     <div className="p-8 pl-72 animate-fadeIn">
-      <div className="mb-4 flex justify-center">
+      <div className="flex items-start mb-10">
         <img 
           src="/lovable-uploads/22f77663-e35c-4d11-9ab0-e3238b031a0b.png" 
           alt="Beautiq Logo" 
