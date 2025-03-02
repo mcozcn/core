@@ -50,11 +50,11 @@ const Dashboard = () => {
 
   return (
     <div className="p-8 pl-72 animate-fadeIn">
-      <div className="flex items-start mb-10">
+      <div className="mb-6 flex justify-center">
         <img 
           src="/lovable-uploads/22f77663-e35c-4d11-9ab0-e3238b031a0b.png" 
           alt="Beautiq Logo" 
-          className="w-full max-w-xl" 
+          className="w-64" 
         />
       </div>
       <p className="text-gray-500 text-center mb-6">Salonunuzdaki güncel durumu buradan takip edebilirsiniz.</p>
