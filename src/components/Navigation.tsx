@@ -1,3 +1,4 @@
+
 import { Link, useLocation } from "react-router-dom";
 import { Calendar, Users, Scissors, BarChart3, Package, DollarSign, CreditCard, ShoppingCart, Database } from "lucide-react";
 
@@ -21,8 +22,8 @@ const Navigation = () => {
     <nav className="fixed top-0 left-0 h-full w-64 bg-background border-r border-border shadow-lg p-6">
       <div className="mb-8">
         <img 
-          src="/lovable-uploads/b98e8cd9-86a0-4af7-b322-84c8d9d63a3d.png" 
-          alt="Aslı Altınbaş Beauty Logo" 
+          src="/lovable-uploads/22f77663-e35c-4d11-9ab0-e3238b031a0b.png" 
+          alt="Beautiq Logo" 
           className="w-56 mx-auto mb-6"
         />
         <p className="text-sm text-muted-foreground text-center">Salon Yönetimi</p>

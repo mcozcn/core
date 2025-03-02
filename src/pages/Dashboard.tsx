@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { getAppointments, getSales, getServiceSales } from "@/utils/localStorage";
 import SalesSummary from "@/components/dashboard/SalesSummary";
@@ -49,12 +50,14 @@ const Dashboard = () => {
 
   return (
     <div className="p-8 pl-72 animate-fadeIn">
-      <div className="mb-8">
-        <h1 className="text-5xl font-serif mb-4 text-center" style={{ color: '#D4AF37' }}>
-          ASLI ALTINBAŞ BEAUTY
-        </h1>
-        <p className="text-gray-500 text-center">Salonunuzdaki güncel durumu buradan takip edebilirsiniz.</p>
+      <div className="mb-8 flex justify-center">
+        <img 
+          src="/lovable-uploads/22f77663-e35c-4d11-9ab0-e3238b031a0b.png" 
+          alt="Beautiq Logo" 
+          className="w-64 mb-4"
+        />
       </div>
+      <p className="text-gray-500 text-center mb-8">Salonunuzdaki güncel durumu buradan takip edebilirsiniz.</p>
 
       {/* Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 max-w-4xl mx-auto">
