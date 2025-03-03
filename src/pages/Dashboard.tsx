@@ -54,7 +54,7 @@ const Dashboard = () => {
         <img 
           src="/lovable-uploads/18599c6d-da00-4149-814e-e1ce55f990d5.png" 
           alt="Beautiq Logo" 
-          className="w-64" 
+          className="w-96" 
         />
       </div>
       <p className="text-gray-500 text-center mb-6">Salonunuzdaki güncel durumu buradan takip edebilirsiniz.</p>
