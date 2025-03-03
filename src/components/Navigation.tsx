@@ -22,7 +22,7 @@ const Navigation = () => {
     <nav className="fixed top-0 left-0 h-full w-64 bg-background border-r border-border shadow-lg p-6">
       <div className="mb-8">
         <img 
-          src="/lovable-uploads/22f77663-e35c-4d11-9ab0-e3238b031a0b.png" 
+          src="/lovable-uploads/18599c6d-da00-4149-814e-e1ce55f990d5.png" 
           alt="Beautiq Logo" 
           className="w-56 mx-auto mb-6"
         />

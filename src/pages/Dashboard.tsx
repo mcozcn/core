@@ -52,7 +52,7 @@ const Dashboard = () => {
     <div className="p-8 pl-72 animate-fadeIn">
       <div className="mb-6 flex justify-center">
         <img 
-          src="/lovable-uploads/22f77663-e35c-4d11-9ab0-e3238b031a0b.png" 
+          src="/lovable-uploads/18599c6d-da00-4149-814e-e1ce55f990d5.png" 
           alt="Beautiq Logo" 
           className="w-64" 
         />
