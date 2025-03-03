@@ -1,7 +1,12 @@
 
-const { app, BrowserWindow } = require('electron');
-const path = require('path');
-const isDev = require('electron-is-dev');
+import { app, BrowserWindow } from 'electron';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import isDev from 'electron-is-dev';
+
+// Get current directory in ESM context
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 let mainWindow;
 

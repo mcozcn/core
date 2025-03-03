@@ -1,6 +1,6 @@
 
-const { spawn } = require('child_process');
-const { platform } = require('os');
+import { spawn } from 'child_process';
+import { platform } from 'os';
 
 // Start Vite dev server
 const vite = spawn('npm', ['run', 'dev'], { 
