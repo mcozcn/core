@@ -42,13 +42,19 @@ if (!packageJson.author) {
   };
 }
 
+// Set main entry point for Electron
+packageJson.main = "index.js";
+
 // Write the modified package.json
 fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
 try {
   // Build React app
   console.log('Building React app...');
-  execSync('npm run build', { stdio: 'inherit' });
+  execSync('npx vite build', { 
+    stdio: 'inherit',
+    env: { ...process.env, IS_ELECTRON: 'true' }
+  });
 
   // Build Electron app
   console.log('Building Electron app...');
