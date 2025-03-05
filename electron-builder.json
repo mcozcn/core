@@ -20,7 +20,6 @@
     "index.js"
   ],
   "win": {
-    "icon": "public/favicon.ico",
     "target": [
       "nsis"
     ]
@@ -28,8 +27,6 @@
   "nsis": {
     "oneClick": false,
     "allowToChangeInstallationDirectory": true,
-    "installerIcon": "public/favicon.ico",
-    "installerHeaderIcon": "public/favicon.ico",
     "createDesktopShortcut": true,
     "createStartMenuShortcut": true
   }
