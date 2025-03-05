@@ -36,7 +36,7 @@ if (!packageJson.description) {
 }
 
 // Set main entry point for Electron
-packageJson.main = "index.js";
+packageJson.main = "electron/main.js";
 
 // Write the modified package.json
 fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
@@ -47,6 +47,29 @@ try {
   execSync('npx vite build', { 
     stdio: 'inherit',
     env: { ...process.env, IS_ELECTRON: 'true' }
+  });
+
+  // Copy index.js to dist
+  console.log('Copying index.js to dist directory...');
+  fs.copyFileSync(
+    path.join(__dirname, '..', 'index.js'),
+    path.join(__dirname, '..', 'dist', 'index.js')
+  );
+
+  // Copy electron directory to dist
+  console.log('Copying electron directory to dist...');
+  const electronDir = path.join(__dirname, '..', 'electron');
+  const distElectronDir = path.join(__dirname, '..', 'dist', 'electron');
+  
+  if (!fs.existsSync(distElectronDir)) {
+    fs.mkdirSync(distElectronDir, { recursive: true });
+  }
+  
+  fs.readdirSync(electronDir).forEach(file => {
+    fs.copyFileSync(
+      path.join(electronDir, file),
+      path.join(distElectronDir, file)
+    );
   });
 
   // Build Electron app

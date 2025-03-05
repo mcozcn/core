@@ -9,13 +9,8 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Set app path
-if (process.env.NODE_ENV === 'development') {
-  // In development, use the source files
-  import('./electron/main.js');
-} else {
-  // In production, use the built files
-  process.env.DIST = path.join(__dirname, './dist');
-  process.env.PUBLIC = app.isPackaged ? process.env.DIST : path.join(__dirname, './public');
-  import('./electron/main.js');
-}
+// Import the main process file directly
+import('./electron/main.js').catch(err => {
+  console.error('Error importing main process file:', err);
+  app.quit();
+});

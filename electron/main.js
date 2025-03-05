@@ -42,7 +42,7 @@ function createWindow() {
 }
 
 // Create window when Electron is ready
-app.on('ready', createWindow);
+app.whenReady().then(createWindow);
 
 // Quit when all windows are closed
 app.on('window-all-closed', () => {
@@ -52,7 +52,7 @@ app.on('window-all-closed', () => {
 });
 
 app.on('activate', () => {
-  if (mainWindow === null) {
+  if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
   }
 });

@@ -8,14 +8,16 @@
       "name": "Beautiq",
       "email": "info@beautiq.com"
     },
-    "description": "Beautiq Salon Yönetim Uygulaması"
+    "description": "Beautiq Salon Yönetim Uygulaması",
+    "main": "electron/main.js"
   },
   "directories": {
     "output": "release"
   },
   "files": [
     "dist/**/*",
-    "electron/**/*"
+    "electron/**/*",
+    "index.js"
   ],
   "win": {
     "icon": "public/favicon.ico",
