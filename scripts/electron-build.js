@@ -30,16 +30,9 @@ if (packageJson.dependencies && packageJson.dependencies['electron-builder']) {
   delete packageJson.dependencies['electron-builder'];
 }
 
-// Add missing fields
+// Add description if not present
 if (!packageJson.description) {
   packageJson.description = "Beautiq Salon Yönetim Uygulaması";
-}
-
-if (!packageJson.author) {
-  packageJson.author = {
-    name: "Beautiq",
-    email: "info@beautiq.com"
-  };
 }
 
 // Set main entry point for Electron

@@ -2,10 +2,13 @@
 {
   "appId": "com.beautiq.salonmanagement",
   "productName": "Beautiq Salon Yönetimi",
-  "description": "Beautiq Salon Yönetim Uygulaması",
-  "author": {
-    "name": "Beautiq",
-    "email": "info@beautiq.com"
+  "copyright": "Copyright © 2024 Beautiq",
+  "extraMetadata": {
+    "author": {
+      "name": "Beautiq",
+      "email": "info@beautiq.com"
+    },
+    "description": "Beautiq Salon Yönetim Uygulaması"
   },
   "directories": {
     "output": "release"
