@@ -20,5 +20,11 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  base: process.env.IS_ELECTRON === 'true' ? './' : '/',
+  base: './',
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    emptyOutDir: true,
+    sourcemap: true,
+  }
 }));

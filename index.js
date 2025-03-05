@@ -10,7 +10,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Import the main process file directly
-import('./electron/main.js').catch(err => {
-  console.error('Error importing main process file:', err);
-  app.quit();
-});
+import('./electron/main.js')
+  .then(() => {
+    console.log('Main process loaded successfully');
+  })
+  .catch(err => {
+    console.error('Error importing main process file:', err);
+    app.quit();
+  });

@@ -4,10 +4,6 @@
   "productName": "Beautiq Salon Yönetimi",
   "copyright": "Copyright © 2024 Beautiq",
   "extraMetadata": {
-    "author": {
-      "name": "Beautiq",
-      "email": "info@beautiq.com"
-    },
     "description": "Beautiq Salon Yönetim Uygulaması",
     "main": "electron/main.js"
   },
