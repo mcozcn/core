@@ -5,16 +5,19 @@
   "copyright": "Copyright © 2024 Beautiq",
   "extraMetadata": {
     "description": "Beautiq Salon Yönetim Uygulaması",
-    "main": "electron/main.js"
+    "main": "index.js"
   },
   "directories": {
-    "output": "release"
+    "output": "release",
+    "buildResources": "dist"
   },
   "files": [
     "dist/**/*",
     "electron/**/*",
-    "index.js"
+    "index.js",
+    "!**/node_modules/**/*"
   ],
+  "asar": true,
   "win": {
     "target": [
       "nsis"

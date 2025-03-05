@@ -36,7 +36,7 @@ if (!packageJson.description) {
 }
 
 // Set main entry point for Electron
-packageJson.main = "electron/main.js";
+packageJson.main = "index.js";
 
 // Write the modified package.json
 fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
@@ -50,11 +50,10 @@ try {
   });
 
   // Copy index.js to dist
-  console.log('Copying index.js to dist directory...');
-  fs.copyFileSync(
-    path.join(__dirname, '..', 'index.js'),
-    path.join(__dirname, '..', 'dist', 'index.js')
-  );
+  console.log('Copying index.js to root directory...');
+  const sourcePath = path.join(__dirname, '..', 'index.js');
+  const destPath = path.join(__dirname, '..', 'dist', 'index.js');
+  fs.copyFileSync(sourcePath, destPath);
 
   // Copy electron directory to dist
   console.log('Copying electron directory to dist...');

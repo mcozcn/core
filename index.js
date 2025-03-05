@@ -9,6 +9,9 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+console.log('Starting Electron application from index.js');
+console.log('Current directory:', __dirname);
+
 // Import the main process file directly
 import('./electron/main.js')
   .then(() => {

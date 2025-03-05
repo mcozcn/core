@@ -11,11 +11,13 @@ const __dirname = path.dirname(__filename);
 let mainWindow;
 
 function createWindow() {
-  console.log('Creating main window...');
+  console.log('Creating main window with dirname:', __dirname);
+  
   // Create the browser window
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
+    show: false, // Don't show until loaded
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
@@ -26,7 +28,7 @@ function createWindow() {
   // Load the app
   const startUrl = isDev 
     ? 'http://localhost:8080' // Dev server
-    : `file://${path.join(__dirname, '../dist/index.html')}`; // Production build
+    : `file://${path.resolve(__dirname, '../dist/index.html')}`; // Production build using resolve
   
   console.log('Loading URL:', startUrl);
   
@@ -34,10 +36,27 @@ function createWindow() {
   mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
     console.error('Failed to load:', errorCode, errorDescription);
     
-    // Try to reload if in production and failed to load
+    // Try different paths if in production and failed to load
     if (!isDev) {
-      console.log('Attempting to load alternative path...');
-      mainWindow.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
+      console.log('Attempting to load alternative paths...');
+      
+      // Try alternative paths
+      const alternativePaths = [
+        path.resolve(__dirname, '../dist/index.html'),
+        path.resolve(__dirname, './dist/index.html'),
+        path.resolve(__dirname, 'dist/index.html'),
+        path.resolve(__dirname, '../index.html'),
+        path.resolve(__dirname, './index.html'),
+        path.join(__dirname, '../dist/index.html'),
+        path.join(__dirname, './dist/index.html'),
+        path.join(__dirname, 'dist/index.html')
+      ];
+      
+      // Log all paths we're trying
+      console.log('Trying alternative paths:', alternativePaths);
+      
+      // Try the first alternative path
+      mainWindow.loadFile(alternativePaths[0]);
     }
   });
   
