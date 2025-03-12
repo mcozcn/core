@@ -14,133 +14,119 @@ import Costs from "./pages/Costs";
 import Financial from "./pages/Financial";
 import Backup from "./pages/Backup";
 import PersonnelManagement from "./pages/PersonnelManagement";
-import { useState, useEffect } from "react";
 
 const queryClient = new QueryClient();
 
-const App = () => {
-  const [isLoaded, setIsLoaded] = useState(false);
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <>
+                <Navigation />
+                <Dashboard />
+              </>
+            }
+          />
+          
+          <Route
+            path="/customers"
+            element={
+              <>
+                <Navigation />
+                <Customers />
+              </>
+            }
+          />
+          
+          <Route
+            path="/appointments"
+            element={
+              <>
+                <Navigation />
+                <Appointments />
+              </>
+            }
+          />
+          
+          <Route
+            path="/services"
+            element={
+              <>
+                <Navigation />
+                <Services />
+              </>
+            }
+          />
+          
+          <Route
+            path="/stock"
+            element={
+              <>
+                <Navigation />
+                <Stock />
+              </>
+            }
+          />
+          
+          <Route
+            path="/sales"
+            element={
+              <>
+                <Navigation />
+                <Sales />
+              </>
+            }
+          />
+          
+          <Route
+            path="/costs"
+            element={
+              <>
+                <Navigation />
+                <Costs />
+              </>
+            }
+          />
+          
+          <Route
+            path="/financial"
+            element={
+              <>
+                <Navigation />
+                <Financial />
+              </>
+            }
+          />
+          
+          <Route
+            path="/backup"
+            element={
+              <>
+                <Navigation />
+                <Backup />
+              </>
+            }
+          />
 
-  useEffect(() => {
-    console.log("App component mounted");
-    setIsLoaded(true);
-  }, []);
-
-  if (!isLoaded) {
-    return <div className="h-screen w-screen flex items-center justify-center">Loading...</div>;
-  }
-
-  return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route
-              path="/"
-              element={
-                <>
-                  <Navigation />
-                  <Dashboard />
-                </>
-              }
-            />
-            
-            <Route
-              path="/customers"
-              element={
-                <>
-                  <Navigation />
-                  <Customers />
-                </>
-              }
-            />
-            
-            <Route
-              path="/appointments"
-              element={
-                <>
-                  <Navigation />
-                  <Appointments />
-                </>
-              }
-            />
-            
-            <Route
-              path="/services"
-              element={
-                <>
-                  <Navigation />
-                  <Services />
-                </>
-              }
-            />
-            
-            <Route
-              path="/stock"
-              element={
-                <>
-                  <Navigation />
-                  <Stock />
-                </>
-              }
-            />
-            
-            <Route
-              path="/sales"
-              element={
-                <>
-                  <Navigation />
-                  <Sales />
-                </>
-              }
-            />
-            
-            <Route
-              path="/costs"
-              element={
-                <>
-                  <Navigation />
-                  <Costs />
-                </>
-              }
-            />
-            
-            <Route
-              path="/financial"
-              element={
-                <>
-                  <Navigation />
-                  <Financial />
-                </>
-              }
-            />
-            
-            <Route
-              path="/backup"
-              element={
-                <>
-                  <Navigation />
-                  <Backup />
-                </>
-              }
-            />
-
-            <Route
-              path="/personnel"
-              element={
-                <>
-                  <Navigation />
-                  <PersonnelManagement />
-                </>
-              }
-            />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
-  );
-};
+          <Route
+            path="/personnel"
+            element={
+              <>
+                <Navigation />
+                <PersonnelManagement />
+              </>
+            }
+          />
+        </Routes>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
 
 export default App;
