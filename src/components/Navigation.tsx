@@ -1,6 +1,6 @@
 
 import { Link, useLocation } from "react-router-dom";
-import { Calendar, Users, Scissors, BarChart3, Package, DollarSign, CreditCard, ShoppingCart, Database } from "lucide-react";
+import { Calendar, Users, BarChart3, Package, DollarSign, CreditCard, ShoppingCart, Database } from "lucide-react";
 
 const Navigation = () => {
   const location = useLocation();
@@ -9,7 +9,6 @@ const Navigation = () => {
     { to: "/", label: "Panel", icon: BarChart3 },
     { to: "/appointments", label: "Randevular", icon: Calendar },
     { to: "/customers", label: "Müşteriler", icon: Users },
-    { to: "/services", label: "Hizmetler", icon: Scissors },
     { to: "/stock", label: "Stok Yönetimi", icon: Package },
     { to: "/sales", label: "Satışlar", icon: ShoppingCart },
     { to: "/costs", label: "Masraflar", icon: DollarSign },
@@ -50,3 +49,4 @@ const Navigation = () => {
 };
 
 export default Navigation;
+
