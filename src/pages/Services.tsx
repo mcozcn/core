@@ -10,11 +10,14 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getServices, setServices, type Service } from "@/utils/localStorage";
 import ServiceList from '@/components/services/ServiceList';
 import SearchInput from '@/components/common/SearchInput';
+import EditServiceForm from "@/components/services/EditServiceForm";
+import { Pencil } from "lucide-react";
 
 const Services = () => {
   const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingService, setEditingService] = useState<Service | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -191,7 +194,40 @@ const Services = () => {
         </Card>
       )}
 
-      <ServiceList services={filteredServices} />
+      {editingService && (
+        <EditServiceForm
+          service={editingService}
+          showForm={!!editingService}
+          setShowForm={(show) => !show && setEditingService(null)}
+        />
+      )}
+
+      <div className="grid gap-4">
+        {filteredServices.map((service) => (
+          <Card key={service.id} className="p-6">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h3 className="text-lg font-semibold">{service.name}</h3>
+                <p className="text-muted-foreground">{service.description}</p>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setEditingService(service)}
+                className="h-8 w-8"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="flex gap-4 text-sm">
+              <span>Fiyat: {service.price} ₺</span>
+              {service.duration && <span>Süre: {service.duration}</span>}
+              <span>Seans: {service.sessionCount}</span>
+              <span>Tür: {service.type === 'recurring' ? 'Sürekli' : 'Tek Seferlik'}</span>
+            </div>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 };

@@ -10,11 +10,13 @@ import SalesTable from "@/components/stock/SalesTable";
 import StockMovementsTable from "@/components/stock/StockMovementsTable";
 import AddProductForm from "@/components/stock/AddProductForm";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import EditProductForm from "@/components/stock/EditProductForm";
 
 const Stock = () => {
   const [showStockEntryForm, setShowStockEntryForm] = useState(false);
   const [showSaleForm, setShowSaleForm] = useState(false);
   const [showAddProductForm, setShowAddProductForm] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<StockItem | null>(null);
 
   const { data: stock = [] } = useQuery({
     queryKey: ['stock'],
@@ -61,7 +63,7 @@ const Stock = () => {
         </TabsList>
 
         <TabsContent value="stock">
-          <StockTable searchTerm="" />
+          <StockTable searchTerm="" onEditProduct={setEditingProduct} />
         </TabsContent>
 
         <TabsContent value="movements">
@@ -103,6 +105,14 @@ const Stock = () => {
           showForm={showAddProductForm}
           setShowForm={setShowAddProductForm}
           stock={stock}
+        />
+      )}
+
+      {editingProduct && (
+        <EditProductForm
+          product={editingProduct}
+          showForm={!!editingProduct}
+          setShowForm={(show) => !show && setEditingProduct(null)}
         />
       )}
     </div>
