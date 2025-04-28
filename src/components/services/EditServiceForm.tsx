@@ -20,12 +20,12 @@ const EditServiceForm = ({ service, showForm, setShowForm }: EditServiceFormProp
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
-    name: service.name,
-    price: service.price.toString(),
-    description: service.description,
+    name: service.name || '',
+    price: service.price !== undefined ? service.price.toString() : '0',
+    description: service.description || '',
     duration: service.duration || '',
-    type: service.type,
-    sessionCount: service.sessionCount.toString(),
+    type: service.type || 'one-time',
+    sessionCount: service.sessionCount !== undefined ? service.sessionCount.toString() : '1',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
