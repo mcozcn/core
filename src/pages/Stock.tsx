@@ -1,8 +1,9 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { getStock, getSales } from "@/utils/localStorage";
+import { getStock, getSales, type StockItem } from "@/utils/localStorage";
 import StockTable from "@/components/stock/StockTable";
 import StockEntryForm from "@/components/stock/StockEntryForm";
 import SaleForm from "@/components/stock/SaleForm";
