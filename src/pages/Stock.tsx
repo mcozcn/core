@@ -3,11 +3,9 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { getStock, getSales, getServices, type StockItem, type Service } from "@/utils/localStorage";
+import { getStock, getServices, type StockItem, type Service } from "@/utils/localStorage";
 import StockTable from "@/components/stock/StockTable";
 import StockEntryForm from "@/components/stock/StockEntryForm";
-import SaleForm from "@/components/stock/SaleForm";
-import SalesTable from "@/components/stock/SalesTable";
 import StockMovementsTable from "@/components/stock/StockMovementsTable";
 import AddProductForm from "@/components/stock/AddProductForm";
 import EditProductForm from "@/components/stock/EditProductForm";
@@ -18,7 +16,6 @@ import ServiceList from "@/components/services/ServiceList";
 
 const Stock = () => {
   const [showStockEntryForm, setShowStockEntryForm] = useState(false);
-  const [showSaleForm, setShowSaleForm] = useState(false);
   const [showAddProductForm, setShowAddProductForm] = useState(false);
   const [showAddServiceForm, setShowAddServiceForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<StockItem | null>(null);
@@ -29,14 +26,6 @@ const Stock = () => {
     queryFn: () => {
       console.log('Fetching stock from localStorage');
       return getStock();
-    },
-  });
-
-  const { data: sales = [] } = useQuery({
-    queryKey: ['sales'],
-    queryFn: () => {
-      console.log('Fetching sales from localStorage');
-      return getSales();
     },
   });
 
@@ -57,10 +46,6 @@ const Stock = () => {
             <Plus className="w-4 h-4 mr-2" />
             Stok Girişi
           </Button>
-          <Button onClick={() => setShowSaleForm(true)} variant="secondary">
-            <Plus className="w-4 h-4 mr-2" />
-            Satış
-          </Button>
           <Button onClick={() => setShowAddProductForm(true)} variant="outline">
             <Plus className="w-4 h-4 mr-2" />
             Yeni Ürün
@@ -77,7 +62,6 @@ const Stock = () => {
           <TabsTrigger value="stock">Stok Durumu</TabsTrigger>
           <TabsTrigger value="services">Hizmetler</TabsTrigger>
           <TabsTrigger value="movements">Stok Hareketleri</TabsTrigger>
-          <TabsTrigger value="sales">Satışlar</TabsTrigger>
         </TabsList>
 
         <TabsContent value="stock">
@@ -91,10 +75,6 @@ const Stock = () => {
         <TabsContent value="movements">
           <StockMovementsTable />
         </TabsContent>
-
-        <TabsContent value="sales">
-          <SalesTable sales={sales} />
-        </TabsContent>
       </Tabs>
 
       {showStockEntryForm && (
@@ -102,15 +82,6 @@ const Stock = () => {
           showForm={showStockEntryForm}
           setShowForm={setShowStockEntryForm}
           stock={stock}
-        />
-      )}
-
-      {showSaleForm && (
-        <SaleForm
-          showForm={showSaleForm}
-          setShowForm={setShowSaleForm}
-          stock={stock}
-          sales={sales}
         />
       )}
 
