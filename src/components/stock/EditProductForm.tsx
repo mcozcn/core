@@ -18,11 +18,11 @@ const EditProductForm = ({ product, showForm, setShowForm }: EditProductFormProp
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
-    productName: product.productName,
-    price: product.price.toString(),
-    cost: product.cost.toString(),
-    category: product.category,
-    criticalLevel: product.criticalLevel.toString(),
+    productName: product?.productName || '',
+    price: product?.price !== undefined ? product.price.toString() : '0',
+    cost: product?.cost !== undefined ? product.cost.toString() : '0',
+    category: product?.category || '',
+    criticalLevel: product?.criticalLevel !== undefined ? product.criticalLevel.toString() : '5',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
