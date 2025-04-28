@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card } from "@/components/ui/card";
 import {
@@ -8,13 +9,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Pencil } from "lucide-react";
 import { Service } from '@/utils/localStorage';
 
 interface ServiceListProps {
   services: Service[];
+  onEditService?: (service: Service) => void;
 }
 
-const ServiceList = ({ services }: ServiceListProps) => {
+const ServiceList = ({ services, onEditService }: ServiceListProps) => {
   return (
     <Card>
       <Table>
@@ -26,12 +30,13 @@ const ServiceList = ({ services }: ServiceListProps) => {
             <TableHead>Seans Sayısı</TableHead>
             <TableHead>Tür</TableHead>
             <TableHead>Açıklama</TableHead>
+            {onEditService && <TableHead className="w-[80px]">İşlem</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
           {services.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className="text-center text-muted-foreground">
+              <TableCell colSpan={onEditService ? 7 : 6} className="text-center text-muted-foreground">
                 Henüz hizmet kaydı bulunmamaktadır.
               </TableCell>
             </TableRow>
@@ -44,6 +49,18 @@ const ServiceList = ({ services }: ServiceListProps) => {
                 <TableCell>{service.sessionCount || 1}</TableCell>
                 <TableCell>{service.type === 'recurring' ? 'Sürekli' : 'Tek Seferlik'}</TableCell>
                 <TableCell>{service.description}</TableCell>
+                {onEditService && (
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onEditService(service)}
+                      className="h-8 w-8"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                )}
               </TableRow>
             ))
           )}
