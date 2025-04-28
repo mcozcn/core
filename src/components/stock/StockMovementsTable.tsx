@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import {
   Table,
@@ -28,6 +29,18 @@ const StockMovementsTable = () => {
     new Date(b.date).getTime() - new Date(a.date).getTime()
   );
 
+  // Her ürün için önceki hareketleri bul
+  const getProductPreviousMovement = (productId: number, currentDate: Date) => {
+    const previousMovements = movements
+      .filter(m => 
+        m.productId === productId && 
+        new Date(m.date) < currentDate
+      )
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    
+    return previousMovements[0];
+  };
+
   return (
     <Card className="p-4">
       <h2 className="text-xl font-semibold mb-4">Stok Hareketleri</h2>
@@ -38,20 +51,24 @@ const StockMovementsTable = () => {
             <TableHead>Ürün</TableHead>
             <TableHead>Hareket</TableHead>
             <TableHead className="text-right">Miktar</TableHead>
-            <TableHead className="text-right">Birim Maliyet</TableHead>
+            <TableHead className="text-right">Yeni Birim Maliyet</TableHead>
+            <TableHead className="text-right">Önceki Birim Maliyet</TableHead>
+            <TableHead>Önceki İşlem Tarihi</TableHead>
             <TableHead>Açıklama</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {sortedMovements.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className="text-center text-muted-foreground">
+              <TableCell colSpan={8} className="text-center text-muted-foreground">
                 Henüz stok hareketi bulunmamaktadır.
               </TableCell>
             </TableRow>
           ) : (
             sortedMovements.map((movement) => {
               const product = stock.find(item => item.productId === movement.productId);
+              const previousMovement = getProductPreviousMovement(movement.productId, new Date(movement.date));
+              
               return (
                 <TableRow key={movement.id}>
                   <TableCell>
@@ -69,6 +86,16 @@ const StockMovementsTable = () => {
                   </TableCell>
                   <TableCell className="text-right">{movement.quantity}</TableCell>
                   <TableCell className="text-right">₺{movement.cost.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</TableCell>
+                  <TableCell className="text-right">
+                    {previousMovement 
+                      ? `₺${previousMovement.cost.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}` 
+                      : '-'}
+                  </TableCell>
+                  <TableCell>
+                    {previousMovement 
+                      ? format(new Date(previousMovement.date), 'dd MMMM yyyy HH:mm', { locale: tr })
+                      : '-'}
+                  </TableCell>
                   <TableCell>{movement.description}</TableCell>
                 </TableRow>
               );

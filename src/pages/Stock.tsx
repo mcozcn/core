@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -13,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EditServiceForm from "@/components/services/EditServiceForm";
 import AddServiceForm from "@/components/services/AddServiceForm";
 import ServiceList from "@/components/services/ServiceList";
+import ServiceHistoryTable from "@/components/services/ServiceHistoryTable";
 
 const Stock = () => {
   const [showStockEntryForm, setShowStockEntryForm] = useState(false);
@@ -68,8 +68,9 @@ const Stock = () => {
           <StockTable searchTerm="" onEditProduct={setEditingProduct} />
         </TabsContent>
 
-        <TabsContent value="services">
+        <TabsContent value="services" className="space-y-8">
           <ServiceList services={services} onEditService={setEditingService} />
+          <ServiceHistoryTable />
         </TabsContent>
 
         <TabsContent value="movements">
