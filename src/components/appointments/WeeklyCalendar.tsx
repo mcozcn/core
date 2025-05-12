@@ -1,9 +1,12 @@
+
 import { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Printer } from "lucide-react";
+import { Printer, RotateCcw } from "lucide-react";
 import { addDays, format, startOfWeek, eachHourOfInterval, setHours, setMinutes } from "date-fns";
 import { tr } from 'date-fns/locale';
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { DateRange } from "react-day-picker";
 
 interface Appointment {
   id: number;
@@ -26,6 +29,17 @@ interface WeeklyCalendarProps {
 
 const WeeklyCalendar = ({ appointments }: WeeklyCalendarProps) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: new Date(),
+    to: addDays(new Date(), 6) // Default to one week
+  });
+
+  const resetDateFilter = () => {
+    setDateRange({
+      from: new Date(),
+      to: addDays(new Date(), 6)
+    });
+  };
 
   const handlePrint = () => {
     const printContent = document.getElementById('calendar-content');
@@ -74,18 +88,40 @@ const WeeklyCalendar = ({ appointments }: WeeklyCalendarProps) => {
     }
   };
 
+  // Determine the date range for the week view
+  let weekStart = selectedDate;
+  if (dateRange.from) {
+    weekStart = dateRange.from;
+  }
+
   const workingHours = eachHourOfInterval({
     start: setHours(setMinutes(new Date(), 0), 9),
     end: setHours(setMinutes(new Date(), 0), 19),
   });
 
   const weekDays = Array.from({ length: 7 }, (_, i) => 
-    addDays(startOfWeek(selectedDate, { locale: tr }), i)
+    addDays(startOfWeek(weekStart, { locale: tr }), i)
   );
 
   return (
     <Card className="p-4 overflow-auto">
-      <div className="flex justify-end mb-4">
+      <div className="flex flex-wrap justify-between items-center gap-3 mb-4">
+        <div className="flex items-center gap-2">
+          <DatePickerWithRange 
+            date={dateRange} 
+            setDate={setDateRange}
+            locale={tr} 
+          />
+          <Button 
+            variant="outline" 
+            size="icon" 
+            onClick={resetDateFilter} 
+            title="Filtreyi Sıfırla"
+          >
+            <RotateCcw className="h-4 w-4" />
+          </Button>
+        </div>
+        
         <Button 
           variant="outline" 
           size="sm"
