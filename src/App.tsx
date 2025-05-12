@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,6 +15,7 @@ import Costs from "./pages/Costs";
 import Financial from "./pages/Financial";
 import Backup from "./pages/Backup";
 import PersonnelManagement from "./pages/PersonnelManagement";
+import Reports from "./pages/Reports";
 
 const queryClient = new QueryClient();
 
@@ -100,6 +102,16 @@ const App = () => (
               <>
                 <Navigation />
                 <Financial />
+              </>
+            }
+          />
+          
+          <Route
+            path="/reports"
+            element={
+              <>
+                <Navigation />
+                <Reports />
               </>
             }
           />
