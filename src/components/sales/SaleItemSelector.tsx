@@ -1,11 +1,12 @@
+
 import React from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { getStock, getServices } from "@/utils/localStorage";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { SaleItemSelectorProps } from './types';
+import { X } from "lucide-react";
 
 const SaleItemSelector = ({ item, index, onUpdate, onRemove }: SaleItemSelectorProps) => {
   const { data: stock = [] } = useQuery({
@@ -22,30 +23,29 @@ const SaleItemSelector = ({ item, index, onUpdate, onRemove }: SaleItemSelectorP
 
   const items = item.type === 'product' ? stock : services;
 
-  return (
-    <div className="space-y-4 p-4 border rounded-lg">
-      <div className="flex justify-between items-center">
-        <Label>Satış Türü #{index + 1}</Label>
-        <Button
-          variant="destructive"
-          size="sm"
-          onClick={() => onRemove(index)}
-        >
-          Kaldır
-        </Button>
-      </div>
+  // Get selected item details
+  const selectedItem = item.type === 'product' 
+    ? stock.find(p => p.productId.toString() === item.itemId)
+    : services.find(s => s.id.toString() === item.itemId);
+  
+  const itemPrice = selectedItem 
+    ? item.type === 'product' 
+      ? (selectedItem.price * (item.quantity || 1)) - (item.discount || 0)
+      : selectedItem.price - (item.discount || 0)
+    : 0;
 
-      <div className="space-y-4">
-        <div>
-          <Label>Tür</Label>
+  return (
+    <div className="p-3 border rounded-lg bg-white hover:bg-gray-50 transition-colors">
+      <div className="flex flex-wrap gap-2">
+        <div className="flex-1 min-w-[120px]">
           <Select
             value={item.type}
             onValueChange={(value: 'product' | 'service') => 
               onUpdate(index, { ...item, type: value, itemId: '' })
             }
           >
-            <SelectTrigger>
-              <SelectValue placeholder="Tür seçin" />
+            <SelectTrigger className="h-9 text-xs">
+              <SelectValue placeholder="Tür" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="product">Ürün</SelectItem>
@@ -54,20 +54,19 @@ const SaleItemSelector = ({ item, index, onUpdate, onRemove }: SaleItemSelectorP
           </Select>
         </div>
 
-        <div>
-          <Label>{item.type === 'product' ? 'Ürün' : 'Hizmet'}</Label>
+        <div className="flex-[3] min-w-[180px]">
           <Select
             value={item.itemId}
             onValueChange={(value) => onUpdate(index, { ...item, itemId: value })}
           >
-            <SelectTrigger>
+            <SelectTrigger className="h-9 text-xs">
               <SelectValue placeholder={item.type === 'product' ? 'Ürün seçin' : 'Hizmet seçin'} />
             </SelectTrigger>
             <SelectContent>
               {item.type === 'product' ? (
                 stock.map((stockItem) => (
                   <SelectItem key={stockItem.productId} value={stockItem.productId.toString()}>
-                    {stockItem.productName} - Stok: {stockItem.quantity} - {stockItem.price} ₺
+                    {stockItem.productName} ({stockItem.quantity}) - {stockItem.price} ₺
                   </SelectItem>
                 ))
               ) : (
@@ -81,27 +80,43 @@ const SaleItemSelector = ({ item, index, onUpdate, onRemove }: SaleItemSelectorP
           </Select>
         </div>
 
-        {item.type === 'product' && (
-          <div>
-            <Label>Miktar</Label>
+        <div className="flex items-center gap-2">
+          <div className="w-20">
+            {item.type === 'product' && (
+              <Input
+                type="number"
+                value={item.quantity || '1'}
+                onChange={(e) => onUpdate(index, { ...item, quantity: Number(e.target.value) })}
+                min="1"
+                className="h-9 text-xs text-right"
+                placeholder="Miktar"
+              />
+            )}
+          </div>
+
+          <div className="w-20">
             <Input
               type="number"
-              value={item.quantity || '1'}
-              onChange={(e) => onUpdate(index, { ...item, quantity: Number(e.target.value) })}
-              min="1"
-              required
+              value={item.discount}
+              onChange={(e) => onUpdate(index, { ...item, discount: Number(e.target.value) })}
+              min="0"
+              className="h-9 text-xs text-right"
+              placeholder="İndirim"
             />
           </div>
-        )}
+          
+          <div className="w-24 text-right font-medium text-sm">
+            {itemPrice > 0 ? `₺${itemPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}` : ''}
+          </div>
 
-        <div>
-          <Label>İndirim Tutarı (₺)</Label>
-          <Input
-            type="number"
-            value={item.discount}
-            onChange={(e) => onUpdate(index, { ...item, discount: Number(e.target.value) })}
-            min="0"
-          />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => onRemove(index)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
         </div>
       </div>
     </div>
