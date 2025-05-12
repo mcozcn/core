@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import EditServiceForm from "@/components/services/EditServiceForm";
 import AddServiceForm from "@/components/services/AddServiceForm";
 import ServiceList from "@/components/services/ServiceList";
 import ServiceHistoryTable from "@/components/services/ServiceHistoryTable";
+import SearchInput from "@/components/common/SearchInput";
 
 const Stock = () => {
   const [showStockEntryForm, setShowStockEntryForm] = useState(false);
@@ -20,6 +22,9 @@ const Stock = () => {
   const [showAddServiceForm, setShowAddServiceForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<StockItem | null>(null);
   const [editingService, setEditingService] = useState<Service | null>(null);
+  const [stockSearchTerm, setStockSearchTerm] = useState("");
+  const [serviceSearchTerm, setServiceSearchTerm] = useState("");
+  const [movementSearchTerm, setMovementSearchTerm] = useState("");
 
   const { data: stock = [] } = useQuery({
     queryKey: ['stock'],
@@ -36,6 +41,10 @@ const Stock = () => {
       return getServices();
     },
   });
+
+  const filteredServices = services.filter(service => 
+    service.name.toLowerCase().includes(serviceSearchTerm.toLowerCase())
+  );
 
   return (
     <div className="p-8 pl-72 space-y-8 animate-fadeIn">
@@ -64,17 +73,41 @@ const Stock = () => {
           <TabsTrigger value="movements">Stok Hareketleri</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="stock">
-          <StockTable searchTerm="" onEditProduct={setEditingProduct} />
+        <TabsContent value="stock" className="space-y-4">
+          <div className="max-w-md">
+            <SearchInput 
+              value={stockSearchTerm} 
+              onChange={setStockSearchTerm} 
+              placeholder="Ürün ara..."
+            />
+          </div>
+          <StockTable searchTerm={stockSearchTerm} onEditProduct={setEditingProduct} />
         </TabsContent>
 
-        <TabsContent value="services" className="space-y-8">
-          <ServiceList services={services} onEditService={setEditingService} />
-          <ServiceHistoryTable />
+        <TabsContent value="services" className="space-y-4">
+          <div className="max-w-md">
+            <SearchInput 
+              value={serviceSearchTerm} 
+              onChange={setServiceSearchTerm} 
+              placeholder="Hizmet ara..."
+            />
+          </div>
+          <ServiceList 
+            services={filteredServices} 
+            onEditService={setEditingService} 
+          />
+          <ServiceHistoryTable searchTerm={serviceSearchTerm} />
         </TabsContent>
 
-        <TabsContent value="movements">
-          <StockMovementsTable />
+        <TabsContent value="movements" className="space-y-4">
+          <div className="max-w-md">
+            <SearchInput 
+              value={movementSearchTerm} 
+              onChange={setMovementSearchTerm} 
+              placeholder="Stok hareketi ara..."
+            />
+          </div>
+          <StockMovementsTable searchTerm={movementSearchTerm} />
         </TabsContent>
       </Tabs>
 

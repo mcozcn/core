@@ -79,7 +79,7 @@ const CustomerDetails = ({ customerId, customerName }: CustomerDetailsProps) => 
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="p-4 rounded-lg bg-orange-50 dark:bg-orange-900/20">
-            <div className="text-sm text-muted-foreground">Toplam Borç</div>
+            <div className="text-sm text-muted-foreground">Toplam Harcama</div>
             <div className="text-2xl font-semibold mt-1 text-orange-600 dark:text-orange-400">
               {formatCurrency(totalDebt)}
             </div>

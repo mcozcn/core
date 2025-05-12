@@ -13,7 +13,11 @@ import { getStockMovements, getStock } from "@/utils/localStorage";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 
-const StockMovementsTable = () => {
+interface StockMovementsTableProps {
+  searchTerm?: string;
+}
+
+const StockMovementsTable = ({ searchTerm = '' }: StockMovementsTableProps) => {
   const { data: movements = [] } = useQuery({
     queryKey: ['stockMovements'],
     queryFn: getStockMovements,
@@ -28,6 +32,20 @@ const StockMovementsTable = () => {
   const sortedMovements = [...movements].sort((a, b) => 
     new Date(b.date).getTime() - new Date(a.date).getTime()
   );
+
+  // Arama filtrelemesi
+  const filteredMovements = sortedMovements.filter(movement => {
+    const product = stock.find(item => item.productId === movement.productId);
+    const productName = product?.productName || '';
+    const description = movement.description || '';
+    const type = movement.type === 'in' ? 'Giriş' : 'Çıkış';
+    
+    return (
+      productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      type.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
 
   // Her ürün için önceki hareketleri bul
   const getProductPreviousMovement = (productId: number, currentDate: Date) => {
@@ -58,14 +76,14 @@ const StockMovementsTable = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {sortedMovements.length === 0 ? (
+          {filteredMovements.length === 0 ? (
             <TableRow>
               <TableCell colSpan={8} className="text-center text-muted-foreground">
-                Henüz stok hareketi bulunmamaktadır.
+                {searchTerm ? 'Arama sonucu bulunamadı.' : 'Henüz stok hareketi bulunmamaktadır.'}
               </TableCell>
             </TableRow>
           ) : (
-            sortedMovements.map((movement) => {
+            filteredMovements.map((movement) => {
               const product = stock.find(item => item.productId === movement.productId);
               const previousMovement = getProductPreviousMovement(movement.productId, new Date(movement.date));
               

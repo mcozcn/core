@@ -21,7 +21,11 @@ interface PriceHistory {
   date: Date;
 }
 
-const ServiceHistoryTable = () => {
+interface ServiceHistoryTableProps {
+  searchTerm?: string;
+}
+
+const ServiceHistoryTable = ({ searchTerm = '' }: ServiceHistoryTableProps) => {
   const { data: services = [] } = useQuery({
     queryKey: ['services'],
     queryFn: getServices,
@@ -49,6 +53,14 @@ const ServiceHistoryTable = () => {
     new Date(b.date).getTime() - new Date(a.date).getTime()
   );
 
+  // Arama filtrelemesi
+  const filteredHistory = sortedHistory.filter(record => {
+    const service = services.find(s => s.id === record.serviceId);
+    const serviceName = service?.name || '';
+    
+    return serviceName.toLowerCase().includes(searchTerm.toLowerCase());
+  });
+
   return (
     <Card className="p-4">
       <h2 className="text-xl font-semibold mb-4">Hizmet Fiyat Geçmişi</h2>
@@ -63,14 +75,14 @@ const ServiceHistoryTable = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {sortedHistory.length === 0 ? (
+          {filteredHistory.length === 0 ? (
             <TableRow>
               <TableCell colSpan={5} className="text-center text-muted-foreground">
-                Henüz hizmet fiyat değişikliği kaydı bulunmamaktadır.
+                {searchTerm ? 'Arama sonucu bulunamadı.' : 'Henüz hizmet fiyat değişikliği kaydı bulunmamaktadır.'}
               </TableCell>
             </TableRow>
           ) : (
-            sortedHistory.map((record) => {
+            filteredHistory.map((record) => {
               const service = services.find(s => s.id === record.serviceId);
               return (
                 <TableRow key={`${record.id}-${record.date.getTime()}`}>
