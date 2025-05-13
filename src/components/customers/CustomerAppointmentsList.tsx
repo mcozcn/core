@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Table,
@@ -18,6 +19,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { useState } from "react";
 import { getAppointments, setAppointments } from "@/utils/localStorage";
 import { useQueryClient } from "@tanstack/react-query";
+import { MessageSquare } from "lucide-react";
+import { createAppointmentWhatsAppLink } from "@/utils/whatsapp";
 
 interface CustomerAppointmentsListProps {
   appointments: Array<{
@@ -28,10 +31,12 @@ interface CustomerAppointmentsListProps {
     status: 'pending' | 'confirmed' | 'cancelled';
     note?: string;
     cancellationNote?: string;
+    staffName: string;
   }>;
+  customerPhone: string;
 }
 
-const CustomerAppointmentsList = ({ appointments }: CustomerAppointmentsListProps) => {
+const CustomerAppointmentsList = ({ appointments, customerPhone }: CustomerAppointmentsListProps) => {
   const [selectedAppointment, setSelectedAppointment] = useState<number | null>(null);
   const [cancellationNote, setCancellationNote] = useState("");
   const [showCancellationDialog, setShowCancellationDialog] = useState(false);
@@ -65,6 +70,38 @@ const CustomerAppointmentsList = ({ appointments }: CustomerAppointmentsListProp
     setShowCancellationDialog(false);
     setCancellationNote("");
     setSelectedAppointment(null);
+  };
+
+  const handleWhatsAppShare = (appointment: any) => {
+    if (!customerPhone) {
+      toast({
+        title: "Telefon Bilgisi Eksik",
+        description: "Müşterinin telefon numarası bulunamadı.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const whatsappLink = createAppointmentWhatsAppLink(
+      customerPhone,
+      {
+        service: appointment.service,
+        date: appointment.date,
+        time: appointment.time,
+        staffName: appointment.staffName,
+        status: appointment.status
+      }
+    );
+
+    if (whatsappLink) {
+      window.open(whatsappLink, '_blank');
+    } else {
+      toast({
+        title: "Hata",
+        description: "WhatsApp bağlantısı oluşturulamadı.",
+        variant: "destructive",
+      });
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -115,42 +152,53 @@ const CustomerAppointmentsList = ({ appointments }: CustomerAppointmentsListProp
                     : appointment.note || '-'}
                 </TableCell>
                 <TableCell>
-                  {appointment.status === 'pending' && (
-                    <Dialog open={showCancellationDialog} onOpenChange={setShowCancellationDialog}>
-                      <DialogTrigger asChild>
-                        <Button 
-                          variant="destructive" 
-                          size="sm"
-                          onClick={() => setSelectedAppointment(appointment.id)}
-                        >
-                          İptal Et
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Randevu İptali</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="cancellationNote">İptal Nedeni</Label>
-                            <Textarea
-                              id="cancellationNote"
-                              value={cancellationNote}
-                              onChange={(e) => setCancellationNote(e.target.value)}
-                              placeholder="İptal nedenini yazın..."
-                            />
-                          </div>
+                  <div className="flex space-x-2">
+                    {appointment.status === 'pending' && (
+                      <Dialog open={showCancellationDialog} onOpenChange={setShowCancellationDialog}>
+                        <DialogTrigger asChild>
                           <Button 
                             variant="destructive" 
-                            onClick={handleCancelAppointment}
-                            className="w-full"
+                            size="sm"
+                            onClick={() => setSelectedAppointment(appointment.id)}
                           >
-                            Randevuyu İptal Et
+                            İptal Et
                           </Button>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  )}
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Randevu İptali</DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="cancellationNote">İptal Nedeni</Label>
+                              <Textarea
+                                id="cancellationNote"
+                                value={cancellationNote}
+                                onChange={(e) => setCancellationNote(e.target.value)}
+                                placeholder="İptal nedenini yazın..."
+                              />
+                            </div>
+                            <Button 
+                              variant="destructive" 
+                              onClick={handleCancelAppointment}
+                              className="w-full"
+                            >
+                              Randevuyu İptal Et
+                            </Button>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    )}
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="text-green-600 border-green-600 hover:bg-green-50"
+                      onClick={() => handleWhatsAppShare(appointment)}
+                    >
+                      <MessageSquare className="h-4 w-4 mr-1" />
+                      WhatsApp
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))

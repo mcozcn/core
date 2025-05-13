@@ -1,11 +1,12 @@
+
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Check, X } from "lucide-react";
+import { Check, X, MessageSquare } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/components/ui/use-toast";
-import { getAppointments, setAppointments, type Appointment } from '@/utils/localStorage';
+import { getAppointments, setAppointments, type Appointment, getCustomers } from '@/utils/localStorage';
 import {
   Dialog,
   DialogContent,
@@ -14,6 +15,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { createAppointmentWhatsAppLink } from '@/utils/whatsapp';
 
 interface UpcomingAppointmentsProps {
   appointments: Appointment[];
@@ -73,6 +75,44 @@ const UpcomingAppointments = ({ appointments }: UpcomingAppointmentsProps) => {
     setSelectedAppointment(null);
   };
 
+  const handleWhatsAppShare = async (appointment: Appointment) => {
+    const { data: customers = [] } = await queryClient.fetchQuery({
+      queryKey: ['customers'],
+      queryFn: getCustomers,
+    });
+
+    const customer = customers.find(c => c.id === appointment.customerId);
+    if (!customer || !customer.phone) {
+      toast({
+        title: "Telefon Bilgisi Eksik",
+        description: "Müşterinin telefon numarası bulunamadı.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const whatsappLink = createAppointmentWhatsAppLink(
+      customer.phone,
+      {
+        service: appointment.service,
+        date: appointment.date,
+        time: appointment.time,
+        staffName: appointment.staffName,
+        status: appointment.status
+      }
+    );
+
+    if (whatsappLink) {
+      window.open(whatsappLink, '_blank');
+    } else {
+      toast({
+        title: "Hata",
+        description: "WhatsApp bağlantısı oluşturulamadı.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const upcomingAppointments = appointments
     .filter(apt => new Date(`${apt.date}T${apt.time}`) > new Date())
     .sort((a, b) => new Date(`${a.date}T${a.time}`).getTime() - new Date(`${b.date}T${b.time}`).getTime())
@@ -107,26 +147,36 @@ const UpcomingAppointments = ({ appointments }: UpcomingAppointmentsProps) => {
                    appointment.status === 'cancelled' ? 'İptal Edildi' :
                    'Beklemede'}
                 </Badge>
-                {appointment.status === 'pending' && (
-                  <div className="flex space-x-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-green-600"
-                      onClick={() => handleStatusChange(appointment.id, 'confirmed')}
-                    >
-                      <Check className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-red-600"
-                      onClick={() => handleStatusChange(appointment.id, 'cancelled')}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
+                <div className="flex space-x-2">
+                  {appointment.status === 'pending' && (
+                    <>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-green-600"
+                        onClick={() => handleStatusChange(appointment.id, 'confirmed')}
+                      >
+                        <Check className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-red-600"
+                        onClick={() => handleStatusChange(appointment.id, 'cancelled')}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-green-600"
+                    onClick={() => handleWhatsAppShare(appointment)}
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           ))}

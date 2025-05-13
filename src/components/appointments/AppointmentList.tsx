@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import {
@@ -20,7 +21,8 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { Ban } from "lucide-react";
+import { Ban, MessageSquare } from "lucide-react";
+import { createAppointmentWhatsAppLink } from "@/utils/whatsapp";
 
 interface AppointmentListProps {
   searchTerm?: string;
@@ -75,6 +77,39 @@ const AppointmentList = ({ searchTerm = '' }: AppointmentListProps) => {
     setSelectedAppointment(null);
   };
 
+  const handleWhatsAppShare = (appointment: any) => {
+    const customer = customers.find(c => c.id === appointment.customerId);
+    if (!customer || !customer.phone) {
+      toast({
+        title: "Telefon Bilgisi Eksik",
+        description: "Müşterinin telefon numarası bulunamadı.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const whatsappLink = createAppointmentWhatsAppLink(
+      customer.phone,
+      {
+        service: appointment.service,
+        date: appointment.date,
+        time: appointment.time,
+        staffName: appointment.staffName,
+        status: appointment.status
+      }
+    );
+
+    if (whatsappLink) {
+      window.open(whatsappLink, '_blank');
+    } else {
+      toast({
+        title: "Hata",
+        description: "WhatsApp bağlantısı oluşturulamadı.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const filteredAppointments = appointments.filter(appointment => {
     const customer = customers.find(c => c.id === appointment.customerId);
     const customerName = customer?.name || '';
@@ -124,16 +159,27 @@ const AppointmentList = ({ searchTerm = '' }: AppointmentListProps) => {
                         <span className="text-green-500">Aktif</span>}
                     </TableCell>
                     <TableCell>
-                      {appointment.status !== 'cancelled' && (
+                      <div className="flex space-x-2">
+                        {appointment.status !== 'cancelled' && (
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleCancelAppointment(appointment)}
+                          >
+                            <Ban className="h-4 w-4 mr-1" />
+                            İptal Et
+                          </Button>
+                        )}
                         <Button
-                          variant="destructive"
+                          variant="outline"
                           size="sm"
-                          onClick={() => handleCancelAppointment(appointment)}
+                          onClick={() => handleWhatsAppShare(appointment)}
+                          className="text-green-600 border-green-600 hover:bg-green-50"
                         >
-                          <Ban className="h-4 w-4 mr-1" />
-                          İptal Et
+                          <MessageSquare className="h-4 w-4 mr-1" />
+                          WhatsApp
                         </Button>
-                      )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
