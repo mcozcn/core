@@ -120,6 +120,7 @@ const Customers = () => {
                   <Card className="p-6">
                     <CustomerAppointmentsList 
                       appointments={appointments.filter(apt => apt.customerId === selectedCustomer.id)}
+                      customerPhone={selectedCustomer.phone}
                     />
                   </Card>
                 </TabsContent>

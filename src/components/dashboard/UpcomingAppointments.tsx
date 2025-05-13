@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -76,7 +75,7 @@ const UpcomingAppointments = ({ appointments }: UpcomingAppointmentsProps) => {
   };
 
   const handleWhatsAppShare = async (appointment: Appointment) => {
-    const { data: customers = [] } = await queryClient.fetchQuery({
+    const customers = await queryClient.fetchQuery({
       queryKey: ['customers'],
       queryFn: getCustomers,
     });
