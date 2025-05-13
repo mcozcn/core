@@ -146,3 +146,13 @@ export interface StockMovement {
   description: string;
   createdAt: Date;
 }
+
+export interface StaffPerformance {
+  id: number;
+  name: string;
+  role: string;
+  servicesProvided: number;
+  totalRevenue: number;
+  appointmentsCount: number;
+  avgRating: string;
+}

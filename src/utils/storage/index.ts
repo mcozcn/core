@@ -1,3 +1,4 @@
+
 export * from './types';
 export * from './appointments';
 export * from './customers';
@@ -6,3 +7,4 @@ export * from './stock';
 export * from './costs';
 export * from './payments';
 export * from './users';
+export * from './staff';

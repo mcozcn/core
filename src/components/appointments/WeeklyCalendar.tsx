@@ -1,12 +1,22 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Printer, RotateCcw } from "lucide-react";
-import { addDays, format, startOfWeek, eachHourOfInterval, setHours, setMinutes } from "date-fns";
+import { Printer, RotateCcw, Calendar } from "lucide-react";
+import { 
+  addDays, 
+  format, 
+  startOfWeek, 
+  endOfWeek,
+  eachHourOfInterval, 
+  setHours, 
+  setMinutes,
+  addWeeks,
+  subWeeks
+} from "date-fns";
 import { tr } from 'date-fns/locale';
-import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { DateRange } from "react-day-picker";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface Appointment {
   id: number;
@@ -28,17 +38,48 @@ interface WeeklyCalendarProps {
 }
 
 const WeeklyCalendar = ({ appointments }: WeeklyCalendarProps) => {
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [dateRange, setDateRange] = useState<DateRange>({
-    from: new Date(),
-    to: addDays(new Date(), 6) // Default to one week
+  const [currentWeekStart, setCurrentWeekStart] = useState<Date>(() => {
+    const today = new Date();
+    return startOfWeek(today, { locale: tr });
+  });
+  
+  const [dateRange, setDateRange] = useState<DateRange>(() => {
+    const start = startOfWeek(new Date(), { locale: tr });
+    return {
+      from: start,
+      to: endOfWeek(start, { locale: tr })
+    };
   });
 
-  const resetDateFilter = () => {
+  // Update the date range when the week changes
+  useEffect(() => {
     setDateRange({
-      from: new Date(),
-      to: addDays(new Date(), 6)
+      from: currentWeekStart,
+      to: endOfWeek(currentWeekStart, { locale: tr })
     });
+  }, [currentWeekStart]);
+
+  const goToNextWeek = () => {
+    const nextWeek = addWeeks(currentWeekStart, 1);
+    setCurrentWeekStart(nextWeek);
+  };
+
+  const goToPreviousWeek = () => {
+    const prevWeek = subWeeks(currentWeekStart, 1);
+    setCurrentWeekStart(prevWeek);
+  };
+
+  const goToCurrentWeek = () => {
+    const today = new Date();
+    setCurrentWeekStart(startOfWeek(today, { locale: tr }));
+  };
+
+  // Handle custom week selection from calendar
+  const handleWeekSelect = (range: DateRange | undefined) => {
+    if (range?.from) {
+      const weekStart = startOfWeek(range.from, { locale: tr });
+      setCurrentWeekStart(weekStart);
+    }
   };
 
   const handlePrint = () => {
@@ -88,38 +129,64 @@ const WeeklyCalendar = ({ appointments }: WeeklyCalendarProps) => {
     }
   };
 
-  // Determine the date range for the week view
-  let weekStart = selectedDate;
-  if (dateRange.from) {
-    weekStart = dateRange.from;
-  }
-
   const workingHours = eachHourOfInterval({
     start: setHours(setMinutes(new Date(), 0), 9),
     end: setHours(setMinutes(new Date(), 0), 19),
   });
 
   const weekDays = Array.from({ length: 7 }, (_, i) => 
-    addDays(startOfWeek(weekStart, { locale: tr }), i)
+    addDays(currentWeekStart, i)
   );
 
   return (
     <Card className="p-4 overflow-auto">
       <div className="flex flex-wrap justify-between items-center gap-3 mb-4">
         <div className="flex items-center gap-2">
-          <DatePickerWithRange 
-            date={dateRange} 
-            setDate={setDateRange}
-            locale={tr} 
-          />
-          <Button 
-            variant="outline" 
-            size="icon" 
-            onClick={resetDateFilter} 
-            title="Filtreyi Sıfırla"
-          >
-            <RotateCcw className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center rounded-md border shadow-sm">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className="rounded-r-none border-r"
+              onClick={goToPreviousWeek}
+            >
+              &#8592; Önceki Hafta
+            </Button>
+            
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="sm" className="flex gap-2">
+                  <Calendar className="h-4 w-4" />
+                  <span className="hidden sm:inline">
+                    {format(dateRange.from!, 'd MMM', { locale: tr })} - {format(dateRange.to!, 'd MMM', { locale: tr })}
+                  </span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <div className="p-3">
+                  <div className="space-y-2">
+                    <div className="grid gap-2">
+                      <Button 
+                        variant="outline" 
+                        onClick={goToCurrentWeek}
+                        size="sm"
+                      >
+                        Bu Haftaya Git
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+            
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className="rounded-l-none border-l"
+              onClick={goToNextWeek}
+            >
+              Sonraki Hafta &#8594;
+            </Button>
+          </div>
         </div>
         
         <Button 
