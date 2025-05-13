@@ -1,29 +1,28 @@
-
 import { getFromStorage, setToStorage } from './core';
 import { STORAGE_KEYS } from './storageKeys';
 import { getAppointments } from './appointments';
 import { getServiceSales } from './services';
+import { getAllUsers } from '@/utils/auth';
 import type { StaffPerformance } from './types';
 
-// Mock staff data - in a real app, these would be in the database
-const mockStaff = [
-  { id: 1, name: "Ayşe Yılmaz", role: "Stilist" },
-  { id: 2, name: "Mehmet Kaya", role: "Kuaför" },
-  { id: 3, name: "Zeynep Demir", role: "Manikür Uzmanı" },
-  { id: 4, name: "Ali Öztürk", role: "Masör" }
-];
+// Get real staff members from the personnel management
+export const getStaff = () => {
+  const allUsers = getAllUsers();
+  return allUsers.filter(user => user.role === 'staff').map(user => ({
+    id: user.id,
+    name: user.displayName || user.username,
+    role: user.title || 'Personel'
+  }));
+};
 
-// Mock staff service assignments
+// Staff service mappings - in a real app, this would come from a database
+// For now, we'll keep using this mock mapping
 const staffServiceMappings = [
   { staffId: 1, serviceIds: [1, 3, 5] },
   { staffId: 2, serviceIds: [1, 2, 4] },
   { staffId: 3, serviceIds: [6, 7] },
   { staffId: 4, serviceIds: [8, 9, 10] }
 ];
-
-export const getStaff = () => {
-  return mockStaff;
-};
 
 export const getStaffServices = () => {
   return staffServiceMappings;
@@ -32,6 +31,7 @@ export const getStaffServices = () => {
 export const getStaffPerformance = (periodInDays: number = 30): StaffPerformance[] => {
   const appointments = getAppointments();
   const serviceSales = getServiceSales();
+  const staff = getStaff();
   
   // Filter by period
   const cutoffDate = new Date();
@@ -41,10 +41,14 @@ export const getStaffPerformance = (periodInDays: number = 30): StaffPerformance
     new Date(sale.saleDate) >= cutoffDate
   );
   
-  return mockStaff.map(staff => {
+  const filteredAppointments = appointments.filter(
+    apt => new Date(`${apt.date}T${apt.time}`) >= cutoffDate
+  );
+  
+  return staff.map(staffMember => {
     // Get services assigned to this staff member
     const staffServiceIds = staffServiceMappings
-      .find(s => s.staffId === staff.id)?.serviceIds || [];
+      .find(s => s.staffId === staffMember.id)?.serviceIds || [];
     
     // Filter sales by services this staff member provides
     const staffSales = filteredSales.filter(sale => 
@@ -52,20 +56,20 @@ export const getStaffPerformance = (periodInDays: number = 30): StaffPerformance
     );
     
     // Filter appointments handled by this staff
-    const staffAppointments = appointments.filter(
-      apt => apt.staffId === staff.id && new Date(`${apt.date}T${apt.time}`) >= cutoffDate
+    const staffAppointments = filteredAppointments.filter(
+      apt => apt.staffId === staffMember.id
     );
     
     const servicesProvided = staffSales.length;
     const totalRevenue = staffSales.reduce((sum, sale) => sum + sale.price, 0);
     const appointmentsCount = staffAppointments.length;
     
-    // Calculate average rating (from appointments with ratings)
-    // For now using mock data between 4-5, but in a real app would use actual ratings
+    // Calculate average rating based on appointments
+    // Since we don't have real ratings, use a mock rating between 4-5
     const avgRating = (4 + Math.random()).toFixed(1);
     
     return {
-      ...staff,
+      ...staffMember,
       servicesProvided,
       totalRevenue,
       appointmentsCount,

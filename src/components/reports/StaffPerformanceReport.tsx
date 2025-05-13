@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { formatCurrency } from "@/utils/format";
 
 const StaffPerformanceReport = () => {
   const [period, setPeriod] = useState("30"); // Default 30 days
@@ -63,7 +64,7 @@ const StaffPerformanceReport = () => {
                 <TableCell className="font-medium">{staff.name}</TableCell>
                 <TableCell>{staff.role}</TableCell>
                 <TableCell className="text-right">{staff.servicesProvided}</TableCell>
-                <TableCell className="text-right">₺{staff.totalRevenue.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</TableCell>
+                <TableCell className="text-right">{formatCurrency(staff.totalRevenue)}</TableCell>
                 <TableCell className="text-right">{staff.avgRating}/5</TableCell>
               </TableRow>
             ))

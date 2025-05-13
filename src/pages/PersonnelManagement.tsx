@@ -1,14 +1,19 @@
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CreatePersonnelForm from "@/components/personnel/CreatePersonnelForm";
 import PersonnelList from "@/components/personnel/PersonnelList";
 import { getAllUsers } from "@/utils/auth";
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 const PersonnelManagement = () => {
   const [personnel, setPersonnel] = useState(getAllUsers());
+  const queryClient = useQueryClient();
 
   const handlePersonnelUpdate = () => {
     setPersonnel(getAllUsers());
+    // Invalidate staff performance queries to reflect the updated personnel
+    queryClient.invalidateQueries({ queryKey: ['staffPerformance'] });
   };
 
   return (
