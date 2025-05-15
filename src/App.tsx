@@ -16,6 +16,7 @@ import Financial from "./pages/Financial";
 import Backup from "./pages/Backup";
 import PersonnelManagement from "./pages/PersonnelManagement";
 import Reports from "./pages/Reports";
+import UpdateSystem from "./components/update/UpdateSystem";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <UpdateSystem />
         <Routes>
           <Route
             path="/"

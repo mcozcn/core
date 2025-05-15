@@ -50,17 +50,17 @@ const Stock = () => {
     <div className="p-8 pl-72 space-y-8 animate-fadeIn">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-serif">Stok ve Hizmet Yönetimi</h1>
-        <div className="space-x-4">
-          <Button onClick={() => setShowStockEntryForm(true)} className="flex items-center gap-1">
-            <Package className="w-4 h-4 mr-1" />
+        <div className="flex space-x-2">
+          <Button onClick={() => setShowStockEntryForm(true)}>
+            <Package className="mr-2 h-4 w-4" />
             Stok Girişi
           </Button>
-          <Button onClick={() => setShowAddProductForm(true)} variant="outline" className="flex items-center gap-1">
-            <Tag className="w-4 h-4 mr-1" />
+          <Button onClick={() => setShowAddProductForm(true)} variant="outline">
+            <Tag className="mr-2 h-4 w-4" />
             Yeni Ürün
           </Button>
-          <Button onClick={() => setShowAddServiceForm(true)} variant="outline" className="flex items-center gap-1">
-            <FileText className="w-4 h-4 mr-1" />
+          <Button onClick={() => setShowAddServiceForm(true)} variant="outline">
+            <FileText className="mr-2 h-4 w-4" />
             Yeni Hizmet
           </Button>
         </div>
