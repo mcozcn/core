@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/use-toast";
 import { Download, X, CheckCircle } from "lucide-react";
+import axios from "axios";
 
 interface UpdateInfo {
   version: string;
@@ -12,12 +13,15 @@ interface UpdateInfo {
   releaseDate: string;
 }
 
+const GITHUB_REPO_URL = "https://api.github.com/repos/mcozcn/glam-appointment-keeper/releases/latest";
+
 const UpdateSystem = () => {
   const [isUpdateAvailable, setIsUpdateAvailable] = useState(false);
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateComplete, setUpdateComplete] = useState(false);
+  const [currentVersion, setCurrentVersion] = useState("1.1.0"); // This should be stored in a configuration file
 
   // Check for updates when component mounts
   useEffect(() => {
@@ -33,44 +37,48 @@ const UpdateSystem = () => {
 
   const checkForUpdates = async () => {
     try {
-      // In a real implementation, this would be a call to your update server
-      // For now, we'll simulate an available update
-      const response = await simulateUpdateCheck();
+      const response = await axios.get(GITHUB_REPO_URL);
+      const releaseData = response.data;
       
-      if (response.updateAvailable) {
-        setUpdateInfo(response.updateInfo);
+      // Extract version without 'v' prefix if present
+      const latestVersion = releaseData.tag_name.replace(/^v/, '');
+      
+      // Compare versions (simple string comparison for now)
+      if (latestVersion > currentVersion) {
+        const updateInfo: UpdateInfo = {
+          version: latestVersion,
+          description: releaseData.body || "Yeni özellikler ve hata düzeltmeleri içerir.",
+          updateUrl: releaseData.zipball_url,
+          releaseDate: new Date(releaseData.published_at).toLocaleDateString('tr-TR')
+        };
+        
+        setUpdateInfo(updateInfo);
         setIsUpdateAvailable(true);
         setIsDialogOpen(true);
       }
     } catch (error) {
       console.error("Güncellemeleri kontrol ederken hata:", error);
+      // Don't show error toast here as this happens in the background
     }
-  };
-
-  const simulateUpdateCheck = async (): Promise<{ updateAvailable: boolean; updateInfo: UpdateInfo }> => {
-    // This is a simulation, in reality you would fetch from your server
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          updateAvailable: true,
-          updateInfo: {
-            version: "1.2.0",
-            description: "Bu güncelleme yeni hizmet tipleri ve geliştirilmiş stok yönetimi özellikleri içermektedir.",
-            updateUrl: "https://your-update-server.com/updates/v1.2.0",
-            releaseDate: "2025-05-14"
-          }
-        });
-      }, 1000);
-    });
   };
 
   const handleUpdate = async () => {
     setIsUpdating(true);
     
     try {
-      // In a real implementation, this would download and apply the update
+      // In a real implementation, this would download and apply the update from GitHub
       // while preserving user data
-      await simulateUpdateProcess();
+      if (updateInfo) {
+        // 1. Download update package
+        // const response = await axios.get(updateInfo.updateUrl, { responseType: 'blob' });
+        
+        // 2. Extract and apply update (simulated here)
+        await simulateUpdateProcess();
+        
+        // 3. Update the current version
+        setCurrentVersion(updateInfo.version);
+        localStorage.setItem('app_version', updateInfo.version);
+      }
       
       setUpdateComplete(true);
       toast({
