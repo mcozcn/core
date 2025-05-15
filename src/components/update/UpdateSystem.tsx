@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/use-toast";
-import { Download, X, CheckCircle } from "lucide-react";
+import { Download, X, CheckCircle, RefreshCw } from "lucide-react";
 import axios from "axios";
 
 interface UpdateInfo {
@@ -21,6 +21,7 @@ const UpdateSystem = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateComplete, setUpdateComplete] = useState(false);
+  const [isCheckingForUpdates, setIsCheckingForUpdates] = useState(false);
   const [currentVersion, setCurrentVersion] = useState("1.1.0"); // This should be stored in a configuration file
 
   // Check for updates when component mounts
@@ -37,6 +38,7 @@ const UpdateSystem = () => {
 
   const checkForUpdates = async () => {
     try {
+      setIsCheckingForUpdates(true);
       const response = await axios.get(GITHUB_REPO_URL);
       const releaseData = response.data;
       
@@ -55,10 +57,27 @@ const UpdateSystem = () => {
         setUpdateInfo(updateInfo);
         setIsUpdateAvailable(true);
         setIsDialogOpen(true);
+      } else {
+        // Only show this toast when manually checking for updates
+        if (isCheckingForUpdates) {
+          toast({
+            title: "Güncelleme Durumu",
+            description: "Şu anda en güncel sürümü kullanıyorsunuz.",
+          });
+        }
       }
     } catch (error) {
       console.error("Güncellemeleri kontrol ederken hata:", error);
-      // Don't show error toast here as this happens in the background
+      // Only show error toast when manually checking for updates
+      if (isCheckingForUpdates) {
+        toast({
+          variant: "destructive",
+          title: "Güncelleme Hatası",
+          description: "Güncellemeler kontrol edilirken bir hata oluştu.",
+        });
+      }
+    } finally {
+      setIsCheckingForUpdates(false);
     }
   };
 
@@ -115,12 +134,26 @@ const UpdateSystem = () => {
     }
   };
 
+  const handleManualCheck = () => {
+    setIsCheckingForUpdates(true);
+    checkForUpdates();
+  };
+
   return (
     <>
+      <Button 
+        onClick={handleManualCheck}
+        disabled={isCheckingForUpdates}
+        className="fixed bottom-4 right-4 z-50 bg-primary hover:bg-primary/90"
+      >
+        <RefreshCw className={`mr-2 h-4 w-4 ${isCheckingForUpdates ? 'animate-spin' : ''}`} /> 
+        {isCheckingForUpdates ? 'Kontrol Ediliyor...' : 'Güncelleme Kontrol Et'}
+      </Button>
+      
       {isUpdateAvailable && (
         <Button 
           onClick={() => setIsDialogOpen(true)}
-          className="fixed bottom-4 right-4 z-50 bg-orange-500 hover:bg-orange-600"
+          className="fixed bottom-16 right-4 z-50 bg-orange-500 hover:bg-orange-600"
         >
           <Download className="mr-2 h-4 w-4" /> 
           Güncelleme Mevcut
