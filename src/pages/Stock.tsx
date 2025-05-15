@@ -2,19 +2,19 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Package, Tag, FileText } from "lucide-react";
 import { getStock, getServices, type StockItem, type Service } from "@/utils/localStorage";
 import StockTable from "@/components/stock/StockTable";
-import StockEntryForm from "@/components/stock/StockEntryForm";
 import StockMovementsTable from "@/components/stock/StockMovementsTable";
-import AddProductForm from "@/components/stock/AddProductForm";
 import EditProductForm from "@/components/stock/EditProductForm";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EditServiceForm from "@/components/services/EditServiceForm";
-import AddServiceForm from "@/components/services/AddServiceForm";
 import ServiceList from "@/components/services/ServiceList";
 import ServiceHistoryTable from "@/components/services/ServiceHistoryTable";
 import SearchInput from "@/components/common/SearchInput";
+import StockEntryFormModal from "@/components/stock/StockEntryFormModal";
+import AddProductFormModal from "@/components/stock/AddProductFormModal";
+import AddServiceFormModal from "@/components/services/AddServiceFormModal";
 
 const Stock = () => {
   const [showStockEntryForm, setShowStockEntryForm] = useState(false);
@@ -51,16 +51,16 @@ const Stock = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-serif">Stok ve Hizmet Yönetimi</h1>
         <div className="space-x-4">
-          <Button onClick={() => setShowStockEntryForm(true)}>
-            <Plus className="w-4 h-4 mr-2" />
+          <Button onClick={() => setShowStockEntryForm(true)} className="flex items-center gap-1">
+            <Package className="w-4 h-4 mr-1" />
             Stok Girişi
           </Button>
-          <Button onClick={() => setShowAddProductForm(true)} variant="outline">
-            <Plus className="w-4 h-4 mr-2" />
+          <Button onClick={() => setShowAddProductForm(true)} variant="outline" className="flex items-center gap-1">
+            <Tag className="w-4 h-4 mr-1" />
             Yeni Ürün
           </Button>
-          <Button onClick={() => setShowAddServiceForm(true)} variant="outline">
-            <Plus className="w-4 h-4 mr-2" />
+          <Button onClick={() => setShowAddServiceForm(true)} variant="outline" className="flex items-center gap-1">
+            <FileText className="w-4 h-4 mr-1" />
             Yeni Hizmet
           </Button>
         </div>
@@ -111,29 +111,24 @@ const Stock = () => {
         </TabsContent>
       </Tabs>
 
-      {showStockEntryForm && (
-        <StockEntryForm
-          showForm={showStockEntryForm}
-          setShowForm={setShowStockEntryForm}
-          stock={stock}
-        />
-      )}
+      {/* Modal Forms */}
+      <StockEntryFormModal
+        showForm={showStockEntryForm}
+        setShowForm={setShowStockEntryForm}
+        stock={stock}
+      />
 
-      {showAddProductForm && (
-        <AddProductForm
-          showForm={showAddProductForm}
-          setShowForm={setShowAddProductForm}
-          stock={stock}
-        />
-      )}
+      <AddProductFormModal
+        showForm={showAddProductForm}
+        setShowForm={setShowAddProductForm}
+        stock={stock}
+      />
 
-      {showAddServiceForm && (
-        <AddServiceForm
-          showForm={showAddServiceForm}
-          setShowForm={setShowAddServiceForm}
-          services={services}
-        />
-      )}
+      <AddServiceFormModal
+        showForm={showAddServiceForm}
+        setShowForm={setShowAddServiceForm}
+        services={services}
+      />
 
       {editingProduct && (
         <EditProductForm
