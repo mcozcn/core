@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card } from "@/components/ui/card";
+import { DialogFooter } from "@/components/ui/dialog";
 import { getCustomers, setCustomers, type Customer } from '@/utils/localStorage';
 
 interface AddCustomerFormProps {
@@ -14,77 +15,95 @@ const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
-    const newCustomer: Customer = {
-      id: Date.now(),
-      name,
-      phone,
-      email,
-      createdAt: new Date(),
-    };
+    try {
+      const newCustomer: Customer = {
+        id: Date.now(),
+        name,
+        phone,
+        email,
+        createdAt: new Date(),
+      };
 
-    console.log('Yeni müşteri oluşturuluyor:', newCustomer);
+      console.log('Yeni müşteri oluşturuluyor:', newCustomer);
 
-    const existingCustomers = getCustomers();
-    setCustomers([...existingCustomers, newCustomer]);
+      const existingCustomers = await getCustomers();
+      await setCustomers([...existingCustomers, newCustomer]);
 
-    toast({
-      title: "Müşteri eklendi",
-      description: "Yeni müşteri başarıyla eklendi.",
-    });
+      toast({
+        title: "Müşteri eklendi",
+        description: "Yeni müşteri başarıyla eklendi.",
+      });
 
-    // Reset form
-    setName('');
-    setPhone('');
-    setEmail('');
+      // Reset form
+      setName('');
+      setPhone('');
+      setEmail('');
 
-    if (onSuccess) {
-      onSuccess();
+      if (onSuccess) {
+        onSuccess();
+      }
+    } catch (error) {
+      console.error("Müşteri eklenirken hata:", error);
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Müşteri eklenirken bir hata oluştu.",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <Card className="p-6">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <Label>Müşteri Adı</Label>
-          <Input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Müşteri adını girin"
-            required
-          />
-        </div>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="name">Müşteri Adı</Label>
+        <Input
+          id="name"
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Müşteri adını girin"
+          required
+        />
+      </div>
 
-        <div>
-          <Label>Telefon</Label>
-          <Input
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="Telefon numarasını girin"
-            required
-          />
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="phone">Telefon</Label>
+        <Input
+          id="phone"
+          type="tel"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          placeholder="Telefon numarasını girin"
+          required
+        />
+      </div>
 
-        <div>
-          <Label>E-posta</Label>
-          <Input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="E-posta adresini girin"
-          />
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="email">E-posta</Label>
+        <Input
+          id="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="E-posta adresini girin"
+        />
+      </div>
 
-        <Button type="submit" className="w-full">Müşteri Ekle</Button>
-      </form>
-    </Card>
+      <DialogFooter className="pt-4">
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? 'Ekleniyor...' : 'Müşteri Ekle'}
+        </Button>
+      </DialogFooter>
+    </form>
   );
 };
 

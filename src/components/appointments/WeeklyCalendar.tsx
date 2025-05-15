@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Printer, RotateCcw, Calendar } from "lucide-react";
+import { Printer, Calendar } from "lucide-react";
 import { 
   addDays, 
   format, 
@@ -12,7 +12,8 @@ import {
   setHours, 
   setMinutes,
   addWeeks,
-  subWeeks
+  subWeeks,
+  getDay
 } from "date-fns";
 import { tr } from 'date-fns/locale';
 import { DateRange } from "react-day-picker";
@@ -103,8 +104,7 @@ const WeeklyCalendar = ({ appointments }: WeeklyCalendarProps) => {
               }
               .grid {
                 display: grid;
-                grid-template-columns: repeat(8, 1fr);
-                gap: 8px;
+                grid-template-columns: repeat(7, 1fr);
               }
               .text-center { text-align: center; }
               .border { border: 1px solid #e2e8f0; }
@@ -134,9 +134,12 @@ const WeeklyCalendar = ({ appointments }: WeeklyCalendarProps) => {
     end: setHours(setMinutes(new Date(), 0), 19),
   });
 
-  const weekDays = Array.from({ length: 7 }, (_, i) => 
-    addDays(currentWeekStart, i)
-  );
+  // Create week days but exclude Sunday (day 0)
+  const weekDays = Array.from({ length: 6 }, (_, i) => {
+    // Skip Sunday (0) and adjust the days accordingly
+    const dayIndex = i + 1; // Start with Monday (1)
+    return addDays(currentWeekStart, dayIndex);
+  });
 
   return (
     <Card className="p-4 overflow-auto">
@@ -201,7 +204,7 @@ const WeeklyCalendar = ({ appointments }: WeeklyCalendarProps) => {
       </div>
       
       <div id="calendar-content" className="min-w-[800px]">
-        <div className="grid grid-cols-8 gap-2 mb-4">
+        <div className="grid grid-cols-7 gap-2 mb-4">
           <div className="font-semibold text-center text-sm">Saat</div>
           {weekDays.map((day) => (
             <div key={day.toString()} className="font-semibold text-center text-sm">
@@ -213,7 +216,7 @@ const WeeklyCalendar = ({ appointments }: WeeklyCalendarProps) => {
         </div>
 
         {workingHours.map((hour) => (
-          <div key={hour.toString()} className="grid grid-cols-8 gap-2 mb-2">
+          <div key={hour.toString()} className="grid grid-cols-7 gap-2 mb-2">
             <div className="text-center py-2 text-sm">
               {format(hour, 'HH:mm')}
             </div>

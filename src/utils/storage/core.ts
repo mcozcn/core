@@ -1,10 +1,25 @@
-const getFromStorage = <T>(key: string): T[] => {
-  const data = localStorage.getItem(key);
-  return data ? JSON.parse(data) : [];
+
+import { getAllFromIDB, saveToIDB } from './idb';
+
+const getFromStorage = async <T>(key: string): Promise<T[]> => {
+  try {
+    return await getAllFromIDB<T>(key);
+  } catch (error) {
+    console.error(`Error getting data from storage for key ${key}:`, error);
+    // Fallback to localStorage
+    const data = localStorage.getItem(key);
+    return data ? JSON.parse(data) : [];
+  }
 };
 
-const setToStorage = <T>(key: string, data: T[]): void => {
-  localStorage.setItem(key, JSON.stringify(data));
+const setToStorage = async <T>(key: string, data: T[]): Promise<void> => {
+  try {
+    await saveToIDB(key, data);
+  } catch (error) {
+    console.error(`Error setting data to storage for key ${key}:`, error);
+    // Fallback to localStorage
+    localStorage.setItem(key, JSON.stringify(data));
+  }
 };
 
 export { getFromStorage, setToStorage };
