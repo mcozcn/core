@@ -13,5 +13,6 @@ export const STORAGE_KEYS = {
   USER_PERFORMANCE: 'userPerformance',
   USER_ACTIVITIES: 'userActivities',
   STAFF: 'staff',
-  STOCK_MOVEMENTS: 'stockMovements'
+  STOCK_MOVEMENTS: 'stockMovements',
+  CURRENT_USER: 'currentUser'
 };

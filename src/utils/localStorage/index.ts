@@ -1,3 +1,4 @@
+
 import { 
   getAppointments, 
   setAppointments, 
@@ -22,11 +23,20 @@ import {
   getUsers,
   setUsers,
   getStaff,
+  setStaff,
   getStockMovements,
   setStockMovements,
   addStockMovement,
-  StockMovement
+  getUserPerformance,
+  setUserPerformance,
+  getUserActivities,
+  setUserActivities,
+  addUserActivity,
+  getCurrentUser as getAsyncCurrentUser,
+  setCurrentUser as setAsyncCurrentUser
 } from '../storage';
+
+import { getCurrentUser as getAuthCurrentUser, setCurrentUser as setAuthCurrentUser } from '../auth';
 
 // Re-export the types
 export type { 
@@ -40,7 +50,9 @@ export type {
   Cost,
   Payment,
   User,
-  StockMovement
+  StockMovement,
+  UserPerformance,
+  UserActivity
 } from '../storage/types';
 
 // This file provides synchronous interfaces for components that haven't been updated to use async/await
@@ -144,6 +156,26 @@ export const getStockMovementsSync = () => {
   return result;
 };
 
+export const getUserPerformanceSync = () => {
+  const result: any = [];
+  getUserPerformance().then(data => {
+    result.push(...data);
+  });
+  return result;
+};
+
+export const getUserActivitiesSync = () => {
+  const result: any = [];
+  getUserActivities().then(data => {
+    result.push(...data);
+  });
+  return result;
+};
+
+// For compatibility, use the auth module's getCurrentUser
+export const getCurrentUser = () => getAuthCurrentUser();
+export const setCurrentUser = (user: any) => setAuthCurrentUser(user);
+
 // Export both the async and sync versions
 export {
   getAppointments,
@@ -169,7 +201,15 @@ export {
   getUsers,
   setUsers,
   getStaff,
+  setStaff,
   getStockMovements,
   setStockMovements,
-  addStockMovement
+  addStockMovement,
+  getUserPerformance,
+  setUserPerformance,
+  getUserActivities,
+  setUserActivities,
+  addUserActivity,
+  getAsyncCurrentUser,
+  setAsyncCurrentUser
 };

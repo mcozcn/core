@@ -1,3 +1,4 @@
+
 export interface Appointment {
   id: number;
   customerId: number;
@@ -99,7 +100,6 @@ export interface StaffPerformance {
   avgRating: number;
 }
 
-// Add StockMovement type
 export interface StockMovement {
   id: number;
   productId: number;
@@ -108,4 +108,20 @@ export interface StockMovement {
   date: string;
   cost: number;
   description?: string;
+}
+
+export interface UserPerformance {
+  userId: number;
+  appointmentCount: number;
+  salesCount: number;
+  totalSales: number;
+}
+
+export interface UserActivity {
+  id: number;
+  userId: number;
+  username: string;
+  action: string;
+  details: string;
+  timestamp: string;
 }
