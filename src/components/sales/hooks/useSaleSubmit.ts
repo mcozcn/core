@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
@@ -24,11 +25,11 @@ export const useSaleSubmit = (onSuccess: () => void) => {
     console.log('Processing sale with data:', formData);
 
     try {
-      const stock = getStock();
-      const sales = getSales();
-      const serviceSales = getServiceSales();
-      const existingRecords = getCustomerRecords();
-      const customers = getCustomers();
+      const stock = await getStock();
+      const sales = await getSales();
+      const serviceSales = await getServiceSales();
+      const existingRecords = await getCustomerRecords();
+      const customers = await getCustomers();
       const customer = customers.find(c => c.id === Number(formData.customerId));
       const newRecords = [];
 
@@ -44,6 +45,8 @@ export const useSaleSubmit = (onSuccess: () => void) => {
           if (product.quantity < (item.quantity || 0)) throw new Error(`${product.productName} için yetersiz stok`);
 
           const totalPrice = (product.price * (item.quantity || 0)) - item.discount;
+          const commissionRate = item.commissionRate || product.commissionRate || 0;
+          const commissionAmount = commissionRate > 0 ? (commissionRate / 100) * totalPrice : 0;
 
           // Create product sale record
           const newSale = {
@@ -56,6 +59,9 @@ export const useSaleSubmit = (onSuccess: () => void) => {
             customerName: customer.name,
             customerPhone: customer.phone,
             saleDate: new Date(),
+            staffId: item.staffId,
+            staffName: item.staffName,
+            commissionAmount: commissionAmount
           };
 
           // Update stock
@@ -65,8 +71,8 @@ export const useSaleSubmit = (onSuccess: () => void) => {
               : stockItem
           );
 
-          setStock(updatedStock);
-          setSales([...sales, newSale]);
+          await setStock(updatedStock);
+          await setSales([...sales, newSale]);
           queryClient.setQueryData(['stock'], updatedStock);
           queryClient.setQueryData(['sales'], [...sales, newSale]);
 
@@ -84,7 +90,10 @@ export const useSaleSubmit = (onSuccess: () => void) => {
             description: `Ürün satışı: ${product.productName} (${item.quantity} adet)`,
             recordType: 'debt' as const,
             discount: item.discount,
-            quantity: item.quantity
+            quantity: item.quantity,
+            staffId: item.staffId,
+            staffName: item.staffName,
+            commissionAmount: commissionAmount
           };
 
           newRecords.push(newRecord);
@@ -99,6 +108,8 @@ export const useSaleSubmit = (onSuccess: () => void) => {
           if (!service) throw new Error("Hizmet bulunamadı");
 
           const totalPrice = service.price - item.discount;
+          const commissionRate = item.commissionRate || service.commissionRate || 0;
+          const commissionAmount = commissionRate > 0 ? (commissionRate / 100) * totalPrice : 0;
 
           // Create service sale record
           const newServiceSale = {
@@ -109,9 +120,12 @@ export const useSaleSubmit = (onSuccess: () => void) => {
             customerName: customer.name,
             customerPhone: customer.phone,
             saleDate: new Date(),
+            staffId: item.staffId,
+            staffName: item.staffName,
+            commissionAmount: commissionAmount
           };
 
-          setServiceSales([...serviceSales, newServiceSale]);
+          await setServiceSales([...serviceSales, newServiceSale]);
           queryClient.setQueryData(['serviceSales'], [...serviceSales, newServiceSale]);
 
           // Add to customer records with detailed information
@@ -127,7 +141,10 @@ export const useSaleSubmit = (onSuccess: () => void) => {
             isPaid: false,
             description: `Hizmet satışı: ${service.name}`,
             recordType: 'debt' as const,
-            discount: item.discount
+            discount: item.discount,
+            staffId: item.staffId,
+            staffName: item.staffName,
+            commissionAmount: commissionAmount
           };
 
           newRecords.push(newRecord);
@@ -135,7 +152,7 @@ export const useSaleSubmit = (onSuccess: () => void) => {
       }
 
       // Add all records at once
-      setCustomerRecords([...existingRecords, ...newRecords]);
+      await setCustomerRecords([...existingRecords, ...newRecords]);
       queryClient.invalidateQueries({ queryKey: ['customerRecords'] });
 
       console.log('New records added:', newRecords);

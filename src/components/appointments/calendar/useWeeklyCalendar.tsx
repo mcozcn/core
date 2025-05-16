@@ -18,11 +18,11 @@ import { Appointment } from '../../../utils/storage/types';
 export const useWeeklyCalendar = (appointments: Appointment[]) => {
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(() => {
     const today = new Date();
-    return startOfWeek(today, { locale: tr });
+    return startOfWeek(today, { locale: tr, weekStartsOn: 1 }); // Start week on Monday (1)
   });
   
   const [dateRange, setDateRange] = useState<DateRange>(() => {
-    const start = startOfWeek(new Date(), { locale: tr });
+    const start = startOfWeek(new Date(), { locale: tr, weekStartsOn: 1 }); // Start week on Monday (1)
     return {
       from: start,
       to: endOfWeek(start, { locale: tr })
@@ -49,13 +49,13 @@ export const useWeeklyCalendar = (appointments: Appointment[]) => {
 
   const goToCurrentWeek = () => {
     const today = new Date();
-    setCurrentWeekStart(startOfWeek(today, { locale: tr }));
+    setCurrentWeekStart(startOfWeek(today, { locale: tr, weekStartsOn: 1 })); // Start week on Monday (1)
   };
 
   // Handle custom week selection from calendar
   const handleWeekSelect = (range: DateRange | undefined) => {
     if (range?.from) {
-      const weekStart = startOfWeek(range.from, { locale: tr });
+      const weekStart = startOfWeek(range.from, { locale: tr, weekStartsOn: 1 }); // Start week on Monday (1)
       setCurrentWeekStart(weekStart);
     }
   };
@@ -113,9 +113,8 @@ export const useWeeklyCalendar = (appointments: Appointment[]) => {
 
   // Create week days - Monday to Saturday (exclude Sunday)
   const weekDays = Array.from({ length: 6 }, (_, i) => {
-    // Start with Monday (index 1) and go through Saturday (index 6)
-    const dayIndex = i + 1;
-    return addDays(currentWeekStart, dayIndex);
+    // Start with Monday (index 0) and go through Saturday (index 5)
+    return addDays(currentWeekStart, i);
   });
 
   return {

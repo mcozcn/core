@@ -1,8 +1,12 @@
+
 export interface SaleItem {
   type: 'product' | 'service';
   itemId: string;
   quantity?: number;
   discount: number;
+  staffId?: number;
+  staffName?: string;
+  commissionRate?: number;
 }
 
 export interface UnifiedSaleFormData {

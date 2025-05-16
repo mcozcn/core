@@ -1,3 +1,4 @@
+
 export interface Appointment {
   id: number;
   customerId: number;
@@ -31,6 +32,7 @@ export interface Service {
   type: 'recurring' | 'one-time';
   sessionCount: number;
   createdAt: Date;
+  commissionRate?: number; // Yeni eklenen komisyon oranı
 }
 
 export interface ServiceSale {
@@ -41,6 +43,9 @@ export interface ServiceSale {
   customerName: string;
   customerPhone: string;
   saleDate: Date;
+  staffId?: number;
+  staffName?: string;
+  commissionAmount?: number; // Yeni eklenen hakediş miktarı
 }
 
 export interface StockItem {
@@ -54,6 +59,7 @@ export interface StockItem {
   criticalLevel: number;
   createdAt: Date;
   lastUpdated: Date;
+  commissionRate?: number; // Yeni eklenen komisyon oranı
 }
 
 export interface Sale {
@@ -66,6 +72,9 @@ export interface Sale {
   customerName: string;
   customerPhone: string;
   saleDate: Date;
+  staffId?: number;
+  staffName?: string;
+  commissionAmount?: number; // Yeni eklenen hakediş miktarı
 }
 
 export interface Cost {
@@ -96,6 +105,9 @@ export interface CustomerRecord {
   discount?: number;
   paymentMethod?: 'cash' | 'credit';
   quantity?: number;
+  staffId?: number;
+  staffName?: string;
+  commissionAmount?: number; // Yeni eklenen hakediş miktarı
 }
 
 export interface Payment {
@@ -124,6 +136,7 @@ export interface UserPerformance {
   appointmentCount: number;
   salesCount: number;
   totalSales: number;
+  commissionAmount?: number; // Yeni eklenen toplam hakediş
   lastUpdated: Date;
 }
 
@@ -155,4 +168,21 @@ export interface StaffPerformance {
   totalRevenue: number;
   appointmentsCount: number;
   avgRating: string;
+  commissionEarned?: number; // Yeni eklenen hakediş miktarı
+}
+
+export interface CommissionRecord {
+  id: number;
+  staffId: number;
+  staffName: string;
+  customerId: number;
+  customerName: string;
+  itemType: 'service' | 'product';
+  itemId: number;
+  itemName: string;
+  amount: number;
+  commissionAmount: number;
+  date: Date;
+  isPaid: boolean;
+  paidDate?: Date;
 }

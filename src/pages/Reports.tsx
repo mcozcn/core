@@ -13,6 +13,7 @@ import TopSellingProducts from "@/components/reports/TopSellingProducts";
 import TopSellingServices from "@/components/reports/TopSellingServices";
 import CustomerValueReport from "@/components/reports/CustomerValueReport";
 import StaffPerformanceReport from "@/components/reports/StaffPerformanceReport";
+import CommissionReport from "@/components/reports/CommissionReport";
 
 const Reports = () => {
   return (
@@ -20,11 +21,12 @@ const Reports = () => {
       <h1 className="text-3xl font-serif">Performans Raporları</h1>
 
       <Tabs defaultValue="products" className="space-y-6">
-        <TabsList className="grid grid-cols-5 w-full max-w-4xl">
+        <TabsList className="grid grid-cols-6 w-full max-w-5xl">
           <TabsTrigger value="products">Ürün Analizi</TabsTrigger>
           <TabsTrigger value="services">Hizmet Analizi</TabsTrigger>
           <TabsTrigger value="customers">Müşteri Analizi</TabsTrigger>
           <TabsTrigger value="staff">Personel Performansı</TabsTrigger>
+          <TabsTrigger value="commission">Hakediş</TabsTrigger>
           <TabsTrigger value="summary">Genel Özet</TabsTrigger>
         </TabsList>
 
@@ -44,6 +46,10 @@ const Reports = () => {
 
         <TabsContent value="staff" className="space-y-8">
           <StaffPerformanceReport />
+        </TabsContent>
+        
+        <TabsContent value="commission" className="space-y-8">
+          <CommissionReport />
         </TabsContent>
 
         <TabsContent value="summary" className="space-y-8">

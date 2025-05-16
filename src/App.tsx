@@ -1,146 +1,71 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { ThemeProvider } from "@/components/ui/theme-provider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Navigation from "./components/Navigation";
-import Dashboard from "./pages/Dashboard";
-import Customers from "./pages/Customers";
-import Appointments from "./pages/Appointments";
-import Services from "./pages/Services";
-import Stock from "./pages/Stock";
-import Sales from "./pages/Sales";
-import Costs from "./pages/Costs";
-import Financial from "./pages/Financial";
-import Backup from "./pages/Backup";
-import PersonnelManagement from "./pages/PersonnelManagement";
-import Reports from "./pages/Reports";
-import UpdateSystem from "./components/update/UpdateSystem";
+import { Toaster } from "@/components/ui/toaster";
 
-const queryClient = new QueryClient();
+import { AuthProvider } from './contexts/AuthContext';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import { migrateLocalStorageIfNeeded } from './utils/storage/migration';
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <UpdateSystem />
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <>
-                <Navigation />
-                <Dashboard />
-              </>
-            }
-          />
-          
-          <Route
-            path="/customers"
-            element={
-              <>
-                <Navigation />
-                <Customers />
-              </>
-            }
-          />
-          
-          <Route
-            path="/appointments"
-            element={
-              <>
-                <Navigation />
-                <Appointments />
-              </>
-            }
-          />
-          
-          <Route
-            path="/services"
-            element={
-              <>
-                <Navigation />
-                <Services />
-              </>
-            }
-          />
-          
-          <Route
-            path="/stock"
-            element={
-              <>
-                <Navigation />
-                <Stock />
-              </>
-            }
-          />
-          
-          <Route
-            path="/sales"
-            element={
-              <>
-                <Navigation />
-                <Sales />
-              </>
-            }
-          />
-          
-          <Route
-            path="/costs"
-            element={
-              <>
-                <Navigation />
-                <Costs />
-              </>
-            }
-          />
-          
-          <Route
-            path="/financial"
-            element={
-              <>
-                <Navigation />
-                <Financial />
-              </>
-            }
-          />
-          
-          <Route
-            path="/reports"
-            element={
-              <>
-                <Navigation />
-                <Reports />
-              </>
-            }
-          />
-          
-          <Route
-            path="/backup"
-            element={
-              <>
-                <Navigation />
-                <Backup />
-              </>
-            }
-          />
+// Pages
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import Appointments from './pages/Appointments';
+import Customers from './pages/Customers';
+import Stock from './pages/Stock';
+import Services from './pages/Services';
+import Reports from './pages/Reports';
+import Sales from './pages/Sales';
+import UserManagement from './pages/UserManagement';
+import PersonnelManagement from './pages/PersonnelManagement';
+import Financial from './pages/Financial';
+import Costs from './pages/Costs';
+import Backup from './pages/Backup';
+import Performance from './pages/Performance';
 
-          <Route
-            path="/personnel"
-            element={
-              <>
-                <Navigation />
-                <PersonnelManagement />
-              </>
-            }
-          />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+    },
+  },
+});
+
+function App() {
+  useEffect(() => {
+    migrateLocalStorageIfNeeded();
+  }, []);
+
+  return (
+    <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+          <AuthProvider>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
+              <Route path="/customers" element={<ProtectedRoute><Customers /></ProtectedRoute>} />
+              <Route path="/stock" element={<ProtectedRoute><Stock /></ProtectedRoute>} />
+              <Route path="/services" element={<ProtectedRoute><Services /></ProtectedRoute>} />
+              <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+              <Route path="/sales" element={<ProtectedRoute><Sales /></ProtectedRoute>} />
+              <Route path="/users" element={<ProtectedRoute adminOnly><UserManagement /></ProtectedRoute>} />
+              <Route path="/personnel" element={<ProtectedRoute><PersonnelManagement /></ProtectedRoute>} />
+              <Route path="/financial" element={<ProtectedRoute><Financial /></ProtectedRoute>} />
+              <Route path="/costs" element={<ProtectedRoute><Costs /></ProtectedRoute>} />
+              <Route path="/backup" element={<ProtectedRoute adminOnly><Backup /></ProtectedRoute>} />
+              <Route path="/performance" element={<ProtectedRoute><Performance /></ProtectedRoute>} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+            <Toaster />
+          </AuthProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </BrowserRouter>
+  );
+}
 
 export default App;
