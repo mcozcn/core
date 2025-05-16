@@ -1,3 +1,4 @@
+
 import { getFromStorage, setToStorage } from '../storage/core';
 import { STORAGE_KEYS } from '../storage/storageKeys';
 import type {
@@ -30,36 +31,36 @@ export const setCurrentUser = (user: User | null) => {
   }
 };
 
-// Appointments
-export const getAppointments = (): Appointment[] => getFromStorage(STORAGE_KEYS.APPOINTMENTS);
-export const setAppointments = (appointments: Appointment[]) => setToStorage(STORAGE_KEYS.APPOINTMENTS, appointments);
+// Appointments - Using async/await pattern
+export const getAppointments = async (): Promise<Appointment[]> => await getFromStorage<Appointment>(STORAGE_KEYS.APPOINTMENTS);
+export const setAppointments = async (appointments: Appointment[]): Promise<void> => await setToStorage(STORAGE_KEYS.APPOINTMENTS, appointments);
 
 // Customers
-export const getCustomers = (): Customer[] => getFromStorage(STORAGE_KEYS.CUSTOMERS);
-export const setCustomers = (customers: Customer[]) => setToStorage(STORAGE_KEYS.CUSTOMERS, customers);
+export const getCustomers = async (): Promise<Customer[]> => await getFromStorage<Customer>(STORAGE_KEYS.CUSTOMERS);
+export const setCustomers = async (customers: Customer[]): Promise<void> => await setToStorage(STORAGE_KEYS.CUSTOMERS, customers);
 
 // Services
-export const getServices = (): Service[] => getFromStorage(STORAGE_KEYS.SERVICES);
-export const setServices = (services: Service[]) => setToStorage(STORAGE_KEYS.SERVICES, services);
+export const getServices = async (): Promise<Service[]> => await getFromStorage<Service>(STORAGE_KEYS.SERVICES);
+export const setServices = async (services: Service[]): Promise<void> => await setToStorage(STORAGE_KEYS.SERVICES, services);
 
 // Stock/Products
-export const getStock = (): StockItem[] => getFromStorage(STORAGE_KEYS.STOCK);
-export const setStock = (stock: StockItem[]) => setToStorage(STORAGE_KEYS.STOCK, stock);
-export const getProducts = (): StockItem[] => getStock();
+export const getStock = async (): Promise<StockItem[]> => await getFromStorage<StockItem>(STORAGE_KEYS.STOCK);
+export const setStock = async (stock: StockItem[]): Promise<void> => await setToStorage(STORAGE_KEYS.STOCK, stock);
+export const getProducts = async (): Promise<StockItem[]> => await getStock();
 
 // Stock Movements
-export const getStockMovements = (): StockMovement[] => getFromStorage(STORAGE_KEYS.STOCK_MOVEMENTS);
-export const setStockMovements = (movements: StockMovement[]) => setToStorage(STORAGE_KEYS.STOCK_MOVEMENTS, movements);
+export const getStockMovements = async (): Promise<StockMovement[]> => await getFromStorage<StockMovement>(STORAGE_KEYS.STOCK_MOVEMENTS);
+export const setStockMovements = async (movements: StockMovement[]): Promise<void> => await setToStorage(STORAGE_KEYS.STOCK_MOVEMENTS, movements);
 
-export const addStockMovement = (movement: Omit<StockMovement, 'id' | 'createdAt'>) => {
-  const movements = getStockMovements();
+export const addStockMovement = async (movement: Omit<StockMovement, 'id' | 'createdAt'>): Promise<StockMovement> => {
+  const movements = await getStockMovements();
   const newMovement: StockMovement = {
     ...movement,
     id: Date.now(),
     createdAt: new Date()
   };
   
-  const stock = getStock();
+  const stock = await getStock();
   const product = stock.find(item => item.productId === movement.productId);
   
   if (!product) {
@@ -88,43 +89,43 @@ export const addStockMovement = (movement: Omit<StockMovement, 'id' | 'createdAt
     return item;
   });
 
-  setStock(updatedStock);
-  setStockMovements([...movements, newMovement]);
+  await setStock(updatedStock);
+  await setStockMovements([...movements, newMovement]);
 
   return newMovement;
 };
 
 // Sales
-export const getSales = (): Sale[] => getFromStorage(STORAGE_KEYS.SALES);
-export const setSales = (sales: Sale[]) => setToStorage(STORAGE_KEYS.SALES, sales);
+export const getSales = async (): Promise<Sale[]> => await getFromStorage<Sale>(STORAGE_KEYS.SALES);
+export const setSales = async (sales: Sale[]): Promise<void> => await setToStorage(STORAGE_KEYS.SALES, sales);
 
 // Service Sales
-export const getServiceSales = (): ServiceSale[] => getFromStorage(STORAGE_KEYS.SERVICE_SALES);
-export const setServiceSales = (sales: ServiceSale[]) => setToStorage(STORAGE_KEYS.SERVICE_SALES, sales);
+export const getServiceSales = async (): Promise<ServiceSale[]> => await getFromStorage<ServiceSale>(STORAGE_KEYS.SERVICE_SALES);
+export const setServiceSales = async (sales: ServiceSale[]): Promise<void> => await setToStorage(STORAGE_KEYS.SERVICE_SALES, sales);
 
 // Customer Records
-export const getCustomerRecords = (): CustomerRecord[] => getFromStorage(STORAGE_KEYS.CUSTOMER_RECORDS);
-export const setCustomerRecords = (records: CustomerRecord[]) => setToStorage(STORAGE_KEYS.CUSTOMER_RECORDS, records);
+export const getCustomerRecords = async (): Promise<CustomerRecord[]> => await getFromStorage<CustomerRecord>(STORAGE_KEYS.CUSTOMER_RECORDS);
+export const setCustomerRecords = async (records: CustomerRecord[]): Promise<void> => await setToStorage(STORAGE_KEYS.CUSTOMER_RECORDS, records);
 
 // Payments
-export const getPayments = (): Payment[] => getFromStorage(STORAGE_KEYS.PAYMENTS);
-export const setPayments = (payments: Payment[]) => setToStorage(STORAGE_KEYS.PAYMENTS, payments);
+export const getPayments = async (): Promise<Payment[]> => await getFromStorage<Payment>(STORAGE_KEYS.PAYMENTS);
+export const setPayments = async (payments: Payment[]): Promise<void> => await setToStorage(STORAGE_KEYS.PAYMENTS, payments);
 
 // Costs
-export const getCosts = (): Cost[] => getFromStorage(STORAGE_KEYS.COSTS);
-export const setCosts = (costs: Cost[]) => setToStorage(STORAGE_KEYS.COSTS, costs);
+export const getCosts = async (): Promise<Cost[]> => await getFromStorage<Cost>(STORAGE_KEYS.COSTS);
+export const setCosts = async (costs: Cost[]): Promise<void> => await setToStorage(STORAGE_KEYS.COSTS, costs);
 
 // Users
-export const getUsers = (): User[] => getFromStorage(STORAGE_KEYS.USERS);
-export const setUsers = (users: User[]) => setToStorage(STORAGE_KEYS.USERS, users);
+export const getUsers = async (): Promise<User[]> => await getFromStorage<User>(STORAGE_KEYS.USERS);
+export const setUsers = async (users: User[]): Promise<void> => await setToStorage(STORAGE_KEYS.USERS, users);
 
 // User Performance
-export const getUserPerformance = (): UserPerformance[] => getFromStorage(STORAGE_KEYS.USER_PERFORMANCE);
-export const setUserPerformance = (performance: UserPerformance[]) => setToStorage(STORAGE_KEYS.USER_PERFORMANCE, performance);
+export const getUserPerformance = async (): Promise<UserPerformance[]> => await getFromStorage<UserPerformance>(STORAGE_KEYS.USER_PERFORMANCE);
+export const setUserPerformance = async (performance: UserPerformance[]): Promise<void> => await setToStorage(STORAGE_KEYS.USER_PERFORMANCE, performance);
 
 // User Activities
-export const getUserActivities = (): UserActivity[] => getFromStorage(STORAGE_KEYS.USER_ACTIVITIES);
-export const setUserActivities = (activities: UserActivity[]) => setToStorage(STORAGE_KEYS.USER_ACTIVITIES, activities);
+export const getUserActivities = async (): Promise<UserActivity[]> => await getFromStorage<UserActivity>(STORAGE_KEYS.USER_ACTIVITIES);
+export const setUserActivities = async (activities: UserActivity[]): Promise<void> => await setToStorage(STORAGE_KEYS.USER_ACTIVITIES, activities);
 
 // Types export
 export type {

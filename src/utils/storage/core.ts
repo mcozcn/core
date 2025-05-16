@@ -1,6 +1,7 @@
 
 import { getAllFromIDB, saveToIDB } from './idb';
 
+// Convert promise-based getFromStorage to an async function
 const getFromStorage = async <T>(key: string): Promise<T[]> => {
   try {
     return await getAllFromIDB<T>(key);
@@ -12,6 +13,7 @@ const getFromStorage = async <T>(key: string): Promise<T[]> => {
   }
 };
 
+// Convert promise-based setToStorage to an async function
 const setToStorage = async <T>(key: string, data: T[]): Promise<void> => {
   try {
     await saveToIDB(key, data);

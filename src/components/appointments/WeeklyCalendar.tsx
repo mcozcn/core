@@ -134,10 +134,10 @@ const WeeklyCalendar = ({ appointments }: WeeklyCalendarProps) => {
     end: setHours(setMinutes(new Date(), 0), 19),
   });
 
-  // Create week days but exclude Sunday (day 0)
+  // Create week days - Monday to Saturday (exclude Sunday)
   const weekDays = Array.from({ length: 6 }, (_, i) => {
-    // Skip Sunday (0) and adjust the days accordingly
-    const dayIndex = i + 1; // Start with Monday (1)
+    // Start with Monday (index 1) and go through Saturday (index 6)
+    const dayIndex = i + 1;
     return addDays(currentWeekStart, dayIndex);
   });
 

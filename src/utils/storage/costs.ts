@@ -3,6 +3,7 @@ import { getFromStorage, setToStorage } from './core';
 import type { Cost } from './types';
 import { STORAGE_KEYS } from './storageKeys';
 
+// Make the functions async to properly handle promises
 export const getCosts = async (): Promise<Cost[]> =>
   await getFromStorage<Cost>(STORAGE_KEYS.COSTS);
 

@@ -56,10 +56,16 @@ const migrateToV1 = async (): Promise<void> => {
       const data = await getFromStorage(key);
       if (data && Array.isArray(data)) {
         // Example: ensure all items have a 'lastUpdated' field
-        const updatedData = data.map(item => ({
-          ...item,
-          lastUpdated: item.lastUpdated || new Date().toISOString(),
-        }));
+        const updatedData = data.map(item => {
+          // Check if lastUpdated exists and add if not
+          if (!item.lastUpdated) {
+            return {
+              ...item,
+              lastUpdated: new Date().toISOString()
+            };
+          }
+          return item;
+        });
         
         await setToStorage(key, updatedData);
       }

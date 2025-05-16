@@ -1,15 +1,17 @@
+
 import { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
-import { RotateCcw } from "lucide-react";
+import { RotateCcw, Plus } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import { addDays } from "date-fns";
 import AddCostForm from "@/components/costs/AddCostForm";
 import CostsTable from "@/components/costs/CostsTable";
 import { useQuery } from "@tanstack/react-query";
-import { getCosts } from "@/utils/localStorage";
+import { getCosts } from "@/utils/storage";
 import { tr } from 'date-fns/locale';
+import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
 
 const Costs = () => {
   const [dateRange, setDateRange] = useState<DateRange>({
@@ -34,9 +36,21 @@ const Costs = () => {
     <div className="p-8 pl-72 animate-fadeIn">
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-4xl font-serif">Masraf Yönetimi</h1>
-        <Button onClick={() => setShowForm(true)}>
-          Yeni Masraf Ekle
-        </Button>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Yeni Masraf Ekle
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[550px]">
+            <AddCostForm 
+              showForm={true} 
+              setShowForm={() => {}} 
+              costs={costs}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="mb-6 flex items-center gap-4">
@@ -51,13 +65,6 @@ const Costs = () => {
         </Button>
       </div>
 
-      {showForm && (
-        <AddCostForm 
-          showForm={showForm} 
-          setShowForm={setShowForm} 
-          costs={costs}
-        />
-      )}
       <CostsTable costs={costs} />
     </div>
   );

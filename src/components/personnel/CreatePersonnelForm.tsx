@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +8,7 @@ import { UserPlus } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { HexColorPicker } from "react-colorful";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Card } from "@/components/ui/card";
+import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const CreatePersonnelForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const [displayName, setDisplayName] = useState("");
@@ -46,7 +47,11 @@ const CreatePersonnelForm = ({ onSuccess }: { onSuccess: () => void }) => {
   };
 
   return (
-    <Card className="p-6">
+    <div className="space-y-4">
+      <DialogHeader>
+        <DialogTitle>Yeni Personel Ekle</DialogTitle>
+      </DialogHeader>
+      
       <div className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="displayName">Personel Adı Soyadı</Label>
@@ -94,7 +99,7 @@ const CreatePersonnelForm = ({ onSuccess }: { onSuccess: () => void }) => {
           Personel Oluştur
         </Button>
       </div>
-    </Card>
+    </div>
   );
 };
 
