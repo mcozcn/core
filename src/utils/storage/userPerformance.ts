@@ -1,34 +1,25 @@
 
 import { getFromStorage, setToStorage } from './core';
 import { STORAGE_KEYS } from './storageKeys';
+import type { UserPerformance, UserActivity } from './types';
 
-export interface UserPerformance {
-  userId: number;
-  appointmentCount: number;
-  salesCount: number;
-  totalSales: number;
-}
+export const getUserPerformance = async (): Promise<UserPerformance[]> => {
+  const result = await getFromStorage<UserPerformance[]>(STORAGE_KEYS.USER_PERFORMANCE);
+  return Array.isArray(result) ? result : [];
+};
 
-export interface UserActivity {
-  id: number;
-  userId: number;
-  username: string;
-  action: string;
-  details: string;
-  timestamp: string;
-}
-
-export const getUserPerformance = async (): Promise<UserPerformance[]> =>
-  await getFromStorage<UserPerformance>(STORAGE_KEYS.USER_PERFORMANCE) || [];
-
-export const setUserPerformance = async (performance: UserPerformance[]): Promise<void> =>
+export const setUserPerformance = async (performance: UserPerformance[]): Promise<void> => {
   await setToStorage(STORAGE_KEYS.USER_PERFORMANCE, performance);
+};
 
-export const getUserActivities = async (): Promise<UserActivity[]> =>
-  await getFromStorage<UserActivity>(STORAGE_KEYS.USER_ACTIVITIES) || [];
+export const getUserActivities = async (): Promise<UserActivity[]> => {
+  const result = await getFromStorage<UserActivity[]>(STORAGE_KEYS.USER_ACTIVITIES);
+  return Array.isArray(result) ? result : [];
+};
 
-export const setUserActivities = async (activities: UserActivity[]): Promise<void> =>
+export const setUserActivities = async (activities: UserActivity[]): Promise<void> => {
   await setToStorage(STORAGE_KEYS.USER_ACTIVITIES, activities);
+};
 
 export const addUserActivity = async (activity: Omit<UserActivity, 'id' | 'timestamp'>): Promise<void> => {
   const activities = await getUserActivities();

@@ -5,7 +5,7 @@ import type { Customer, CustomerRecord } from './types';
 
 export const getCustomers = async (): Promise<Customer[]> => {
   const result = await getFromStorage<Customer[]>(STORAGE_KEYS.CUSTOMERS);
-  return result || [];
+  return Array.isArray(result) ? result : [];
 };
 
 export const setCustomers = async (customers: Customer[]): Promise<void> => {
@@ -14,7 +14,7 @@ export const setCustomers = async (customers: Customer[]): Promise<void> => {
 
 export const getCustomerRecords = async (): Promise<CustomerRecord[]> => {
   const result = await getFromStorage<CustomerRecord[]>(STORAGE_KEYS.CUSTOMER_RECORDS);
-  return result || [];
+  return Array.isArray(result) ? result : [];
 };
 
 export const setCustomerRecords = async (records: CustomerRecord[]): Promise<void> => {

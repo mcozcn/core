@@ -1,10 +1,11 @@
 
 import { getAllFromIDB, saveToIDB } from './idb';
 
-// Convert promise-based getFromStorage to an async function
-export const getFromStorage = async <T>(key: string): Promise<T | T[]> => {
+// Convert promise-based getFromStorage to an async function that properly handles return types
+export const getFromStorage = async <T>(key: string): Promise<T[]> => {
   try {
-    return await getAllFromIDB<T>(key);
+    const result = await getAllFromIDB<T>(key);
+    return Array.isArray(result) ? result : [];
   } catch (error) {
     console.error(`Error getting data from storage for key ${key}:`, error);
     // Fallback to localStorage

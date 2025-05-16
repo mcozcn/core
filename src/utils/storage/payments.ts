@@ -5,7 +5,7 @@ import type { Payment } from './types';
 
 export const getPayments = async (): Promise<Payment[]> => {
   const result = await getFromStorage<Payment[]>(STORAGE_KEYS.PAYMENTS);
-  return result || [];
+  return Array.isArray(result) ? result : [];
 };
 
 export const setPayments = async (payments: Payment[]): Promise<void> => {

@@ -5,7 +5,7 @@ import type { User } from './types';
 
 // Store the current user in storage
 export const getCurrentUser = async (): Promise<User | null> => {
-  const result = await getFromStorage<User>('currentUser');
+  const result = await getFromStorage<User[]>('currentUser');
   if (Array.isArray(result) && result.length > 0) {
     return result[0];
   }
@@ -22,7 +22,7 @@ export const setCurrentUser = async (user: User | null): Promise<void> => {
 
 export const getUsers = async (): Promise<User[]> => {
   const result = await getFromStorage<User[]>(STORAGE_KEYS.USERS);
-  return result || [];
+  return Array.isArray(result) ? result : [];
 };
 
 export const setUsers = async (users: User[]): Promise<void> => {

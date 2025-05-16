@@ -6,8 +6,8 @@ import type { StaffPerformance } from './types';
 export const getStaffPerformance = async (): Promise<StaffPerformance[]> => {
   const result = await getFromStorage<StaffPerformance[]>(STORAGE_KEYS.STAFF);
   
-  // Ensure avgRating is a number
-  if (result && Array.isArray(result)) {
+  // Ensure we have an array and avgRating is a number
+  if (Array.isArray(result)) {
     return result.map(staff => ({
       ...staff,
       avgRating: typeof staff.avgRating === 'string' ? parseFloat(staff.avgRating) : staff.avgRating

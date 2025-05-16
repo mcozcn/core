@@ -5,7 +5,7 @@ import type { Service, ServiceSale } from './types';
 
 export const getServices = async (): Promise<Service[]> => {
   const result = await getFromStorage<Service[]>(STORAGE_KEYS.SERVICES);
-  return result || [];
+  return Array.isArray(result) ? result : [];
 };
 
 export const setServices = async (services: Service[]): Promise<void> => {
@@ -14,7 +14,7 @@ export const setServices = async (services: Service[]): Promise<void> => {
 
 export const getServiceSales = async (): Promise<ServiceSale[]> => {
   const result = await getFromStorage<ServiceSale[]>(STORAGE_KEYS.SERVICE_SALES);
-  return result || [];
+  return Array.isArray(result) ? result : [];
 };
 
 export const setServiceSales = async (sales: ServiceSale[]): Promise<void> => {

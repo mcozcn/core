@@ -5,7 +5,8 @@ import type { Appointment } from './types';
 
 export const getAppointments = async (): Promise<Appointment[]> => {
   const result = await getFromStorage<Appointment[]>(STORAGE_KEYS.APPOINTMENTS);
-  return result || [];
+  // Ensure we always return an array
+  return Array.isArray(result) ? result : [];
 };
 
 export const setAppointments = async (appointments: Appointment[]): Promise<void> => {
