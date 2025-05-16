@@ -15,8 +15,29 @@ import {
   getSales,
   setSales,
   getProducts,
-  setProducts
+  setProducts,
+  getCosts,
+  setCosts,
+  getPayments,
+  setPayments,
+  getUsers,
+  setUsers,
+  getStaff,
+  setStaff
 } from '../storage';
+
+// Re-export the types
+export type { 
+  Appointment,
+  Customer,
+  CustomerRecord,
+  Service,
+  ServiceSale,
+  StockItem,
+  Sale,
+  Cost,
+  Payment
+} from '../storage/types';
 
 // This file provides synchronous interfaces for components that haven't been updated to use async/await
 // It immediately resolves promises to maintain compatibility
@@ -77,6 +98,38 @@ export const getSalesSync = () => {
   return result;
 };
 
+export const getCostsSync = () => {
+  const result: any = [];
+  getCosts().then(data => {
+    result.push(...data);
+  });
+  return result;
+};
+
+export const getPaymentsSync = () => {
+  const result: any = [];
+  getPayments().then(data => {
+    result.push(...data);
+  });
+  return result;
+};
+
+export const getUsersSync = () => {
+  const result: any = [];
+  getUsers().then(data => {
+    result.push(...data);
+  });
+  return result;
+};
+
+export const getStaffSync = () => {
+  const result: any = [];
+  getStaff().then(data => {
+    result.push(...data);
+  });
+  return result;
+};
+
 export const getProductsSync = getStockSync;
 
 // Export both the async and sync versions
@@ -96,5 +149,13 @@ export {
   getSales,
   setSales,
   getProducts,
-  setProducts
+  setProducts,
+  getCosts,
+  setCosts,
+  getPayments,
+  setPayments,
+  getUsers,
+  setUsers,
+  getStaff,
+  setStaff
 };

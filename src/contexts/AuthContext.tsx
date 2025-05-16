@@ -1,5 +1,6 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { getCurrentUser, setCurrentUser, type User } from '@/utils/localStorage';
+import { getCurrentUser, setCurrentUser, type User } from '@/utils/auth';
 
 interface AuthContextType {
   user: User | null;
