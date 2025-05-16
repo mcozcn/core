@@ -49,7 +49,7 @@ const Dashboard = () => {
   const totalDailySales = todaySales.length + todayServiceSales.length;
 
   return (
-    <div className="p-8 pl-72 animate-fadeIn">
+    <div className="p-8 animate-fadeIn">
       <div className="mb-6 flex justify-center">
         <img 
           src="/lovable-uploads/18599c6d-da00-4149-814e-e1ce55f990d5.png" 

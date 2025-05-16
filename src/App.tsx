@@ -7,6 +7,7 @@ import { Toaster } from "./components/ui/toaster";
 
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import Navigation from './components/Navigation';
 import { runMigrations } from './utils/storage/migration';
 
 // Pages
@@ -43,23 +44,36 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
           <AuthProvider>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
-              <Route path="/customers" element={<ProtectedRoute><Customers /></ProtectedRoute>} />
-              <Route path="/stock" element={<ProtectedRoute><Stock /></ProtectedRoute>} />
-              <Route path="/services" element={<ProtectedRoute><Services /></ProtectedRoute>} />
-              <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-              <Route path="/sales" element={<ProtectedRoute><Sales /></ProtectedRoute>} />
-              <Route path="/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
-              <Route path="/personnel" element={<ProtectedRoute><PersonnelManagement /></ProtectedRoute>} />
-              <Route path="/financial" element={<ProtectedRoute><Financial /></ProtectedRoute>} />
-              <Route path="/costs" element={<ProtectedRoute><Costs /></ProtectedRoute>} />
-              <Route path="/backup" element={<ProtectedRoute><Backup /></ProtectedRoute>} />
-              <Route path="/performance" element={<ProtectedRoute><Performance /></ProtectedRoute>} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
+            <div className="flex">
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route path="/*" element={
+                  <ProtectedRoute>
+                    <div className="flex w-full">
+                      <Navigation />
+                      <div className="flex-1">
+                        <Routes>
+                          <Route path="/" element={<Dashboard />} />
+                          <Route path="/appointments" element={<Appointments />} />
+                          <Route path="/customers" element={<Customers />} />
+                          <Route path="/stock" element={<Stock />} />
+                          <Route path="/services" element={<Services />} />
+                          <Route path="/reports" element={<Reports />} />
+                          <Route path="/sales" element={<Sales />} />
+                          <Route path="/users" element={<UserManagement />} />
+                          <Route path="/personnel" element={<PersonnelManagement />} />
+                          <Route path="/financial" element={<Financial />} />
+                          <Route path="/costs" element={<Costs />} />
+                          <Route path="/backup" element={<Backup />} />
+                          <Route path="/performance" element={<Performance />} />
+                          <Route path="*" element={<Navigate to="/" replace />} />
+                        </Routes>
+                      </div>
+                    </div>
+                  </ProtectedRoute>
+                } />
+              </Routes>
+            </div>
             <Toaster />
           </AuthProvider>
         </ThemeProvider>
