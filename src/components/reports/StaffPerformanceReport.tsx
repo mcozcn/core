@@ -17,7 +17,7 @@ import { formatCurrency } from "@/utils/format";
 const StaffPerformanceReport = () => {
   const [period, setPeriod] = useState("30"); // Default 30 days
   
-  // Get staff performance - removed the argument as it's not expected by the function
+  // Fix: Remove the argument as it's not expected by the function
   const { data: staffPerformance = [] } = useQuery({
     queryKey: ['staffPerformance', period],
     queryFn: () => getStaffPerformance(),

@@ -4,8 +4,8 @@ import { STORAGE_KEYS } from './storageKeys';
 import type { UserPerformance, UserActivity } from './types';
 
 export const getUserPerformance = async (): Promise<UserPerformance[]> => {
-  const result = await getFromStorage<UserPerformance[]>(STORAGE_KEYS.USER_PERFORMANCE);
-  return Array.isArray(result) ? result : [];
+  const result = await getFromStorage<UserPerformance>(STORAGE_KEYS.USER_PERFORMANCE);
+  return result as UserPerformance[];
 };
 
 export const setUserPerformance = async (performance: UserPerformance[]): Promise<void> => {
@@ -13,8 +13,8 @@ export const setUserPerformance = async (performance: UserPerformance[]): Promis
 };
 
 export const getUserActivities = async (): Promise<UserActivity[]> => {
-  const result = await getFromStorage<UserActivity[]>(STORAGE_KEYS.USER_ACTIVITIES);
-  return Array.isArray(result) ? result : [];
+  const result = await getFromStorage<UserActivity>(STORAGE_KEYS.USER_ACTIVITIES);
+  return result as UserActivity[];
 };
 
 export const setUserActivities = async (activities: UserActivity[]): Promise<void> => {

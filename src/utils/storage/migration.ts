@@ -1,84 +1,104 @@
+import { saveToIDB } from './idb';
 
-import { getFromStorage, setToStorage } from './core';
-import { STORAGE_KEYS } from './storageKeys';
-
-/**
- * Migration utility to safely migrate data between different storage formats
- * or structures without losing any user data
- */
-
-export const CURRENT_DATA_VERSION = 1;
-const VERSION_KEY = 'dataVersion';
-
-// Check if data needs migration
-export const checkMigrationNeeded = async (): Promise<boolean> => {
+export const migrateStockData = async () => {
   try {
-    const storedVersionString = localStorage.getItem(VERSION_KEY);
-    const storedVersion = storedVersionString ? parseInt(storedVersionString, 10) : 0;
+    const storedData = localStorage.getItem('stock');
     
-    return storedVersion < CURRENT_DATA_VERSION;
-  } catch (error) {
-    console.error('Error checking migration status:', error);
-    return false;
-  }
-};
-
-// Run migrations if needed
-export const runMigrations = async (): Promise<void> => {
-  try {
-    const storedVersionString = localStorage.getItem(VERSION_KEY);
-    const storedVersion = storedVersionString ? parseInt(storedVersionString, 10) : 0;
-    
-    if (storedVersion < CURRENT_DATA_VERSION) {
-      console.log(`Migrating data from version ${storedVersion} to ${CURRENT_DATA_VERSION}`);
+    if (storedData) {
+      const parsedData = JSON.parse(storedData);
       
-      // Run migration steps based on the current version
-      if (storedVersion < 1) {
-        await migrateToV1();
-      }
-      
-      // Save the new version
-      localStorage.setItem(VERSION_KEY, CURRENT_DATA_VERSION.toString());
-    }
-  } catch (error) {
-    console.error('Error during data migration:', error);
-  }
-};
-
-// Migration from initial state to version 1
-const migrateToV1 = async (): Promise<void> => {
-  try {
-    // This is just an example migration
-    // In a real migration, you might need to transform data structures
-    
-    // For each data type you need to migrate:
-    for (const key of Object.values(STORAGE_KEYS)) {
-      const data = await getFromStorage(key);
-      if (data && Array.isArray(data)) {
-        // Example: ensure all items have a 'lastUpdated' field
-        const updatedData = data.map(item => {
-          // Check if lastUpdated exists and add if not
-          if (!item.lastUpdated) {
-            return {
-              ...item,
-              lastUpdated: new Date().toISOString()
-            };
-          }
-          return item;
-        });
+      if (Array.isArray(parsedData)) {
+        // Fix the issue with lastUpdated and type casting
+        const migratedData = parsedData.map((item: any) => ({
+          ...item,
+          // Ensure lastUpdated is a Date if it exists
+          lastUpdated: item.lastUpdated ? new Date(item.lastUpdated) : new Date(),
+          // Add any missing fields that might cause type errors
+        }));
         
-        await setToStorage(key, updatedData);
+        // Save to IndexedDB
+        await saveToIDB('stock', migratedData);
+        console.log('Stock data migrated to IndexedDB');
       }
     }
-    
-    console.log('Migration to V1 completed');
   } catch (error) {
-    console.error('Error during V1 migration:', error);
-    throw error;
+    console.error('Error migrating stock data:', error);
   }
 };
 
-// Export this function for backwards compatibility
-export const migrateLocalStorageIfNeeded = async (): Promise<void> => {
-  await runMigrations();
+export const migrateAppointmentsData = async () => {
+  try {
+    const storedData = localStorage.getItem('appointments');
+    
+    if (storedData) {
+      const parsedData = JSON.parse(storedData);
+      
+      if (Array.isArray(parsedData)) {
+        await saveToIDB('appointments', parsedData);
+        console.log('Appointments data migrated to IndexedDB');
+      }
+    }
+  } catch (error) {
+    console.error('Error migrating appointments data:', error);
+  }
+};
+
+export const migrateCustomersData = async () => {
+  try {
+    const storedData = localStorage.getItem('customers');
+    
+    if (storedData) {
+      const parsedData = JSON.parse(storedData);
+      
+      if (Array.isArray(parsedData)) {
+        await saveToIDB('customers', parsedData);
+        console.log('Customers data migrated to IndexedDB');
+      }
+    }
+  } catch (error) {
+    console.error('Error migrating customers data:', error);
+  }
+};
+
+export const migrateServicesData = async () => {
+  try {
+    const storedData = localStorage.getItem('services');
+    
+    if (storedData) {
+      const parsedData = JSON.parse(storedData);
+      
+      if (Array.isArray(parsedData)) {
+        await saveToIDB('services', parsedData);
+        console.log('Services data migrated to IndexedDB');
+      }
+    }
+  } catch (error) {
+    console.error('Error migrating services data:', error);
+  }
+};
+
+export const migrateSalesData = async () => {
+  try {
+    const storedData = localStorage.getItem('sales');
+    
+    if (storedData) {
+      const parsedData = JSON.parse(storedData);
+      
+      if (Array.isArray(parsedData)) {
+        await saveToIDB('sales', parsedData);
+        console.log('Sales data migrated to IndexedDB');
+      }
+    }
+  } catch (error) {
+    console.error('Error migrating sales data:', error);
+  }
+};
+
+export const migrateAllData = async () => {
+  await migrateStockData();
+  await migrateAppointmentsData();
+  await migrateCustomersData();
+  await migrateServicesData();
+  await migrateSalesData();
+  console.log('All data migration completed');
 };

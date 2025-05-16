@@ -3,7 +3,7 @@ export { type Appointment, type Customer, type CustomerRecord, type Service,
   type ServiceSale, type StockItem, type Sale, type Cost, 
   type Payment, type User, type StaffPerformance } from './types';
 
-// We need to export these types explicitly to avoid ambiguity
+// Export these types explicitly 
 export type { StockMovement, UserPerformance, UserActivity } from './types';
 
 export * from './appointments';

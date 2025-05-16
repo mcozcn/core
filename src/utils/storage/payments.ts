@@ -4,8 +4,8 @@ import { STORAGE_KEYS } from './storageKeys';
 import type { Payment } from './types';
 
 export const getPayments = async (): Promise<Payment[]> => {
-  const result = await getFromStorage<Payment[]>(STORAGE_KEYS.PAYMENTS);
-  return Array.isArray(result) ? result : [];
+  const result = await getFromStorage<Payment>(STORAGE_KEYS.PAYMENTS);
+  return result as Payment[];
 };
 
 export const setPayments = async (payments: Payment[]): Promise<void> => {

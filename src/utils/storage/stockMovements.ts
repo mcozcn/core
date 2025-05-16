@@ -4,8 +4,8 @@ import { STORAGE_KEYS } from './storageKeys';
 import type { StockMovement } from './types';
 
 export const getStockMovements = async (): Promise<StockMovement[]> => {
-  const result = await getFromStorage<StockMovement[]>(STORAGE_KEYS.STOCK_MOVEMENTS);
-  return Array.isArray(result) ? result : [];
+  const result = await getFromStorage<StockMovement>(STORAGE_KEYS.STOCK_MOVEMENTS);
+  return result as StockMovement[];
 };
 
 export const setStockMovements = async (movements: StockMovement[]): Promise<void> => {
