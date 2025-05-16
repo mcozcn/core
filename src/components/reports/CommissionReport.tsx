@@ -52,7 +52,8 @@ const CommissionReport = () => {
       if (staffFilter !== "all" && item.staffId.toString() !== staffFilter) return false;
       
       // Filter by date
-      return new Date(item.saleDate) >= cutoffDate;
+      const itemDate = item.saleDate || (('date' in item) ? item.date : null);
+      return itemDate ? new Date(itemDate) >= cutoffDate : false;
     });
   };
 
@@ -61,17 +62,21 @@ const CommissionReport = () => {
     const productSales = filterByPeriod(sales).map(sale => ({
       ...sale,
       type: 'product' as const,
-      itemName: sale.productName
+      itemName: sale.productName || ''
     }));
     
     const servSales = filterByPeriod(serviceSales).map(sale => ({
       ...sale,
       type: 'service' as const,
-      itemName: sale.serviceName
+      itemName: sale.serviceName || ''
     }));
     
     return [...productSales, ...servSales]
-      .sort((a, b) => new Date(b.saleDate).getTime() - new Date(a.saleDate).getTime());
+      .sort((a, b) => {
+        const dateA = new Date(a.saleDate || (('date' in a) ? a.date : new Date()));
+        const dateB = new Date(b.saleDate || (('date' in b) ? b.date : new Date()));
+        return dateB.getTime() - dateA.getTime();
+      });
   };
 
   // Calculate total commission by staff
@@ -100,7 +105,11 @@ const CommissionReport = () => {
       }
       
       const staffRecord = staffCommissions[sale.staffId];
-      staffRecord.totalSales += sale.totalPrice || sale.price || 0;
+      const saleAmount = ('totalPrice' in sale && sale.totalPrice !== undefined) ? sale.totalPrice : 
+                         ('price' in sale && sale.price !== undefined) ? sale.price :
+                         ('total' in sale) ? sale.total : 0;
+                         
+      staffRecord.totalSales += saleAmount;
       staffRecord.totalCommission += sale.commissionAmount || 0;
       staffRecord.count += 1;
     });
@@ -125,7 +134,7 @@ const CommissionReport = () => {
               <SelectItem value="all">Tüm Personel</SelectItem>
               {staff.filter(user => user.role === 'staff').map((user) => (
                 <SelectItem key={user.id} value={user.id.toString()}>
-                  {user.name}
+                  {user.name || user.displayName || user.username}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -210,13 +219,16 @@ const CommissionReport = () => {
                 </TableRow>
               ) : (
                 commissionItems.map((item) => {
-                  const amount = 'totalPrice' in item ? item.totalPrice : item.price;
+                  const saleDate = item.saleDate || (('date' in item) ? item.date : new Date());
+                  const amount = ('totalPrice' in item && item.totalPrice !== undefined) ? item.totalPrice : 
+                               ('price' in item && item.price !== undefined) ? item.price :
+                               ('total' in item) ? item.total : 0;
                   const commissionRate = item.commissionAmount && amount ? 
                     (item.commissionAmount / amount * 100).toFixed(2) : "0";
                   
                   return (
                     <TableRow key={`${item.type}-${item.id}`}>
-                      <TableCell>{new Date(item.saleDate).toLocaleDateString('tr-TR')}</TableCell>
+                      <TableCell>{new Date(saleDate).toLocaleDateString('tr-TR')}</TableCell>
                       <TableCell>{item.staffName}</TableCell>
                       <TableCell>{item.customerName}</TableCell>
                       <TableCell>
@@ -225,7 +237,7 @@ const CommissionReport = () => {
                           {item.itemName}
                         </span>
                       </TableCell>
-                      <TableCell className="text-right">{formatCurrency(amount || 0)}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(amount)}</TableCell>
                       <TableCell className="text-right">{formatCurrency(item.commissionAmount || 0)}</TableCell>
                       <TableCell className="text-right">%{commissionRate}</TableCell>
                     </TableRow>

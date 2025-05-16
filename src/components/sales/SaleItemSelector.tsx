@@ -41,7 +41,9 @@ const SaleItemSelector = ({ item, index, onUpdate, onRemove }: SaleItemSelectorP
     : 0;
 
   // Calculate commission based on rate
-  const commissionRate = item.commissionRate || (selectedItem?.commissionRate || 0);
+  const commissionRate = item.commissionRate || 
+    (selectedItem && 'commissionRate' in selectedItem ? selectedItem.commissionRate || 0 : 0);
+    
   const commissionAmount = (commissionRate / 100) * itemPrice;
 
   return (
@@ -72,10 +74,14 @@ const SaleItemSelector = ({ item, index, onUpdate, onRemove }: SaleItemSelectorP
                 ? stock.find(p => p.productId.toString() === value)
                 : services.find(s => s.id.toString() === value);
               
+              const newCommissionRate = selectedItem && 'commissionRate' in selectedItem 
+                ? selectedItem.commissionRate || 0
+                : 0;
+              
               onUpdate(index, { 
                 ...item, 
                 itemId: value,
-                commissionRate: selectedItem?.commissionRate || 0
+                commissionRate: newCommissionRate
               });
             }}
           >
@@ -151,7 +157,7 @@ const SaleItemSelector = ({ item, index, onUpdate, onRemove }: SaleItemSelectorP
                 onUpdate(index, { 
                   ...item, 
                   staffId: Number(value),
-                  staffName: selectedStaff?.name || ""
+                  staffName: selectedStaff?.name || selectedStaff?.displayName || ""
                 });
               }}
             >
@@ -162,7 +168,7 @@ const SaleItemSelector = ({ item, index, onUpdate, onRemove }: SaleItemSelectorP
                 <SelectItem value="">Personel Seçin</SelectItem>
                 {users.filter(u => u.role === 'staff').map((user) => (
                   <SelectItem key={user.id} value={user.id.toString()}>
-                    {user.name}
+                    {user.name || user.displayName || user.username}
                   </SelectItem>
                 ))}
               </SelectContent>

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Table,
@@ -40,11 +41,11 @@ const SalesTable = ({ sales }: SalesTableProps) => {
             <TableRow key={sale.id}>
               <TableCell>{sale.productName}</TableCell>
               <TableCell>{sale.quantity}</TableCell>
-              <TableCell>{formatCurrency(sale.discount)}</TableCell>
-              <TableCell>{formatCurrency(sale.totalPrice)}</TableCell>
+              <TableCell>{formatCurrency(sale.discount || 0)}</TableCell>
+              <TableCell>{formatCurrency(sale.totalPrice || sale.total)}</TableCell>
               <TableCell>{sale.customerName}</TableCell>
               <TableCell>{sale.customerPhone}</TableCell>
-              <TableCell>{new Date(sale.saleDate).toLocaleDateString()}</TableCell>
+              <TableCell>{new Date(sale.saleDate || sale.date).toLocaleDateString()}</TableCell>
             </TableRow>
           ))
         )}

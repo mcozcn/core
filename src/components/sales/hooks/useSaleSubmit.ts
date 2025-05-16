@@ -45,12 +45,16 @@ export const useSaleSubmit = (onSuccess: () => void) => {
           if (product.quantity < (item.quantity || 0)) throw new Error(`${product.productName} için yetersiz stok`);
 
           const totalPrice = (product.price * (item.quantity || 0)) - item.discount;
-          const commissionRate = item.commissionRate || product.commissionRate || 0;
+          const commissionRate = item.commissionRate || (product.commissionRate || 0);
           const commissionAmount = commissionRate > 0 ? (commissionRate / 100) * totalPrice : 0;
 
           // Create product sale record
           const newSale = {
             id: Date.now() + Math.random(),
+            customerId: Number(formData.customerId),
+            date: new Date().toISOString(),
+            total: totalPrice,
+            paymentMethod: "Nakit", // Default
             productId: product.productId,
             productName: product.productName,
             quantity: item.quantity || 0,
@@ -104,7 +108,7 @@ export const useSaleSubmit = (onSuccess: () => void) => {
           if (!service) throw new Error("Hizmet bulunamadı");
 
           const totalPrice = service.price - item.discount;
-          const commissionRate = item.commissionRate || service.commissionRate || 0;
+          const commissionRate = item.commissionRate || (service.commissionRate || 0);
           const commissionAmount = commissionRate > 0 ? (commissionRate / 100) * totalPrice : 0;
 
           // Create service sale record
@@ -118,7 +122,8 @@ export const useSaleSubmit = (onSuccess: () => void) => {
             saleDate: new Date(),
             staffId: item.staffId,
             staffName: item.staffName,
-            commissionAmount: commissionAmount
+            commissionAmount: commissionAmount,
+            totalPrice: totalPrice
           };
 
           await setServiceSales([...serviceSales, newServiceSale]);

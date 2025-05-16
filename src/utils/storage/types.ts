@@ -44,6 +44,10 @@ export interface CustomerRecord {
   discount?: number;     // Any discount applied
   dueDate?: Date;        // When payment is due
   recordType?: 'debt' | 'payment'; // Type of financial record
+  quantity?: number;      // Quantity for products
+  staffId?: number;       // Staff who made the sale/service
+  staffName?: string;     // Staff name
+  commissionAmount?: number; // Commission for the staff
 }
 
 export interface Service {
@@ -52,6 +56,10 @@ export interface Service {
   description?: string;
   price: number;
   duration: number;
+  type?: 'recurring' | 'one-time';
+  sessionCount?: number;
+  commissionRate?: number;
+  createdAt?: Date;
 }
 
 export interface ServiceSale {
@@ -67,6 +75,7 @@ export interface ServiceSale {
   staffName?: string;
   commissionAmount?: number;
   totalPrice?: number;
+  productName?: string;  // Added for compatibility with Product sales
 }
 
 export interface StockItem {
@@ -80,6 +89,7 @@ export interface StockItem {
   criticalLevel: number;
   createdAt: Date;
   lastUpdated: Date;
+  commissionRate?: number; // Added for commission calculation
 }
 
 export interface Sale {
@@ -99,6 +109,9 @@ export interface Sale {
   staffId?: number;
   staffName?: string;
   commissionAmount?: number;
+  discount?: number;     // Added for discount handling
+  serviceName?: string;  // Added for compatibility with Service sales
+  price?: number;        // Added for compatibility with Service sales
 }
 
 export interface Cost {
@@ -128,6 +141,11 @@ export interface User {
   title?: string;
   color?: string;
   name?: string;
+  password?: string;      // Added for login functionality
+  allowedPages?: string[];
+  canEdit?: boolean;
+  canDelete?: boolean;
+  createdAt?: Date;
 }
 
 export interface StaffPerformance {

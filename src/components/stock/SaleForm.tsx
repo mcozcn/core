@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -63,6 +64,10 @@ const SaleForm = ({ showForm, setShowForm, stock, sales }: SaleFormProps) => {
 
       const newSale: Sale = {
         id: Date.now(),
+        customerId: customer.id,
+        date: new Date().toISOString(),
+        total: totalPrice,
+        paymentMethod: "Nakit", // Default
         productId: product.productId,
         productName: product.productName,
         quantity,
@@ -94,7 +99,8 @@ const SaleForm = ({ showForm, setShowForm, stock, sales }: SaleFormProps) => {
         date: new Date(),
         isPaid: false,
         description: `Ürün satışı: ${product.productName} (${quantity} adet)`,
-        recordType: 'debt'
+        recordType: 'debt',
+        discount
       };
 
       const existingRecords = getCustomerRecords();
