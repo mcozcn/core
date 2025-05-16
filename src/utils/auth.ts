@@ -1,8 +1,9 @@
+
 export type UserRole = 'admin' | 'staff';
 
 export interface User {
   id: number;
-  username: string;  // Added this property
+  username: string;
   displayName: string;
   title: string;
   role?: UserRole;
@@ -15,6 +16,7 @@ export interface User {
 
 export interface AuthState {
   users: User[];
+  currentUser?: User | null;
 }
 
 const STORAGE_KEY = 'auth_state';
@@ -23,7 +25,7 @@ const initialState: AuthState = {
   users: [
     {
       id: 1,
-      username: 'staff1',  // Added username
+      username: 'staff1',
       displayName: 'Örnek Personel',
       title: 'Kuaför',
       role: 'staff',
@@ -33,7 +35,8 @@ const initialState: AuthState = {
       createdAt: new Date(),
       allowedPages: ['dashboard', 'appointments', 'customers', 'services', 'stock', 'sales', 'costs', 'financial', 'backup']
     }
-  ]
+  ],
+  currentUser: null
 };
 
 export const getAuthState = (): AuthState => {
@@ -50,8 +53,14 @@ export const getAllUsers = (): User[] => {
 };
 
 export const getCurrentUser = (): User | null => {
-  const users = getAllUsers();
-  return users.length > 0 ? users[0] : null;
+  const state = getAuthState();
+  return state.currentUser || (state.users.length > 0 ? state.users[0] : null);
+};
+
+export const setCurrentUser = (user: User | null): void => {
+  const state = getAuthState();
+  state.currentUser = user;
+  setAuthState(state);
 };
 
 export const deleteUser = (userId: number): boolean => {
@@ -76,7 +85,7 @@ export const register = (
   
   const newUser: User = {
     id: Date.now(),
-    username: `staff${state.users.length + 1}`,  // Generate username
+    username: `staff${state.users.length + 1}`,
     displayName,
     title,
     role,

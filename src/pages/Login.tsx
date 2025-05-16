@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from "@/components/ui/card";
@@ -5,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { getUsers, setCurrentUser } from '@/utils/localStorage';
+import { setCurrentUser } from '@/utils/auth';
+import { getUsers } from '@/utils/localStorage';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -19,7 +21,7 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const users = getUsers();
+      const users = await getUsers();
       const user = users.find(u => u.username === username && u.password === password);
 
       if (user) {
