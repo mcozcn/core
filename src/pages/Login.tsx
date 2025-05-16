@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { setCurrentUser } from '@/utils/auth';
+import { setCurrentUser, type User as AuthUser } from '@/utils/auth';
 import { getUsers } from '@/utils/localStorage';
 
 const Login = () => {
@@ -25,7 +25,21 @@ const Login = () => {
       const user = users.find(u => u.username === username && u.password === password);
 
       if (user) {
-        setCurrentUser(user);
+        // Convert storage user to auth user format
+        const authUser: AuthUser = {
+          id: user.id,
+          username: user.username,
+          displayName: user.displayName || user.username,
+          title: user.title || 'Staff',
+          role: user.role || 'staff',
+          color: user.color || '#9b87f5',
+          allowedPages: user.allowedPages,
+          canEdit: user.canEdit,
+          canDelete: user.canDelete,
+          createdAt: user.createdAt || new Date()
+        };
+        
+        setCurrentUser(authUser);
         toast({
           title: "Giriş başarılı",
           description: "Hoş geldiniz!",

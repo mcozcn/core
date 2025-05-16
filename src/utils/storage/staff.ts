@@ -1,3 +1,4 @@
+
 import { getFromStorage, setToStorage } from './core';
 import { STORAGE_KEYS } from './storageKeys';
 import { getAppointments } from './appointments';
@@ -6,7 +7,7 @@ import { getAllUsers } from '@/utils/auth';
 import type { StaffPerformance } from './types';
 
 // Get real staff members from the personnel management
-export const getStaff = () => {
+export const getStaff = async () => {
   const allUsers = getAllUsers();
   return allUsers.filter(user => user.role === 'staff').map(user => ({
     id: user.id,
@@ -28,10 +29,10 @@ export const getStaffServices = () => {
   return staffServiceMappings;
 };
 
-export const getStaffPerformance = (periodInDays: number = 30): StaffPerformance[] => {
-  const appointments = getAppointments();
-  const serviceSales = getServiceSales();
-  const staff = getStaff();
+export const getStaffPerformance = async (periodInDays: number = 30): Promise<StaffPerformance[]> => {
+  const appointments = await getAppointments();
+  const serviceSales = await getServiceSales();
+  const staff = await getStaff();
   
   // Filter by period
   const cutoffDate = new Date();

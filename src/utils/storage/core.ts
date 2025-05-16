@@ -2,7 +2,7 @@
 import { getAllFromIDB, saveToIDB } from './idb';
 
 // Convert promise-based getFromStorage to an async function
-const getFromStorage = async <T>(key: string): Promise<T[]> => {
+export const getFromStorage = async <T>(key: string): Promise<T[]> => {
   try {
     return await getAllFromIDB<T>(key);
   } catch (error) {
@@ -14,7 +14,7 @@ const getFromStorage = async <T>(key: string): Promise<T[]> => {
 };
 
 // Convert promise-based setToStorage to an async function
-const setToStorage = async <T>(key: string, data: T[]): Promise<void> => {
+export const setToStorage = async <T>(key: string, data: T[]): Promise<void> => {
   try {
     await saveToIDB(key, data);
   } catch (error) {
@@ -24,4 +24,4 @@ const setToStorage = async <T>(key: string, data: T[]): Promise<void> => {
   }
 };
 
-export { getFromStorage, setToStorage };
+export { getAllFromIDB, saveToIDB };

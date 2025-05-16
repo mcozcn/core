@@ -22,8 +22,7 @@ import {
   setPayments,
   getUsers,
   setUsers,
-  getStaff,
-  setStaff
+  getStaff
 } from '../storage';
 
 // Re-export the types
@@ -36,7 +35,8 @@ export type {
   StockItem,
   Sale,
   Cost,
-  Payment
+  Payment,
+  User
 } from '../storage/types';
 
 // This file provides synchronous interfaces for components that haven't been updated to use async/await
@@ -156,6 +156,5 @@ export {
   setPayments,
   getUsers,
   setUsers,
-  getStaff,
-  setStaff
+  getStaff
 };
