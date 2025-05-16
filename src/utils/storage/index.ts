@@ -8,4 +8,5 @@ export * from './costs';
 export * from './payments';
 export * from './users';
 export * from './staff';
+export * from './stockMovements';
 export * from '../whatsapp';

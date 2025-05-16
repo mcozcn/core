@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { getStock, setStock, addStockMovement, type StockItem } from "@/utils/localStorage";
+import { addStockMovement, getStock, setStock, type StockItem } from "@/utils/localStorage";
+import { format } from 'date-fns';
 
 interface StockEntryFormProps {
   showForm: boolean;
@@ -20,61 +21,81 @@ const StockEntryForm = ({ showForm, setShowForm, stock }: StockEntryFormProps) =
     productId: '',
     quantity: '',
     cost: '',
-    date: new Date().toISOString().split('T')[0],
-    notes: ''
+    description: '',
+    type: 'in', // Varsayılan olarak giriş
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
-      const selectedProduct = stock.find(item => item.productId.toString() === formData.productId);
-      
-      if (!selectedProduct) {
-        throw new Error("Ürün bulunamadı");
+      const productId = parseInt(formData.productId);
+      const quantity = parseInt(formData.quantity);
+      const cost = parseFloat(formData.cost);
+
+      if (isNaN(productId) || isNaN(quantity) || isNaN(cost)) {
+        toast({
+          variant: "destructive",
+          title: "Hata!",
+          description: "Lütfen geçerli sayısal değerler girin.",
+        });
+        return;
       }
 
-      const quantity = Number(formData.quantity);
-      const cost = Number(formData.cost) || selectedProduct.cost;
-      
-      // Stok hareketi ekle
-      await addStockMovement({
-        productId: selectedProduct.productId,
-        type: 'in',
-        quantity,
-        cost,
-        date: new Date(formData.date),
-        description: formData.notes || 'Stok girişi'
+      const existingProduct = stock.find(item => item.productId === productId);
+
+      if (!existingProduct) {
+        toast({
+          variant: "destructive",
+          title: "Hata!",
+          description: "Bu ürün ID'siyle eşleşen bir ürün bulunamadı.",
+        });
+        return;
+      }
+
+      const newStockMovement = {
+        productId: productId,
+        quantity: quantity,
+        type: formData.type,
+        date: format(new Date(), 'yyyy-MM-dd HH:mm:ss'),
+        cost: cost,
+        description: formData.description,
+      };
+
+      await addStockMovement(newStockMovement);
+
+      // Update stock quantity
+      const updatedStock = stock.map(item => {
+        if (item.productId === productId) {
+          const newQuantity = formData.type === 'in' ? item.quantity + quantity : item.quantity - quantity;
+          return { ...item, quantity: newQuantity };
+        }
+        return item;
       });
 
-      // Query cache'i güncelle
-      queryClient.invalidateQueries({ queryKey: ['stock'] });
-
-      console.log('Stok girişi yapıldı:', {
-        product: selectedProduct.productName,
-        quantity,
-        cost
-      });
+      setStock(updatedStock);
+      queryClient.setQueryData(['stock'], updatedStock);
+      queryClient.invalidateQueries(['stockMovements']);
 
       toast({
-        title: "Stok girişi başarılı",
-        description: `${selectedProduct.productName} için ${quantity} adet giriş yapıldı.`,
+        title: "Başarıyla kaydedildi",
+        description: "Stok hareketi başarıyla kaydedildi.",
       });
 
       setFormData({
         productId: '',
         quantity: '',
         cost: '',
-        date: new Date().toISOString().split('T')[0],
-        notes: ''
+        description: '',
+        type: 'in',
       });
       setShowForm(false);
     } catch (error) {
-      console.error('Stok girişi sırasında hata:', error);
+      console.error('Stok hareketi kaydı sırasında hata:', error);
       toast({
         variant: "destructive",
         title: "Hata!",
-        description: error instanceof Error ? error.message : "Stok girişi sırasında bir hata oluştu.",
+        description: "Kayıt sırasında bir hata oluştu. Lütfen tekrar deneyin.",
       });
     }
   };
@@ -85,20 +106,13 @@ const StockEntryForm = ({ showForm, setShowForm, stock }: StockEntryFormProps) =
     <Card className="p-6 mb-8">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <Label>Ürün</Label>
-          <select
+          <Label>Ürün ID</Label>
+          <Input
             value={formData.productId}
             onChange={(e) => setFormData({ ...formData, productId: e.target.value })}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2"
+            placeholder="Ürün ID'sini girin"
             required
-          >
-            <option value="">Ürün seçin</option>
-            {stock.map((item) => (
-              <option key={item.productId} value={item.productId}>
-                {item.productName} - Mevcut Stok: {item.quantity}
-              </option>
-            ))}
-          </select>
+          />
         </div>
 
         <div>
@@ -107,8 +121,7 @@ const StockEntryForm = ({ showForm, setShowForm, stock }: StockEntryFormProps) =
             type="number"
             value={formData.quantity}
             onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-            placeholder="Giriş miktarını girin"
-            min="1"
+            placeholder="Miktarı girin"
             required
           />
         </div>
@@ -120,33 +133,34 @@ const StockEntryForm = ({ showForm, setShowForm, stock }: StockEntryFormProps) =
             value={formData.cost}
             onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
             placeholder="Birim maliyeti girin"
-            min="0"
-            step="0.01"
-          />
-        </div>
-
-        <div>
-          <Label>Tarih</Label>
-          <Input
-            type="date"
-            value={formData.date}
-            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
             required
           />
         </div>
 
         <div>
-          <Label>Notlar</Label>
+          <Label>Açıklama</Label>
           <Input
-            value={formData.notes}
-            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-            placeholder="Varsa notları girin"
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            placeholder="Açıklama girin"
           />
+        </div>
+
+        <div>
+          <Label>Hareket Tipi</Label>
+          <select
+            className="w-full border rounded-md py-2 px-3"
+            value={formData.type}
+            onChange={(e) => setFormData({ ...formData, type: e.target.value as 'in' | 'out' })}
+          >
+            <option value="in">Giriş</option>
+            <option value="out">Çıkış</option>
+          </select>
         </div>
 
         <div className="flex gap-2">
           <Button type="submit" className="flex-1">
-            Stok Girişi Yap
+            Kaydet
           </Button>
           <Button
             type="button"

@@ -28,13 +28,15 @@ const StockMovementsTable = ({ searchTerm = '' }: StockMovementsTableProps) => {
     queryFn: getStock,
   });
 
-  // En son hareketleri başta göster
-  const sortedMovements = [...movements].sort((a, b) => 
-    new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
+  // Sort movements to show the most recent first
+  const sortedMovements = movements ? 
+    [...movements].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) 
+    : [];
 
-  // Arama filtrelemesi
+  // Filter movements based on search term
   const filteredMovements = sortedMovements.filter(movement => {
+    if (!movement) return false;
+    
     const product = stock.find(item => item.productId === movement.productId);
     const productName = product?.productName || '';
     const description = movement.description || '';
@@ -47,8 +49,10 @@ const StockMovementsTable = ({ searchTerm = '' }: StockMovementsTableProps) => {
     );
   });
 
-  // Her ürün için önceki hareketleri bul
+  // Find previous movements for a product
   const getProductPreviousMovement = (productId: number, currentDate: Date) => {
+    if (!movements) return null;
+    
     const previousMovements = movements
       .filter(m => 
         m.productId === productId && 
@@ -76,7 +80,7 @@ const StockMovementsTable = ({ searchTerm = '' }: StockMovementsTableProps) => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {filteredMovements.length === 0 ? (
+          {!filteredMovements || filteredMovements.length === 0 ? (
             <TableRow>
               <TableCell colSpan={8} className="text-center text-muted-foreground">
                 {searchTerm ? 'Arama sonucu bulunamadı.' : 'Henüz stok hareketi bulunmamaktadır.'}

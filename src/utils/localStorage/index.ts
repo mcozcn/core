@@ -1,4 +1,3 @@
-
 import { 
   getAppointments, 
   setAppointments, 
@@ -22,7 +21,11 @@ import {
   setPayments,
   getUsers,
   setUsers,
-  getStaff
+  getStaff,
+  getStockMovements,
+  setStockMovements,
+  addStockMovement,
+  StockMovement
 } from '../storage';
 
 // Re-export the types
@@ -36,7 +39,8 @@ export type {
   Sale,
   Cost,
   Payment,
-  User
+  User,
+  StockMovement
 } from '../storage/types';
 
 // This file provides synchronous interfaces for components that haven't been updated to use async/await
@@ -132,6 +136,14 @@ export const getStaffSync = () => {
 
 export const getProductsSync = getStockSync;
 
+export const getStockMovementsSync = () => {
+  const result: any = [];
+  getStockMovements().then(data => {
+    result.push(...data);
+  });
+  return result;
+};
+
 // Export both the async and sync versions
 export {
   getAppointments,
@@ -156,5 +168,8 @@ export {
   setPayments,
   getUsers,
   setUsers,
-  getStaff
+  getStaff,
+  getStockMovements,
+  setStockMovements,
+  addStockMovement
 };
