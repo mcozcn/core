@@ -151,14 +151,27 @@ const SaleItemSelector = ({ item, index, onUpdate, onRemove }: SaleItemSelectorP
 
           <div className="w-24">
             <Select
-              value={item.staffId?.toString() || undefined}
+              value={item.staffId ? item.staffId.toString() : undefined}
               onValueChange={(value) => {
+                // Value "no-staff" için staffId ve staffName sıfırla
+                if (value === "no-staff") {
+                  onUpdate(index, { 
+                    ...item, 
+                    staffId: undefined,
+                    staffName: undefined
+                  });
+                  return;
+                }
+
+                // Normal personel seçimi
                 const selectedStaff = users.find(u => u.id.toString() === value);
-                onUpdate(index, { 
-                  ...item, 
-                  staffId: Number(value),
-                  staffName: selectedStaff?.name || selectedStaff?.displayName || ""
-                });
+                if (selectedStaff) {
+                  onUpdate(index, { 
+                    ...item, 
+                    staffId: Number(value),
+                    staffName: selectedStaff.name || selectedStaff.displayName || ""
+                  });
+                }
               }}
             >
               <SelectTrigger className="h-9 text-xs">
