@@ -26,6 +26,7 @@ const AddServiceForm = ({ showForm, setShowForm, services }: AddServiceFormProps
     duration: '',
     type: 'one-time' as 'recurring' | 'one-time',
     sessionCount: '1',
+    commissionRate: '0',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,9 +38,10 @@ const AddServiceForm = ({ showForm, setShowForm, services }: AddServiceFormProps
         name: formData.name,
         price: Number(formData.price),
         description: formData.description,
-        duration: formData.duration,
+        duration: formData.duration, // Allow string for duration
         type: formData.type,
         sessionCount: Number(formData.sessionCount),
+        commissionRate: Number(formData.commissionRate),
         createdAt: new Date(),
       };
 
@@ -59,6 +61,7 @@ const AddServiceForm = ({ showForm, setShowForm, services }: AddServiceFormProps
         duration: '',
         type: 'one-time',
         sessionCount: '1',
+        commissionRate: '0',
       });
       setShowForm(false);
     } catch (error) {
@@ -103,6 +106,18 @@ const AddServiceForm = ({ showForm, setShowForm, services }: AddServiceFormProps
             value={formData.duration}
             onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
             placeholder="Hizmet süresini girin"
+          />
+        </div>
+
+        <div>
+          <Label>Komisyon Oranı (%)</Label>
+          <Input
+            type="number"
+            min="0"
+            max="100"
+            value={formData.commissionRate}
+            onChange={(e) => setFormData({ ...formData, commissionRate: e.target.value })}
+            placeholder="Komisyon oranı girin"
           />
         </div>
 

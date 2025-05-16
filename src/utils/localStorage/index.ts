@@ -1,4 +1,3 @@
-
 import {
   getAppointments as getAppointmentsAsync,
   setAppointments as setAppointmentsAsync
@@ -19,8 +18,8 @@ import {
 } from '../storage/services';
 
 import {
-  getStockItems as getStockItemsAsync,
-  setStockItems as setStockItemsAsync,
+  getStock as getStockAsync,
+  setStock as setStockAsync,
   getSales as getSalesAsync,
   setSales as setSalesAsync
 } from '../storage/stock';
@@ -86,12 +85,11 @@ export const getAppointments = (): Appointment[] => {
 export const setAppointments = (appointments: Appointment[]): void => {
   try {
     localStorage.setItem('appointments', JSON.stringify(appointments));
+    // Don't await the promise, just call it
+    setAppointmentsAsync(appointments);
   } catch (e) {
     console.error('Error saving appointments:', e);
   }
-  
-  // Also update async storage
-  setAppointmentsAsync(appointments).catch(console.error);
 };
 
 export const getCustomers = (): Customer[] => {
@@ -107,12 +105,12 @@ export const getCustomers = (): Customer[] => {
 export const setCustomers = (customers: Customer[]): void => {
   try {
     localStorage.setItem('customers', JSON.stringify(customers));
+  
+    // Don't await the promise, just call it
+    setCustomersAsync(customers);
   } catch (e) {
     console.error('Error saving customers:', e);
   }
-  
-  // Also update async storage
-  setCustomersAsync(customers).catch(console.error);
 };
 
 export const getCustomerRecords = (): CustomerRecord[] => {
@@ -128,12 +126,12 @@ export const getCustomerRecords = (): CustomerRecord[] => {
 export const setCustomerRecords = (records: CustomerRecord[]): void => {
   try {
     localStorage.setItem('customerRecords', JSON.stringify(records));
+  
+    // Don't await the promise, just call it
+    setCustomerRecordsAsync(records);
   } catch (e) {
     console.error('Error saving customer records:', e);
   }
-  
-  // Also update async storage
-  setCustomerRecordsAsync(records).catch(console.error);
 };
 
 export const getServices = (): Service[] => {
@@ -149,12 +147,12 @@ export const getServices = (): Service[] => {
 export const setServices = (services: Service[]): void => {
   try {
     localStorage.setItem('services', JSON.stringify(services));
+  
+    // Don't await the promise, just call it
+    setServicesAsync(services);
   } catch (e) {
     console.error('Error saving services:', e);
   }
-  
-  // Also update async storage
-  setServicesAsync(services).catch(console.error);
 };
 
 export const getProducts = (): StockItem[] => {
@@ -170,12 +168,12 @@ export const getProducts = (): StockItem[] => {
 export const setProducts = (products: StockItem[]): void => {
   try {
     localStorage.setItem('stock', JSON.stringify(products));
+  
+    // Don't await the promise, just call it
+    setStockAsync(products);
   } catch (e) {
     console.error('Error saving products:', e);
   }
-  
-  // Also update async storage
-  setStockItemsAsync(products).catch(console.error);
 };
 
 export const getCosts = (): Cost[] => {
@@ -191,12 +189,12 @@ export const getCosts = (): Cost[] => {
 export const setCosts = (costs: Cost[]): void => {
   try {
     localStorage.setItem('costs', JSON.stringify(costs));
+  
+    // Don't await the promise, just call it
+    setCostsAsync(costs);
   } catch (e) {
     console.error('Error saving costs:', e);
   }
-  
-  // Also update async storage
-  setCostsAsync(costs).catch(console.error);
 };
 
 export const getPayments = (): Payment[] => {
@@ -212,12 +210,12 @@ export const getPayments = (): Payment[] => {
 export const setPayments = (payments: Payment[]): void => {
   try {
     localStorage.setItem('payments', JSON.stringify(payments));
+  
+    // Don't await the promise, just call it
+    setPaymentsAsync(payments);
   } catch (e) {
     console.error('Error saving payments:', e);
   }
-  
-  // Also update async storage
-  setPaymentsAsync(payments).catch(console.error);
 };
 
 export const getCurrentUser = (): User | null => {
@@ -238,12 +236,12 @@ export const setCurrentUser = (user: User | null): void => {
     } else {
       localStorage.removeItem('currentUser');
     }
+    
+    // Don't await the promise, just call it
+    setCurrentUserAsync(user);
   } catch (e) {
     console.error('Error saving current user:', e);
   }
-  
-  // Also update async storage
-  setCurrentUserAsync(user).catch(console.error);
 };
 
 export const getUsers = (): User[] => {
@@ -259,12 +257,12 @@ export const getUsers = (): User[] => {
 export const setUsers = (users: User[]): void => {
   try {
     localStorage.setItem('users', JSON.stringify(users));
+    
+    // Don't await the promise, just call it
+    setUsersAsync(users);
   } catch (e) {
     console.error('Error saving users:', e);
   }
-  
-  // Also update async storage
-  setUsersAsync(users).catch(console.error);
 };
 
 export const getUserPerformance = (): UserPerformance[] => {
@@ -280,12 +278,12 @@ export const getUserPerformance = (): UserPerformance[] => {
 export const setUserPerformance = (performance: UserPerformance[]): void => {
   try {
     localStorage.setItem('userPerformance', JSON.stringify(performance));
+  
+    // Don't await the promise, just call it
+    setUserPerformanceAsync(performance);
   } catch (e) {
     console.error('Error saving user performance:', e);
   }
-  
-  // Also update async storage
-  setUserPerformanceAsync(performance).catch(console.error);
 };
 
 export const getUserActivities = (): UserActivity[] => {
@@ -301,12 +299,12 @@ export const getUserActivities = (): UserActivity[] => {
 export const setUserActivities = (activities: UserActivity[]): void => {
   try {
     localStorage.setItem('userActivities', JSON.stringify(activities));
+  
+    // Don't await the promise, just call it
+    setUserActivitiesAsync(activities);
   } catch (e) {
     console.error('Error saving user activities:', e);
   }
-  
-  // Also update async storage
-  setUserActivitiesAsync(activities).catch(console.error);
 };
 
 export const addUserActivity = (activity: Omit<UserActivity, 'id' | 'timestamp'>): void => {
@@ -335,12 +333,12 @@ export const getStockMovements = (): StockMovement[] => {
 export const setStockMovements = (movements: StockMovement[]): void => {
   try {
     localStorage.setItem('stockMovements', JSON.stringify(movements));
+  
+    // Also update async storage
+    setStockMovementsAsync(movements).catch(console.error);
   } catch (e) {
     console.error('Error saving stock movements:', e);
   }
-  
-  // Also update async storage
-  setStockMovementsAsync(movements).catch(console.error);
 };
 
 export const addStockMovement = (movement: Omit<StockMovement, 'id'>): StockMovement => {
@@ -371,12 +369,12 @@ export const getSales = (): Sale[] => {
 export const setSales = (sales: Sale[]): void => {
   try {
     localStorage.setItem('sales', JSON.stringify(sales));
+    
+    // Don't await the promise, just call it
+    setSalesAsync(sales);
   } catch (e) {
     console.error('Error saving sales:', e);
   }
-  
-  // Also update async storage
-  setSalesAsync(sales).catch(console.error);
 };
 
 export const getStock = getProducts;
@@ -395,12 +393,12 @@ export const getServiceSales = (): ServiceSale[] => {
 export const setServiceSales = (sales: ServiceSale[]): void => {
   try {
     localStorage.setItem('serviceSales', JSON.stringify(sales));
+    
+    // Don't await the promise, just call it
+    setServiceSalesAsync(sales);
   } catch (e) {
     console.error('Error saving service sales:', e);
   }
-  
-  // Also update async storage
-  setServiceSalesAsync(sales).catch(console.error);
 };
 
 // Export types

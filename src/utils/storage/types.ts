@@ -55,7 +55,7 @@ export interface Service {
   name: string;
   description?: string;
   price: number;
-  duration: number;
+  duration: string | number;  // Modified to accept both string and number
   type?: 'recurring' | 'one-time';
   sessionCount?: number;
   commissionRate?: number;
@@ -155,7 +155,7 @@ export interface StaffPerformance {
   servicesProvided: number;
   totalRevenue: number;
   appointmentsCount: number;
-  avgRating: number;
+  avgRating: number; // Changed from string to number as per error
 }
 
 export interface StockMovement {

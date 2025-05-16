@@ -27,6 +27,7 @@ const AddServiceFormModal = ({ showForm, setShowForm, services }: AddServiceForm
     duration: '',
     type: 'one-time' as 'recurring' | 'one-time',
     sessionCount: '1',
+    commissionRate: '0',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -38,9 +39,10 @@ const AddServiceFormModal = ({ showForm, setShowForm, services }: AddServiceForm
         name: formData.name,
         price: Number(formData.price),
         description: formData.description,
-        duration: formData.duration,
+        duration: formData.duration, // Allow string for duration
         type: formData.type,
         sessionCount: Number(formData.sessionCount),
+        commissionRate: Number(formData.commissionRate),
         createdAt: new Date(),
       };
 
@@ -60,6 +62,7 @@ const AddServiceFormModal = ({ showForm, setShowForm, services }: AddServiceForm
         duration: '',
         type: 'one-time',
         sessionCount: '1',
+        commissionRate: '0',
       });
       setShowForm(false);
     } catch (error) {
@@ -139,22 +142,34 @@ const AddServiceFormModal = ({ showForm, setShowForm, services }: AddServiceForm
               </div>
 
               <div>
-                <Label>Hizmet Tipi</Label>
-                <RadioGroup
-                  value={formData.type}
-                  onValueChange={(value) => setFormData({ ...formData, type: value as 'recurring' | 'one-time' })}
-                  className="flex space-x-4 mt-2"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="recurring" id="recurring" />
-                    <Label htmlFor="recurring">Sürekli</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="one-time" id="one-time" />
-                    <Label htmlFor="one-time">Tek Seferlik</Label>
-                  </div>
-                </RadioGroup>
+                <Label>Komisyon Oranı (%)</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={formData.commissionRate}
+                  onChange={(e) => setFormData({ ...formData, commissionRate: e.target.value })}
+                  placeholder="Komisyon oranı girin"
+                />
               </div>
+            </div>
+
+            <div>
+              <Label>Hizmet Tipi</Label>
+              <RadioGroup
+                value={formData.type}
+                onValueChange={(value) => setFormData({ ...formData, type: value as 'recurring' | 'one-time' })}
+                className="flex space-x-4 mt-2"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="recurring" id="recurring" />
+                  <Label htmlFor="recurring">Sürekli</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="one-time" id="one-time" />
+                  <Label htmlFor="one-time">Tek Seferlik</Label>
+                </div>
+              </RadioGroup>
             </div>
 
             <div>

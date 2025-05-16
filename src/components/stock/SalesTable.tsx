@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { type Sale } from "@/utils/localStorage";
+import { type Sale } from "@/utils/storage/types";
 import { formatCurrency } from '@/utils/format';
 
 interface SalesTableProps {

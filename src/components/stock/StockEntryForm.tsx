@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -5,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { addStockMovement, getStock, setStock, type StockItem } from "@/utils/localStorage";
+import { addStockMovement, getStock, setStock, type StockItem, type StockMovement } from "@/utils/localStorage";
 import { format } from 'date-fns';
 
 interface StockEntryFormProps {
@@ -22,7 +23,7 @@ const StockEntryForm = ({ showForm, setShowForm, stock }: StockEntryFormProps) =
     quantity: '',
     cost: '',
     description: '',
-    type: 'in', // Varsayılan olarak giriş
+    type: 'in' as 'in' | 'out', // Explicit type cast to 'in' | 'out'
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -53,7 +54,7 @@ const StockEntryForm = ({ showForm, setShowForm, stock }: StockEntryFormProps) =
         return;
       }
 
-      const newStockMovement = {
+      const newStockMovement: Omit<StockMovement, 'id'> = {
         productId: productId,
         quantity: quantity,
         type: formData.type,
@@ -75,7 +76,7 @@ const StockEntryForm = ({ showForm, setShowForm, stock }: StockEntryFormProps) =
 
       setStock(updatedStock);
       queryClient.setQueryData(['stock'], updatedStock);
-      queryClient.invalidateQueries(['stockMovements']);
+      queryClient.invalidateQueries({ queryKey: ['stockMovements'] });
 
       toast({
         title: "Başarıyla kaydedildi",

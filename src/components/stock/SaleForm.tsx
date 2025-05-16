@@ -62,6 +62,7 @@ const SaleForm = ({ showForm, setShowForm, stock, sales }: SaleFormProps) => {
 
       const totalPrice = (product.price * quantity) - discount;
 
+      // Create a sale object with all required properties
       const newSale: Sale = {
         id: Date.now(),
         customerId: customer.id,

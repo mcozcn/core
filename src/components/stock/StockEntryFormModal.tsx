@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   AlertDialog,
@@ -32,7 +33,7 @@ const StockEntryFormModal = ({ showForm, setShowForm, stock }: StockEntryFormMod
             Lütfen aşağıdaki formu doldurarak stok girişini tamamlayın.
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <StockEntryForm setShowForm={setShowForm} stock={stock} />
+        <StockEntryForm showForm={showForm} setShowForm={setShowForm} stock={stock} />
         <AlertDialogFooter>
           <AlertDialogCancel>İptal</AlertDialogCancel>
           <AlertDialogAction>Kaydet</AlertDialogAction>

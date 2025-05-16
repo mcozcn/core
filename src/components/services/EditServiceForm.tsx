@@ -26,6 +26,7 @@ const EditServiceForm = ({ service, showForm, setShowForm }: EditServiceFormProp
     duration: service.duration || '',
     type: service.type || 'one-time',
     sessionCount: service.sessionCount !== undefined ? service.sessionCount.toString() : '1',
+    commissionRate: service.commissionRate !== undefined ? service.commissionRate.toString() : '0',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -33,7 +34,8 @@ const EditServiceForm = ({ service, showForm, setShowForm }: EditServiceFormProp
 
     try {
       const services = getServices();
-      const updatedServices = services.map(item =>
+      // Explicitly cast the updated services to Service[] type
+      const updatedServices: Service[] = services.map(item =>
         item.id === service.id
           ? {
               ...item,
@@ -43,6 +45,7 @@ const EditServiceForm = ({ service, showForm, setShowForm }: EditServiceFormProp
               duration: formData.duration,
               type: formData.type as 'recurring' | 'one-time',
               sessionCount: Number(formData.sessionCount),
+              commissionRate: Number(formData.commissionRate),
             }
           : item
       );
@@ -98,6 +101,18 @@ const EditServiceForm = ({ service, showForm, setShowForm }: EditServiceFormProp
             value={formData.duration}
             onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
             placeholder="Hizmet süresini girin"
+          />
+        </div>
+
+        <div>
+          <Label>Komisyon Oranı (%)</Label>
+          <Input
+            type="number"
+            min="0"
+            max="100"
+            value={formData.commissionRate}
+            onChange={(e) => setFormData({ ...formData, commissionRate: e.target.value })}
+            placeholder="Komisyon oranı girin"
           />
         </div>
 
