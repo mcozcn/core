@@ -1,4 +1,18 @@
+
 import { saveToIDB } from './idb';
+
+export const checkMigrationNeeded = async (): Promise<boolean> => {
+  // Simple check - if any data exists in localStorage but not in IndexedDB
+  const hasLocalStorageData = Object.keys(localStorage).some(key => 
+    ['stock', 'appointments', 'customers', 'services', 'sales', 'costs', 'payments'].includes(key)
+  );
+  
+  return hasLocalStorageData;
+};
+
+export const runMigrations = async (): Promise<void> => {
+  await migrateAllData();
+};
 
 export const migrateStockData = async () => {
   try {

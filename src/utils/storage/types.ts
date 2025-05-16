@@ -169,6 +169,7 @@ export interface StockMovement {
 }
 
 export interface UserPerformance {
+  id: number; // Added the required id field
   userId: number;
   appointmentCount: number;
   salesCount: number;
