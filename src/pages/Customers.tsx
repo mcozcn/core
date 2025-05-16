@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getCustomers, getCustomerRecords, getAppointments } from "@/utils/localStorage";
+import { getCustomers, getCustomerRecords, getAppointments, Appointment } from "@/utils/localStorage";
 import SearchInput from '@/components/common/SearchInput';
 import CustomerDetails from '@/components/customers/CustomerDetails';
 import CustomerDebtForm from '@/components/customers/forms/CustomerDebtForm';
@@ -145,7 +144,12 @@ const Customers = () => {
                 <TabsContent value="appointments">
                   <Card className="p-6">
                     <CustomerAppointmentsList 
-                      appointments={appointments.filter(apt => apt.customerId === selectedCustomer.id)}
+                      appointments={appointments
+                        .filter(apt => apt.customerId === selectedCustomer.id)
+                        .map((apt): Appointment => ({
+                          ...apt,
+                          service: apt.service || '' // Ensure service is not undefined
+                        }))}
                       customerPhone={selectedCustomer.phone}
                     />
                   </Card>

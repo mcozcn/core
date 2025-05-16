@@ -1,24 +1,18 @@
 
 import { getFromStorage, setToStorage } from './core';
 import { STORAGE_KEYS } from './storageKeys';
+import type { StockMovement } from './types';
 
-export interface StockMovement {
-  id: number;
-  productId: number;
-  quantity: number;
-  type: 'in' | 'out';
-  date: string;
-  cost: number;
-  description?: string;
-}
+export const getStockMovements = async (): Promise<StockMovement[]> => {
+  const result = await getFromStorage<StockMovement[]>(STORAGE_KEYS.STOCK_MOVEMENTS);
+  return result || [];
+};
 
-export const getStockMovements = async (): Promise<StockMovement[]> =>
-  await getFromStorage<StockMovement>(STORAGE_KEYS.STOCK_MOVEMENTS) || [];
-
-export const setStockMovements = async (movements: StockMovement[]): Promise<void> =>
+export const setStockMovements = async (movements: StockMovement[]): Promise<void> => {
   await setToStorage(STORAGE_KEYS.STOCK_MOVEMENTS, movements);
+};
 
-export const addStockMovement = async (movement: Omit<StockMovement, 'id'>): Promise<void> => {
+export const addStockMovement = async (movement: Omit<StockMovement, 'id'>): Promise<StockMovement> => {
   const movements = await getStockMovements();
   
   const newMovement: StockMovement = {
@@ -27,4 +21,5 @@ export const addStockMovement = async (movement: Omit<StockMovement, 'id'>): Pro
   };
 
   await setStockMovements([...movements, newMovement]);
+  return newMovement;
 };

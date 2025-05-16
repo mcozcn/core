@@ -3,14 +3,20 @@ import { getFromStorage, setToStorage } from './core';
 import { STORAGE_KEYS } from './storageKeys';
 import type { Customer, CustomerRecord } from './types';
 
-export const getCustomers = async (): Promise<Customer[]> =>
-  await getFromStorage<Customer[]>(STORAGE_KEYS.CUSTOMERS) || [];
+export const getCustomers = async (): Promise<Customer[]> => {
+  const result = await getFromStorage<Customer[]>(STORAGE_KEYS.CUSTOMERS);
+  return result || [];
+};
 
-export const setCustomers = async (customers: Customer[]): Promise<void> =>
+export const setCustomers = async (customers: Customer[]): Promise<void> => {
   await setToStorage(STORAGE_KEYS.CUSTOMERS, customers);
+};
 
-export const getCustomerRecords = async (): Promise<CustomerRecord[]> =>
-  await getFromStorage<CustomerRecord[]>(STORAGE_KEYS.CUSTOMER_RECORDS) || [];
+export const getCustomerRecords = async (): Promise<CustomerRecord[]> => {
+  const result = await getFromStorage<CustomerRecord[]>(STORAGE_KEYS.CUSTOMER_RECORDS);
+  return result || [];
+};
 
-export const setCustomerRecords = async (records: CustomerRecord[]): Promise<void> =>
+export const setCustomerRecords = async (records: CustomerRecord[]): Promise<void> => {
   await setToStorage(STORAGE_KEYS.CUSTOMER_RECORDS, records);
+};

@@ -4,7 +4,7 @@ export interface Appointment {
   customerId: number;
   customerName?: string;  // Added for UI display
   serviceId: number;
-  service?: string;       // Added for UI display
+  service: string;       // Changed from optional to required
   staffId: number;
   staffName?: string;     // Added for UI display
   staffColor?: string;    // Added for UI display

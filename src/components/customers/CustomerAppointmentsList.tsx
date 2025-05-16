@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Table,
@@ -17,22 +16,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { useState } from "react";
-import { getAppointments, setAppointments } from "@/utils/localStorage";
+import { getAppointments, setAppointments, Appointment } from "@/utils/localStorage";
 import { useQueryClient } from "@tanstack/react-query";
 import { MessageSquare } from "lucide-react";
 import { createAppointmentWhatsAppLink } from "@/utils/whatsapp";
 
 interface CustomerAppointmentsListProps {
-  appointments: Array<{
-    id: number;
-    date: string;
-    time: string;
-    service: string;
-    status: 'pending' | 'confirmed' | 'cancelled';
-    note?: string;
-    cancellationNote?: string;
-    staffName: string;
-  }>;
+  appointments: Appointment[];
   customerPhone: string;
 }
 
