@@ -7,7 +7,7 @@ import WeeklyCalendar from '@/components/appointments/WeeklyCalendar';
 import SearchInput from '@/components/common/SearchInput';
 import DateSelectionDialog from '@/components/common/DateSelectionDialog';
 import { useQuery } from '@tanstack/react-query';
-import { getAppointments } from '@/utils/localStorage';
+import { getAppointments } from '@/utils/storage/appointments';
 
 const Appointments = () => {
   const [searchTerm, setSearchTerm] = useState('');
