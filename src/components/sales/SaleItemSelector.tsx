@@ -151,7 +151,7 @@ const SaleItemSelector = ({ item, index, onUpdate, onRemove }: SaleItemSelectorP
 
           <div className="w-24">
             <Select
-              value={item.staffId?.toString() || ""}
+              value={item.staffId?.toString() || undefined}
               onValueChange={(value) => {
                 const selectedStaff = users.find(u => u.id.toString() === value);
                 onUpdate(index, { 
@@ -165,7 +165,7 @@ const SaleItemSelector = ({ item, index, onUpdate, onRemove }: SaleItemSelectorP
                 <SelectValue placeholder="Personel" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Personel Seçin</SelectItem>
+                <SelectItem value="no-staff">Personel Seçin</SelectItem>
                 {users.filter(u => u.role === 'staff').map((user) => (
                   <SelectItem key={user.id} value={user.id.toString()}>
                     {user.name || user.displayName || user.username}
