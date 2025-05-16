@@ -12,8 +12,8 @@ import {
   setServiceSales,
   getCustomerRecords,
   setCustomerRecords,
-  getCustomers,
-} from '@/utils/localStorage';
+  getCustomers
+} from '@/utils/storage';
 
 export const useSaleSubmit = (onSuccess: () => void) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -99,11 +99,7 @@ export const useSaleSubmit = (onSuccess: () => void) => {
           newRecords.push(newRecord);
 
         } else {
-          const services = await queryClient.fetchQuery({
-            queryKey: ['services'],
-            queryFn: () => import('@/utils/localStorage').then(m => m.getServices()),
-          });
-
+          const services = await getServices();
           const service = services.find(s => s.id.toString() === item.itemId);
           if (!service) throw new Error("Hizmet bulunamadı");
 
@@ -180,4 +176,14 @@ export const useSaleSubmit = (onSuccess: () => void) => {
     handleSubmit,
     isSubmitting
   };
+};
+
+// Helper function to get services (defined here to avoid circular dependency)
+const getServices = async () => {
+  try {
+    return await import('@/utils/storage').then(m => m.getServices());
+  } catch (error) {
+    console.error('Error getting services', error);
+    return [];
+  }
 };

@@ -77,3 +77,8 @@ const migrateToV1 = async (): Promise<void> => {
     throw error;
   }
 };
+
+// Export this function for backwards compatibility
+export const migrateLocalStorageIfNeeded = async (): Promise<void> => {
+  await runMigrations();
+};

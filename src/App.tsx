@@ -7,7 +7,7 @@ import { Toaster } from "@/components/ui/toaster";
 
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
-import { migrateLocalStorageIfNeeded } from './utils/storage/migration';
+import { runMigrations } from './utils/storage/migration';
 
 // Pages
 import Login from './pages/Login';
@@ -35,7 +35,7 @@ const queryClient = new QueryClient({
 
 function App() {
   useEffect(() => {
-    migrateLocalStorageIfNeeded();
+    runMigrations();
   }, []);
 
   return (
@@ -52,11 +52,11 @@ function App() {
               <Route path="/services" element={<ProtectedRoute><Services /></ProtectedRoute>} />
               <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
               <Route path="/sales" element={<ProtectedRoute><Sales /></ProtectedRoute>} />
-              <Route path="/users" element={<ProtectedRoute adminOnly><UserManagement /></ProtectedRoute>} />
+              <Route path="/users" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
               <Route path="/personnel" element={<ProtectedRoute><PersonnelManagement /></ProtectedRoute>} />
               <Route path="/financial" element={<ProtectedRoute><Financial /></ProtectedRoute>} />
               <Route path="/costs" element={<ProtectedRoute><Costs /></ProtectedRoute>} />
-              <Route path="/backup" element={<ProtectedRoute adminOnly><Backup /></ProtectedRoute>} />
+              <Route path="/backup" element={<ProtectedRoute><Backup /></ProtectedRoute>} />
               <Route path="/performance" element={<ProtectedRoute><Performance /></ProtectedRoute>} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
