@@ -56,10 +56,17 @@ export interface Service {
 
 export interface ServiceSale {
   id: number;
-  saleId: number;
   serviceId: number;
+  serviceName?: string;
   price: number;
-  saleDate: string;
+  saleDate: string | Date;
+  customerName?: string;
+  customerPhone?: string;
+  customerId?: number;
+  staffId?: number;
+  staffName?: string;
+  commissionAmount?: number;
+  totalPrice?: number;
 }
 
 export interface StockItem {
@@ -82,6 +89,16 @@ export interface Sale {
   total: number;
   paymentMethod: string;
   notes?: string;
+  saleDate?: string | Date;
+  productId?: number;
+  productName?: string;
+  quantity?: number;
+  totalPrice?: number;
+  customerName?: string;
+  customerPhone?: string;
+  staffId?: number;
+  staffName?: string;
+  commissionAmount?: number;
 }
 
 export interface Cost {
@@ -90,6 +107,7 @@ export interface Cost {
   amount: number;
   description: string;
   category: string;
+  createdAt?: Date;
 }
 
 export interface Payment {
@@ -109,6 +127,7 @@ export interface User {
   displayName?: string;
   title?: string;
   color?: string;
+  name?: string;
 }
 
 export interface StaffPerformance {

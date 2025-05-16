@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -71,12 +72,13 @@ const AppointmentForm = ({ selectedDate, onSuccess, onCancel }: AppointmentFormP
         id: Date.now(),
         customerId: Number(customerId),
         customerName: customer.name,
+        serviceId: Number(serviceId),
+        service: service.name,
         staffId: Number(staffId),
         staffName: staff.displayName,
         staffColor: staff.color,
         date: formattedDate,
         time: appointmentTime,
-        service: service.name,
         status: 'pending',
         createdAt: new Date(),
       };

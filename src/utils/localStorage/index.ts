@@ -13,12 +13,16 @@ import {
 
 import {
   getServices as getServicesAsync,
-  setServices as setServicesAsync
+  setServices as setServicesAsync,
+  getServiceSales as getServiceSalesAsync,
+  setServiceSales as setServiceSalesAsync
 } from '../storage/services';
 
 import {
   getStockItems as getStockItemsAsync,
-  setStockItems as setStockItemsAsync
+  setStockItems as setStockItemsAsync,
+  getSales as getSalesAsync,
+  setSales as setSalesAsync
 } from '../storage/stock';
 
 import {
@@ -57,7 +61,9 @@ import type {
   Customer,
   CustomerRecord,
   Service,
+  ServiceSale,
   StockItem,
+  Sale,
   Cost,
   Payment,
   User,
@@ -351,13 +357,61 @@ export const addStockMovement = (movement: Omit<StockMovement, 'id'>): StockMove
   return newMovement;
 };
 
+// Add missing functions for Sales and ServiceSales
+export const getSales = (): Sale[] => {
+  let result: Sale[] = [];
+  try {
+    result = JSON.parse(localStorage.getItem('sales') || '[]');
+  } catch (e) {
+    console.error('Error loading sales:', e);
+  }
+  return result;
+};
+
+export const setSales = (sales: Sale[]): void => {
+  try {
+    localStorage.setItem('sales', JSON.stringify(sales));
+  } catch (e) {
+    console.error('Error saving sales:', e);
+  }
+  
+  // Also update async storage
+  setSalesAsync(sales).catch(console.error);
+};
+
+export const getStock = getProducts;
+export const setStock = setProducts;
+
+export const getServiceSales = (): ServiceSale[] => {
+  let result: ServiceSale[] = [];
+  try {
+    result = JSON.parse(localStorage.getItem('serviceSales') || '[]');
+  } catch (e) {
+    console.error('Error loading service sales:', e);
+  }
+  return result;
+};
+
+export const setServiceSales = (sales: ServiceSale[]): void => {
+  try {
+    localStorage.setItem('serviceSales', JSON.stringify(sales));
+  } catch (e) {
+    console.error('Error saving service sales:', e);
+  }
+  
+  // Also update async storage
+  setServiceSalesAsync(sales).catch(console.error);
+};
+
 // Export types
 export type { 
   Appointment,
   Customer,
   CustomerRecord,
   Service,
+  ServiceSale,
   StockItem,
+  Sale,
   Cost,
   Payment,
   User,

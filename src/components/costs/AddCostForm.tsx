@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -33,7 +34,6 @@ const AddCostForm = ({ showForm, setShowForm, costs }: AddCostFormProps) => {
         amount: Number(formData.amount),
         category: formData.category,
         date: new Date(formData.date),
-        createdAt: new Date(),
       };
 
       const updatedCosts = [...costs, newCost];
