@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -36,6 +37,16 @@ interface PerformanceDataPoint {
   appointments: number;
   sales: number;
   revenue: number;
+}
+
+// Define a type for commission items to use in our component
+interface CommissionItem {
+  date: Date;
+  item: string;
+  amount: number;
+  commissionRate: number;
+  commissionAmount: number;
+  customerName: string;
 }
 
 const StaffPerformanceDetail: React.FC<StaffPerformanceDetailProps> = ({ staff }) => {
@@ -78,13 +89,14 @@ const StaffPerformanceDetail: React.FC<StaffPerformanceDetailProps> = ({ staff }
   const staffServiceSales = serviceSales.filter(filterByStaffAndDate);
   const staffAppointments = appointments.filter(filterByStaffAndDate);
 
-  // Process commission data
-  const commissionItems = [
+  // Process commission data - with proper type safety
+  const commissionItems: CommissionItem[] = [
     ...staffSales.map(sale => ({
       date: new Date(sale.saleDate || sale.date || new Date()),
       item: sale.productName || 'Ürün Satışı',
       amount: sale.price || sale.total || 0,
-      commissionRate: sale.commissionRate || 0,
+      // Use optional chaining to safely access properties that might not exist in the type
+      commissionRate: sale.commissionRate ?? 0, // Use nullish coalescing for safety
       commissionAmount: sale.commissionAmount || 0,
       customerName: sale.customerName || 'Müşteri'
     })),
@@ -92,7 +104,8 @@ const StaffPerformanceDetail: React.FC<StaffPerformanceDetailProps> = ({ staff }
       date: new Date(sale.saleDate || new Date()),
       item: sale.serviceName || 'Hizmet Satışı',
       amount: sale.price || 0,
-      commissionRate: sale.commissionRate || 0,
+      // Use optional chaining to safely access properties that might not exist in the type
+      commissionRate: sale.commissionRate ?? 0, // Use nullish coalescing for safety
       commissionAmount: sale.commissionAmount || 0,
       customerName: sale.customerName || 'Müşteri'
     }))
