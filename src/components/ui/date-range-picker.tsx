@@ -67,6 +67,8 @@ export function DatePickerWithRange({
             numberOfMonths={2}
             locale={locale}
             className="pointer-events-auto"
+            // Set today's date to be used as single selection when clicking on a date
+            today={new Date()}
           />
         </PopoverContent>
       </Popover>

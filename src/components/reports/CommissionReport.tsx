@@ -2,7 +2,8 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import { getSales, getServiceSales, getAllUsers } from "@/utils/localStorage";
+import { getSales, getServiceSales } from "@/utils/localStorage";
+import { getAllUsers } from "@/utils/auth";  // Changed from localStorage to auth
 import {
   Table,
   TableBody,

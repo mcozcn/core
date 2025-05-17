@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -62,7 +61,8 @@ const StaffPerformanceDetail: React.FC<StaffPerformanceDetailProps> = ({ staff }
 
   // Filter data by staff and date range
   const filterByStaffAndDate = (item: any) => {
-    const itemDate = new Date(item.date || item.saleDate);
+    // Handle both date and saleDate properties
+    const itemDate = new Date(item.date || item.saleDate || new Date());
     const staffMatch = item.staffId === staff.id;
     
     if (!date?.from) return staffMatch;
@@ -81,17 +81,17 @@ const StaffPerformanceDetail: React.FC<StaffPerformanceDetailProps> = ({ staff }
   // Process commission data
   const commissionItems = [
     ...staffSales.map(sale => ({
-      date: new Date(sale.saleDate || sale.date),
+      date: new Date(sale.saleDate || sale.date || new Date()),
       item: sale.productName || 'Ürün Satışı',
-      amount: sale.price || sale.total,
+      amount: sale.price || sale.total || 0,
       commissionRate: sale.commissionRate || 0,
       commissionAmount: sale.commissionAmount || 0,
       customerName: sale.customerName || 'Müşteri'
     })),
     ...staffServiceSales.map(sale => ({
-      date: new Date(sale.saleDate),
+      date: new Date(sale.saleDate || new Date()),
       item: sale.serviceName || 'Hizmet Satışı',
-      amount: sale.price,
+      amount: sale.price || 0,
       commissionRate: sale.commissionRate || 0,
       commissionAmount: sale.commissionAmount || 0,
       customerName: sale.customerName || 'Müşteri'
@@ -143,11 +143,15 @@ const StaffPerformanceDetail: React.FC<StaffPerformanceDetailProps> = ({ staff }
       }
     });
     
-    // Add sales data
+    // Add sales data - safely handle different data structures
     [...staffSales, ...staffServiceSales].forEach(sale => {
-      const saleDate = new Date(sale.saleDate || sale.date);
+      // Handle both date formats safely
+      const saleDate = new Date(sale.saleDate || (sale as any).date || new Date());
       const dateKey = format(saleDate, 'yyyy-MM-dd');
-      const saleAmount = sale.price || sale.total || 0;
+      
+      // Handle both price structures safely
+      const saleAmount = ('price' in sale) ? sale.price : 
+                        ('total' in sale) ? (sale as any).total : 0;
       
       if (dataMap.has(dateKey)) {
         const data = dataMap.get(dateKey)!;
@@ -176,10 +180,18 @@ const StaffPerformanceDetail: React.FC<StaffPerformanceDetailProps> = ({ staff }
   // Calculate summary metrics
   const totalAppointments = staffAppointments.length;
   const totalSales = staffSales.length + staffServiceSales.length;
+  
+  // Safely calculate total revenue
   const totalRevenue = [...staffSales, ...staffServiceSales].reduce(
-    (sum, sale) => sum + (sale.price || sale.total || 0), 
+    (sum, sale) => {
+      // Handle both price structures safely
+      const amount = 'price' in sale ? sale.price : 
+                    'total' in sale ? (sale as any).total : 0;
+      return sum + amount;
+    }, 
     0
   );
+  
   const avgDailyRevenue = performanceData.length > 0 
     ? totalRevenue / performanceData.length 
     : 0;

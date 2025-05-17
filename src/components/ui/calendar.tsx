@@ -56,6 +56,10 @@ function Calendar({
         IconLeft: ({ ..._props }) => <ChevronLeft className="h-4 w-4" />,
         IconRight: ({ ..._props }) => <ChevronRight className="h-4 w-4" />,
       }}
+      modifiersClassNames={{
+        selected: "bg-primary text-primary-foreground",
+        today: "bg-accent text-accent-foreground",
+      }}
       {...props}
     />
   );
