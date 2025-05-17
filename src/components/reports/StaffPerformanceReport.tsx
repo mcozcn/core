@@ -11,15 +11,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatCurrency } from "@/utils/format";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { DateRange } from "react-day-picker";
+import { addDays } from "date-fns";
 
 const StaffPerformanceReport = () => {
-  const [period, setPeriod] = useState("30"); // Default 30 days
+  const [period, setPeriod] = useState("30"); // Keep period for backward compatibility
+  const [date, setDate] = useState<DateRange | undefined>({
+    from: new Date(),
+    to: addDays(new Date(), 30),
+  });
   
-  // Fix: Remove the argument as it's not expected by the function
+  // Use date range in query key for refetching when date range changes
   const { data: staffPerformance = [] } = useQuery({
-    queryKey: ['staffPerformance', period],
+    queryKey: ['staffPerformance', date?.from?.toISOString(), date?.to?.toISOString()],
     queryFn: () => getStaffPerformance(),
   });
 
@@ -28,17 +34,12 @@ const StaffPerformanceReport = () => {
       <div className="flex justify-between items-center mb-6">
         <h3 className="text-xl font-semibold">Personel Performans Raporu</h3>
         
-        <Select value={period} onValueChange={setPeriod}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Period" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="7">Son 7 Gün</SelectItem>
-            <SelectItem value="30">Son 30 Gün</SelectItem>
-            <SelectItem value="90">Son 3 Ay</SelectItem>
-            <SelectItem value="365">Son 1 Yıl</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <DatePickerWithRange 
+            date={date} 
+            setDate={setDate} 
+          />
+        </div>
       </div>
       
       <Table>

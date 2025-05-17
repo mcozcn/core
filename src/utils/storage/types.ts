@@ -158,6 +158,21 @@ export interface StaffPerformance {
   avgRating: number; // Changed from string to number as per error
 }
 
+export interface StaffCommission {
+  id: number;
+  staffId: number;
+  staffName: string;
+  date: string | Date;
+  serviceId?: number;
+  productId?: number;
+  itemName: string;
+  amount: number;
+  commissionRate: number;
+  commissionAmount: number;
+  isPaid: boolean;
+  paidDate?: string | Date;
+}
+
 export interface StockMovement {
   id: number;
   productId: number;

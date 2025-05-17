@@ -1,12 +1,13 @@
 
 import React from 'react';
 import { useQuery } from "@tanstack/react-query";
-import { getStock, getServices, getUsers } from "@/utils/localStorage";
+import { getStock, getServices } from "@/utils/localStorage";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SaleItemSelectorProps } from './types';
 import { X } from "lucide-react";
+import { getAllUsers } from "@/utils/auth";
 
 const SaleItemSelector = ({ item, index, onUpdate, onRemove }: SaleItemSelectorProps) => {
   const { data: stock = [] } = useQuery({
@@ -21,11 +22,8 @@ const SaleItemSelector = ({ item, index, onUpdate, onRemove }: SaleItemSelectorP
     initialData: [],
   });
 
-  const { data: users = [] } = useQuery({
-    queryKey: ['users'],
-    queryFn: getUsers,
-    initialData: [],
-  });
+  // Use getAllUsers directly instead of useQuery since it's not an async function
+  const users = getAllUsers();
 
   const items = item.type === 'product' ? stock : services;
 
@@ -151,7 +149,7 @@ const SaleItemSelector = ({ item, index, onUpdate, onRemove }: SaleItemSelectorP
 
           <div className="w-24">
             <Select
-              value={item.staffId ? item.staffId.toString() : undefined}
+              value={item.staffId ? item.staffId.toString() : "no-staff"}
               onValueChange={(value) => {
                 // Value "no-staff" için staffId ve staffName sıfırla
                 if (value === "no-staff") {

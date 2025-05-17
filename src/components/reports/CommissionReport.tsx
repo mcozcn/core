@@ -2,11 +2,7 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import { 
-  getSales, 
-  getServiceSales, 
-  getUsers 
-} from "@/utils/localStorage";
+import { getSales, getServiceSales } from "@/utils/localStorage";
 import {
   Table,
   TableBody,
@@ -15,239 +11,166 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { DateRange } from "react-day-picker";
+import { addDays, isWithinInterval, parseISO } from "date-fns";
 import { formatCurrency } from "@/utils/format";
-import { Sale, ServiceSale, User } from "@/utils/storage/types";
 
 const CommissionReport = () => {
-  const [period, setPeriod] = useState("30"); // Default 30 days
-  const [staffFilter, setStaffFilter] = useState("all");
-  
-  // Get sales and service sales based on the selected period
+  const [date, setDate] = useState<DateRange | undefined>({
+    from: new Date(),
+    to: addDays(new Date(), 30),
+  });
+
   const { data: sales = [] } = useQuery({
     queryKey: ['sales'],
-    queryFn: getSales,
+    queryFn: () => getSales(),
   });
 
   const { data: serviceSales = [] } = useQuery({
     queryKey: ['serviceSales'],
-    queryFn: getServiceSales,
+    queryFn: () => getServiceSales(),
   });
 
-  const { data: staff = [] } = useQuery({
-    queryKey: ['users'],
-    queryFn: getUsers,
-  });
-
-  // Filter sales and service sales by period
-  const filterByPeriod = (items: (Sale | ServiceSale)[]) => {
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - parseInt(period));
+  // Filter sales by date range
+  const filteredSales = sales.filter(sale => {
+    if (!date?.from || !date?.to) return true;
     
-    return items.filter(item => {
-      // Only include items with staff information
-      if (!item.staffId || !item.staffName) return false;
-      
-      // Filter by selected staff if not "all"
-      if (staffFilter !== "all" && item.staffId.toString() !== staffFilter) return false;
-      
-      // Filter by date
-      const itemDate = item.saleDate || (('date' in item) ? item.date : null);
-      return itemDate ? new Date(itemDate) >= cutoffDate : false;
+    const saleDate = new Date(sale.saleDate || sale.date);
+    return isWithinInterval(saleDate, { 
+      start: date.from, 
+      end: date.to || date.from 
     });
-  };
+  });
 
-  // Combine and process both types of sales
-  const getCommissionData = () => {
-    const productSales = filterByPeriod(sales).map(sale => ({
-      ...sale,
-      type: 'product' as const,
-      itemName: sale.productName || ''
-    }));
+  const filteredServiceSales = serviceSales.filter(sale => {
+    if (!date?.from || !date?.to) return true;
     
-    const servSales = filterByPeriod(serviceSales).map(sale => ({
-      ...sale,
-      type: 'service' as const,
-      itemName: sale.serviceName || ''
-    }));
-    
-    return [...productSales, ...servSales]
-      .sort((a, b) => {
-        const dateA = new Date(a.saleDate || (('date' in a) ? a.date : new Date()));
-        const dateB = new Date(b.saleDate || (('date' in b) ? b.date : new Date()));
-        return dateB.getTime() - dateA.getTime();
-      });
-  };
+    const saleDate = new Date(sale.saleDate);
+    return isWithinInterval(saleDate, { 
+      start: date.from, 
+      end: date.to || date.from 
+    });
+  });
 
-  // Calculate total commission by staff
-  const calculateStaffTotals = () => {
-    const staffCommissions: Record<number, {
-      staffId: number,
-      staffName: string,
-      totalSales: number,
-      totalCommission: number,
-      count: number
-    }> = {};
-
-    const allSales = getCommissionData();
-    
-    allSales.forEach(sale => {
-      if (!sale.staffId || !sale.commissionAmount) return;
+  // Group commissions by staff
+  const commissionsByStaff = new Map();
+  
+  // Add product sales commissions
+  filteredSales.forEach(sale => {
+    if (sale.staffId && sale.commissionAmount) {
+      const staffId = sale.staffId;
+      const staffName = sale.staffName || `Personel #${staffId}`;
       
-      if (!staffCommissions[sale.staffId]) {
-        staffCommissions[sale.staffId] = {
-          staffId: sale.staffId,
-          staffName: sale.staffName || "Bilinmeyen Personel",
-          totalSales: 0,
+      if (!commissionsByStaff.has(staffId)) {
+        commissionsByStaff.set(staffId, {
+          staffId,
+          staffName,
           totalCommission: 0,
-          count: 0
-        };
+          sales: []
+        });
       }
       
-      const staffRecord = staffCommissions[sale.staffId];
-      const saleAmount = ('totalPrice' in sale && sale.totalPrice !== undefined) ? sale.totalPrice : 
-                         ('price' in sale && sale.price !== undefined) ? sale.price :
-                         ('total' in sale) ? sale.total : 0;
-                         
-      staffRecord.totalSales += saleAmount;
-      staffRecord.totalCommission += sale.commissionAmount || 0;
-      staffRecord.count += 1;
-    });
-    
-    return Object.values(staffCommissions);
-  };
+      const staffData = commissionsByStaff.get(staffId);
+      staffData.totalCommission += sale.commissionAmount;
+      staffData.sales.push({
+        date: new Date(sale.saleDate || sale.date).toLocaleDateString(),
+        itemName: sale.productName || 'Ürün Satışı',
+        amount: sale.price || sale.total,
+        commissionAmount: sale.commissionAmount
+      });
+    }
+  });
 
-  const commissionItems = getCommissionData();
-  const staffTotals = calculateStaffTotals();
+  // Add service sales commissions
+  filteredServiceSales.forEach(sale => {
+    if (sale.staffId && sale.commissionAmount) {
+      const staffId = sale.staffId;
+      const staffName = sale.staffName || `Personel #${staffId}`;
+      
+      if (!commissionsByStaff.has(staffId)) {
+        commissionsByStaff.set(staffId, {
+          staffId,
+          staffName,
+          totalCommission: 0,
+          sales: []
+        });
+      }
+      
+      const staffData = commissionsByStaff.get(staffId);
+      staffData.totalCommission += sale.commissionAmount;
+      staffData.sales.push({
+        date: new Date(sale.saleDate).toLocaleDateString(),
+        itemName: sale.serviceName || 'Hizmet Satışı',
+        amount: sale.price,
+        commissionAmount: sale.commissionAmount
+      });
+    }
+  });
+
+  const staffCommissionData = Array.from(commissionsByStaff.values());
+  const totalCommissionAmount = staffCommissionData.reduce(
+    (total, staff) => total + staff.totalCommission, 
+    0
+  );
 
   return (
     <Card className="p-6">
-      <div className="flex flex-wrap justify-between items-center mb-6 gap-2">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
         <h3 className="text-xl font-semibold">Personel Hakediş Raporu</h3>
-        
-        <div className="flex flex-wrap gap-2">
-          <Select value={staffFilter} onValueChange={setStaffFilter}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Personel" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tüm Personel</SelectItem>
-              {staff.filter(user => user.role === 'staff').map((user) => (
-                <SelectItem key={user.id} value={user.id.toString()}>
-                  {user.name || user.displayName || user.username}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <DatePickerWithRange 
+          className="mt-3 sm:mt-0"
+          date={date} 
+          setDate={setDate} 
+        />
+      </div>
+
+      {staffCommissionData.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground">
+          Seçilen tarih aralığında hakediş bilgisi bulunamadı.
+        </div>
+      ) : (
+        <>
+          <div className="mb-6 p-4 bg-accent/20 rounded-lg">
+            <div className="flex justify-between">
+              <span>Toplam Hakediş Tutarı:</span>
+              <span className="font-bold">{formatCurrency(totalCommissionAmount)}</span>
+            </div>
+          </div>
           
-          <Select value={period} onValueChange={setPeriod}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Dönem" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7">Son 7 Gün</SelectItem>
-              <SelectItem value="30">Son 30 Gün</SelectItem>
-              <SelectItem value="90">Son 3 Ay</SelectItem>
-              <SelectItem value="365">Son 1 Yıl</SelectItem>
-              <SelectItem value="3650">Tümü</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      
-      <div className="space-y-6">
-        {/* Özet Tablo */}
-        <div>
-          <h4 className="text-lg font-medium mb-2">Hakediş Özeti</h4>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Personel</TableHead>
-                <TableHead className="text-right">İşlem Sayısı</TableHead>
-                <TableHead className="text-right">Toplam Satış</TableHead>
-                <TableHead className="text-right">Toplam Hakediş</TableHead>
-                <TableHead className="text-right">Ortalama Hakediş Oranı</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {staffTotals.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground py-6">
-                    Bu dönem için hakediş verisi bulunamadı.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                staffTotals.map((record) => (
-                  <TableRow key={record.staffId}>
-                    <TableCell className="font-medium">{record.staffName}</TableCell>
-                    <TableCell className="text-right">{record.count}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(record.totalSales)}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(record.totalCommission)}</TableCell>
-                    <TableCell className="text-right">
-                      {record.totalSales > 0 
-                        ? `%${((record.totalCommission / record.totalSales) * 100).toFixed(2)}` 
-                        : "0%"}
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
-        
-        {/* Detay Tablo */}
-        <div>
-          <h4 className="text-lg font-medium mb-2">Hakediş Detayları</h4>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Tarih</TableHead>
-                <TableHead>Personel</TableHead>
-                <TableHead>Müşteri</TableHead>
-                <TableHead>İşlem</TableHead>
-                <TableHead className="text-right">Tutar</TableHead>
-                <TableHead className="text-right">Hakediş</TableHead>
-                <TableHead className="text-right">Oran</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {commissionItems.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-6">
-                    Bu dönem için hakediş detayı bulunamadı.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                commissionItems.map((item) => {
-                  const saleDate = item.saleDate || (('date' in item) ? item.date : new Date());
-                  const amount = ('totalPrice' in item && item.totalPrice !== undefined) ? item.totalPrice : 
-                               ('price' in item && item.price !== undefined) ? item.price :
-                               ('total' in item) ? item.total : 0;
-                  const commissionRate = item.commissionAmount && amount ? 
-                    (item.commissionAmount / amount * 100).toFixed(2) : "0";
-                  
-                  return (
-                    <TableRow key={`${item.type}-${item.id}`}>
-                      <TableCell>{new Date(saleDate).toLocaleDateString('tr-TR')}</TableCell>
-                      <TableCell>{item.staffName}</TableCell>
-                      <TableCell>{item.customerName}</TableCell>
-                      <TableCell>
-                        <span className="inline-flex items-center">
-                          <span className={`w-2 h-2 rounded-full mr-2 ${item.type === 'service' ? 'bg-blue-500' : 'bg-green-500'}`}></span>
-                          {item.itemName}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">{formatCurrency(amount)}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(item.commissionAmount || 0)}</TableCell>
-                      <TableCell className="text-right">%{commissionRate}</TableCell>
+          <div className="space-y-6">
+            {staffCommissionData.map(staffData => (
+              <div key={staffData.staffId} className="border rounded-lg">
+                <div className="p-4 bg-accent/10 flex justify-between items-center border-b">
+                  <h4 className="font-medium">{staffData.staffName}</h4>
+                  <span className="font-bold">{formatCurrency(staffData.totalCommission)}</span>
+                </div>
+                
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Tarih</TableHead>
+                      <TableHead>Ürün/Hizmet</TableHead>
+                      <TableHead className="text-right">Tutar</TableHead>
+                      <TableHead className="text-right">Hakediş</TableHead>
                     </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </div>
+                  </TableHeader>
+                  <TableBody>
+                    {staffData.sales.map((sale, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{sale.date}</TableCell>
+                        <TableCell>{sale.itemName}</TableCell>
+                        <TableCell className="text-right">{formatCurrency(sale.amount)}</TableCell>
+                        <TableCell className="text-right">{formatCurrency(sale.commissionAmount)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </Card>
   );
 };
