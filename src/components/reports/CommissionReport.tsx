@@ -1,9 +1,8 @@
-
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { getSales, getServiceSales } from "@/utils/localStorage";
-import { getAllUsers } from "@/utils/auth";  // getAllUsers'ı auth modülünden alıyoruz
+import { getAllUsers } from "@/utils/auth";
 import {
   Table,
   TableBody,
@@ -14,7 +13,7 @@ import {
 } from "@/components/ui/table";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { DateRange } from "react-day-picker";
-import { addDays, isWithinInterval, parseISO, format, startOfDay, endOfDay } from "date-fns";
+import { addDays, isWithinInterval, format, startOfDay, endOfDay } from "date-fns";
 import { formatCurrency } from "@/utils/format";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -39,8 +38,7 @@ const CommissionReport = () => {
   
   const { data: users = [] } = useQuery({
     queryKey: ['users'],
-    queryFn: () => getAllUsers(),
-    initialData: [],
+    queryFn: getAllUsers,
   });
 
   // Filter staff users
