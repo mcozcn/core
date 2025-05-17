@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -95,8 +94,8 @@ const StaffPerformanceDetail: React.FC<StaffPerformanceDetailProps> = ({ staff }
       date: new Date(sale.saleDate || sale.date || new Date()),
       item: sale.productName || 'Ürün Satışı',
       amount: sale.price || sale.total || 0,
-      // Use optional chaining to safely access properties that might not exist in the type
-      commissionRate: sale.commissionRate ?? 0, // Use nullish coalescing for safety
+      // Use nullish coalescing for safety and type assertion for TypeScript
+      commissionRate: (sale as any).commissionRate ?? 0,
       commissionAmount: sale.commissionAmount || 0,
       customerName: sale.customerName || 'Müşteri'
     })),
@@ -104,8 +103,8 @@ const StaffPerformanceDetail: React.FC<StaffPerformanceDetailProps> = ({ staff }
       date: new Date(sale.saleDate || new Date()),
       item: sale.serviceName || 'Hizmet Satışı',
       amount: sale.price || 0,
-      // Use optional chaining to safely access properties that might not exist in the type
-      commissionRate: sale.commissionRate ?? 0, // Use nullish coalescing for safety
+      // Use nullish coalescing for safety and type assertion for TypeScript
+      commissionRate: (sale as any).commissionRate ?? 0,
       commissionAmount: sale.commissionAmount || 0,
       customerName: sale.customerName || 'Müşteri'
     }))
