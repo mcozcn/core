@@ -22,7 +22,7 @@ const SaleItemSelector = ({ item, index, onUpdate, onRemove }: SaleItemSelectorP
     initialData: [],
   });
 
-  // Use getAllUsers directly instead of useQuery since it's not an async function
+  // Use getAllUsers directly since it's not an async function
   const users = getAllUsers();
 
   const items = item.type === 'product' ? stock : services;

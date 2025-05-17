@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -45,11 +46,11 @@ export function DatePickerWithRange({
             {date?.from ? (
               date.to ? (
                 <>
-                  {format(date.from, "LLL dd, y", { locale })} -{" "}
-                  {format(date.to, "LLL dd, y", { locale })}
+                  {format(date.from, "dd/MM/yyyy", { locale })} -{" "}
+                  {format(date.to, "dd/MM/yyyy", { locale })}
                 </>
               ) : (
-                format(date.from, "LLL dd, y", { locale })
+                format(date.from, "dd/MM/yyyy", { locale })
               )
             ) : (
               <span>Tarih seçin</span>
@@ -65,6 +66,7 @@ export function DatePickerWithRange({
             onSelect={setDate}
             numberOfMonths={2}
             locale={locale}
+            className="pointer-events-auto"
           />
         </PopoverContent>
       </Popover>

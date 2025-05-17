@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import { getSales, getServiceSales } from "@/utils/localStorage";
+import { getSales, getServiceSales, getAllUsers } from "@/utils/localStorage";
 import {
   Table,
   TableBody,
@@ -13,14 +13,18 @@ import {
 } from "@/components/ui/table";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { DateRange } from "react-day-picker";
-import { addDays, isWithinInterval, parseISO } from "date-fns";
+import { addDays, isWithinInterval, parseISO, format, startOfDay, endOfDay } from "date-fns";
 import { formatCurrency } from "@/utils/format";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const CommissionReport = () => {
   const [date, setDate] = useState<DateRange | undefined>({
     from: new Date(),
     to: addDays(new Date(), 30),
   });
+  
+  // Add staff selection state
+  const [selectedStaffId, setSelectedStaffId] = useState<string>("all");
 
   const { data: sales = [] } = useQuery({
     queryKey: ['sales'],
@@ -31,26 +35,45 @@ const CommissionReport = () => {
     queryKey: ['serviceSales'],
     queryFn: () => getServiceSales(),
   });
+  
+  const { data: users = [] } = useQuery({
+    queryKey: ['users'],
+    queryFn: () => getAllUsers(),
+    initialData: [],
+  });
 
-  // Filter sales by date range
-  const filteredSales = sales.filter(sale => {
+  // Filter staff users
+  const staffUsers = users.filter(user => user.role === 'staff');
+
+  // Fix date filter to use precise day comparison
+  const filterByDate = (saleDate: Date | string) => {
     if (!date?.from || !date?.to) return true;
     
-    const saleDate = new Date(sale.saleDate || sale.date);
-    return isWithinInterval(saleDate, { 
-      start: date.from, 
-      end: date.to || date.from 
+    const saleDateObj = typeof saleDate === 'string' ? new Date(saleDate) : saleDate;
+    
+    // Set time to start of day for from date and end of day for to date
+    const fromDate = startOfDay(date.from);
+    const toDate = date.to ? endOfDay(date.to) : endOfDay(date.from);
+    
+    return isWithinInterval(saleDateObj, { 
+      start: fromDate, 
+      end: toDate
     });
+  };
+
+  // Filter sales by date range and selected staff
+  const filteredSales = sales.filter(sale => {
+    const passesDateFilter = filterByDate(sale.saleDate || sale.date);
+    const passesStaffFilter = selectedStaffId === "all" || sale.staffId?.toString() === selectedStaffId;
+    
+    return passesDateFilter && passesStaffFilter;
   });
 
   const filteredServiceSales = serviceSales.filter(sale => {
-    if (!date?.from || !date?.to) return true;
+    const passesDateFilter = filterByDate(sale.saleDate);
+    const passesStaffFilter = selectedStaffId === "all" || sale.staffId?.toString() === selectedStaffId;
     
-    const saleDate = new Date(sale.saleDate);
-    return isWithinInterval(saleDate, { 
-      start: date.from, 
-      end: date.to || date.from 
-    });
+    return passesDateFilter && passesStaffFilter;
   });
 
   // Group commissions by staff
@@ -77,7 +100,8 @@ const CommissionReport = () => {
         date: new Date(sale.saleDate || sale.date).toLocaleDateString(),
         itemName: sale.productName || 'Ürün Satışı',
         amount: sale.price || sale.total,
-        commissionAmount: sale.commissionAmount
+        commissionAmount: sale.commissionAmount,
+        customerName: sale.customerName || 'Müşteri'
       });
     }
   });
@@ -103,7 +127,8 @@ const CommissionReport = () => {
         date: new Date(sale.saleDate).toLocaleDateString(),
         itemName: sale.serviceName || 'Hizmet Satışı',
         amount: sale.price,
-        commissionAmount: sale.commissionAmount
+        commissionAmount: sale.commissionAmount,
+        customerName: sale.customerName || 'Müşteri'
       });
     }
   });
@@ -114,20 +139,39 @@ const CommissionReport = () => {
     0
   );
 
+  const formatDate = (date: Date) => {
+    return format(date, 'dd/MM/yyyy');
+  };
+
   return (
     <Card className="p-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
         <h3 className="text-xl font-semibold">Personel Hakediş Raporu</h3>
-        <DatePickerWithRange 
-          className="mt-3 sm:mt-0"
-          date={date} 
-          setDate={setDate} 
-        />
+        <div className="flex flex-col sm:flex-row gap-3 mt-3 sm:mt-0">
+          <Select value={selectedStaffId} onValueChange={setSelectedStaffId}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Personel Seçin" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tüm Personeller</SelectItem>
+              {staffUsers.map((user) => (
+                <SelectItem key={user.id} value={user.id.toString()}>
+                  {user.displayName || user.username}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          <DatePickerWithRange 
+            date={date} 
+            setDate={setDate} 
+          />
+        </div>
       </div>
 
       {staffCommissionData.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
-          Seçilen tarih aralığında hakediş bilgisi bulunamadı.
+          Seçilen kriterlere uygun hakediş bilgisi bulunamadı.
         </div>
       ) : (
         <>
@@ -136,6 +180,11 @@ const CommissionReport = () => {
               <span>Toplam Hakediş Tutarı:</span>
               <span className="font-bold">{formatCurrency(totalCommissionAmount)}</span>
             </div>
+            {date?.from && (
+              <div className="text-sm text-muted-foreground mt-2">
+                {formatDate(date.from)} - {date.to ? formatDate(date.to) : formatDate(date.from)}
+              </div>
+            )}
           </div>
           
           <div className="space-y-6">
@@ -150,6 +199,7 @@ const CommissionReport = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Tarih</TableHead>
+                      <TableHead>Müşteri</TableHead>
                       <TableHead>Ürün/Hizmet</TableHead>
                       <TableHead className="text-right">Tutar</TableHead>
                       <TableHead className="text-right">Hakediş</TableHead>
@@ -159,6 +209,7 @@ const CommissionReport = () => {
                     {staffData.sales.map((sale, index) => (
                       <TableRow key={index}>
                         <TableCell>{sale.date}</TableCell>
+                        <TableCell>{sale.customerName}</TableCell>
                         <TableCell>{sale.itemName}</TableCell>
                         <TableCell className="text-right">{formatCurrency(sale.amount)}</TableCell>
                         <TableCell className="text-right">{formatCurrency(sale.commissionAmount)}</TableCell>
