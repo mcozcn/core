@@ -167,7 +167,7 @@ const SaleItemSelector = ({ item, index, onUpdate, onRemove }: SaleItemSelectorP
                   onUpdate(index, { 
                     ...item, 
                     staffId: Number(value),
-                    staffName: selectedStaff.name || selectedStaff.displayName || ""
+                    staffName: selectedStaff.displayName || selectedStaff.username
                   });
                 }
               }}
@@ -179,7 +179,7 @@ const SaleItemSelector = ({ item, index, onUpdate, onRemove }: SaleItemSelectorP
                 <SelectItem value="no-staff">Personel Seçin</SelectItem>
                 {users.filter(u => u.role === 'staff').map((user) => (
                   <SelectItem key={user.id} value={user.id.toString()}>
-                    {user.name || user.displayName || user.username}
+                    {user.displayName || user.username}
                   </SelectItem>
                 ))}
               </SelectContent>
