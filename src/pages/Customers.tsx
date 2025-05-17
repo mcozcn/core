@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getCustomers, getCustomerRecords, getAppointments, Appointment } from "@/utils/localStorage";
+import { getCustomers, getCustomerRecords, getAppointments, type Appointment } from "@/utils/storage";
 import SearchInput from '@/components/common/SearchInput';
 import CustomerDetails from '@/components/customers/CustomerDetails';
 import CustomerDebtForm from '@/components/customers/forms/CustomerDebtForm';

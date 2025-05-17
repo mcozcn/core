@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,8 +10,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription
 } from "@/components/ui/dialog";
-import { getCustomers, setCustomers, type Customer } from '@/utils/localStorage';
+import { getCustomers, setCustomers, type Customer } from '@/utils/storage';
 
 interface EditCustomerFormProps {
   customer: Customer;
@@ -27,6 +28,13 @@ const EditCustomerForm = ({ customer, open, onOpenChange, onSuccess }: EditCusto
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
+  // Customer bilgileri değiştiğinde form state'ini güncelle
+  React.useEffect(() => {
+    setName(customer.name);
+    setPhone(customer.phone);
+    setEmail(customer.email || '');
+  }, [customer]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -41,6 +49,7 @@ const EditCustomerForm = ({ customer, open, onOpenChange, onSuccess }: EditCusto
         email,
       };
 
+      // Müşteri ID'ye göre karşılaştırma yapılıyor
       const updatedCustomers = customers.map(c => 
         c.id === customer.id ? updatedCustomer : c
       );
@@ -74,6 +83,9 @@ const EditCustomerForm = ({ customer, open, onOpenChange, onSuccess }: EditCusto
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Müşteri Düzenle</DialogTitle>
+          <DialogDescription>
+            Müşteri bilgilerini düzenlemek için aşağıdaki alanları kullanın.
+          </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
