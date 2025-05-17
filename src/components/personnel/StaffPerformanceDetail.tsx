@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -54,20 +55,22 @@ const StaffPerformanceDetail: React.FC<StaffPerformanceDetailProps> = ({ staff }
     to: addDays(new Date(), 7),
   });
 
-  const { data: sales = [] } = useQuery({
-    queryKey: ['sales'],
+  const { data: sales = [], isLoading: salesLoading } = useQuery({
+    queryKey: ['sales', date?.from?.toISOString(), date?.to?.toISOString(), staff.id],
     queryFn: () => getSales(),
   });
 
-  const { data: serviceSales = [] } = useQuery({
-    queryKey: ['serviceSales'],
+  const { data: serviceSales = [], isLoading: serviceSalesLoading } = useQuery({
+    queryKey: ['serviceSales', date?.from?.toISOString(), date?.to?.toISOString(), staff.id],
     queryFn: () => getServiceSales(),
   });
   
-  const { data: appointments = [] } = useQuery({
-    queryKey: ['appointments'],
+  const { data: appointments = [], isLoading: appointmentsLoading } = useQuery({
+    queryKey: ['appointments', date?.from?.toISOString(), date?.to?.toISOString(), staff.id],
     queryFn: () => getAppointments(),
   });
+
+  const isLoading = salesLoading || serviceSalesLoading || appointmentsLoading;
 
   // Filter data by staff and date range
   const filterByStaffAndDate = (item: any) => {
@@ -93,8 +96,7 @@ const StaffPerformanceDetail: React.FC<StaffPerformanceDetailProps> = ({ staff }
     ...staffSales.map(sale => ({
       date: new Date(sale.saleDate || sale.date || new Date()),
       item: sale.productName || 'Ürün Satışı',
-      amount: sale.price || sale.total || 0,
-      // Use nullish coalescing for safety and type assertion for TypeScript
+      amount: sale.price || (sale as any).total || 0,
       commissionRate: (sale as any).commissionRate ?? 0,
       commissionAmount: sale.commissionAmount || 0,
       customerName: sale.customerName || 'Müşteri'
@@ -103,7 +105,6 @@ const StaffPerformanceDetail: React.FC<StaffPerformanceDetailProps> = ({ staff }
       date: new Date(sale.saleDate || new Date()),
       item: sale.serviceName || 'Hizmet Satışı',
       amount: sale.price || 0,
-      // Use nullish coalescing for safety and type assertion for TypeScript
       commissionRate: (sale as any).commissionRate ?? 0,
       commissionAmount: sale.commissionAmount || 0,
       customerName: sale.customerName || 'Müşteri'
@@ -163,7 +164,7 @@ const StaffPerformanceDetail: React.FC<StaffPerformanceDetailProps> = ({ staff }
       
       // Handle both price structures safely
       const saleAmount = ('price' in sale) ? sale.price : 
-                        ('total' in sale) ? (sale as any).total : 0;
+                        ('total' in (sale as any)) ? (sale as any).total : 0;
       
       if (dataMap.has(dateKey)) {
         const data = dataMap.get(dateKey)!;
@@ -198,7 +199,7 @@ const StaffPerformanceDetail: React.FC<StaffPerformanceDetailProps> = ({ staff }
     (sum, sale) => {
       // Handle both price structures safely
       const amount = 'price' in sale ? sale.price : 
-                    'total' in sale ? (sale as any).total : 0;
+                    ('total' in (sale as any)) ? (sale as any).total : 0;
       return sum + amount;
     }, 
     0
@@ -251,104 +252,110 @@ const StaffPerformanceDetail: React.FC<StaffPerformanceDetailProps> = ({ staff }
         </Card>
       </div>
       
-      <Tabs defaultValue="chart">
-        <TabsList className="mb-4">
-          <TabsTrigger value="chart">Grafik</TabsTrigger>
-          <TabsTrigger value="table">Tablo</TabsTrigger>
-          <TabsTrigger value="commissions">Hakediş</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="chart" className="space-y-4">
-          {performanceData.length > 0 ? (
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={performanceData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis yAxisId="left" orientation="left" />
-                  <YAxis yAxisId="right" orientation="right" />
-                  <Tooltip />
-                  <Legend />
-                  <Bar yAxisId="left" dataKey="appointments" name="Randevu" fill="#8884d8" />
-                  <Bar yAxisId="left" dataKey="sales" name="Satış" fill="#82ca9d" />
-                  <Bar yAxisId="right" dataKey="revenue" name="Gelir" fill="#ffc658" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              Seçilen tarih aralığında veri bulunamadı.
-            </div>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="table">
-          {performanceData.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Tarih</TableHead>
-                  <TableHead className="text-right">Randevu</TableHead>
-                  <TableHead className="text-right">Satış</TableHead>
-                  <TableHead className="text-right">Gelir</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {performanceData.map((day, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{day.date}</TableCell>
-                    <TableCell className="text-right">{day.appointments}</TableCell>
-                    <TableCell className="text-right">{day.sales}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(day.revenue)}</TableCell>
+      {isLoading ? (
+        <div className="flex justify-center items-center p-8">
+          <p className="text-muted-foreground">Veriler yükleniyor...</p>
+        </div>
+      ) : (
+        <Tabs defaultValue="chart">
+          <TabsList className="mb-4">
+            <TabsTrigger value="chart">Grafik</TabsTrigger>
+            <TabsTrigger value="table">Tablo</TabsTrigger>
+            <TabsTrigger value="commissions">Hakediş</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="chart" className="space-y-4">
+            {performanceData.length > 0 ? (
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={performanceData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" />
+                    <YAxis yAxisId="left" orientation="left" />
+                    <YAxis yAxisId="right" orientation="right" />
+                    <Tooltip />
+                    <Legend />
+                    <Bar yAxisId="left" dataKey="appointments" name="Randevu" fill="#8884d8" />
+                    <Bar yAxisId="left" dataKey="sales" name="Satış" fill="#82ca9d" />
+                    <Bar yAxisId="right" dataKey="revenue" name="Gelir" fill="#ffc658" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                Seçilen tarih aralığında veri bulunamadı.
+              </div>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="table">
+            {performanceData.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Tarih</TableHead>
+                    <TableHead className="text-right">Randevu</TableHead>
+                    <TableHead className="text-right">Satış</TableHead>
+                    <TableHead className="text-right">Gelir</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              Seçilen tarih aralığında veri bulunamadı.
-            </div>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="commissions">
-          {commissionItems.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Tarih</TableHead>
-                  <TableHead>Müşteri</TableHead>
-                  <TableHead>Ürün/Hizmet</TableHead>
-                  <TableHead className="text-right">Tutar</TableHead>
-                  <TableHead className="text-right">Komisyon %</TableHead>
-                  <TableHead className="text-right">Hakediş</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {commissionItems.map((item, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{format(item.date, 'dd/MM/yyyy')}</TableCell>
-                    <TableCell>{item.customerName}</TableCell>
-                    <TableCell>{item.item}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
-                    <TableCell className="text-right">%{item.commissionRate}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(item.commissionAmount)}</TableCell>
+                </TableHeader>
+                <TableBody>
+                  {performanceData.map((day, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{day.date}</TableCell>
+                      <TableCell className="text-right">{day.appointments}</TableCell>
+                      <TableCell className="text-right">{day.sales}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(day.revenue)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                Seçilen tarih aralığında veri bulunamadı.
+              </div>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="commissions">
+            {commissionItems.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Tarih</TableHead>
+                    <TableHead>Müşteri</TableHead>
+                    <TableHead>Ürün/Hizmet</TableHead>
+                    <TableHead className="text-right">Tutar</TableHead>
+                    <TableHead className="text-right">Komisyon %</TableHead>
+                    <TableHead className="text-right">Hakediş</TableHead>
                   </TableRow>
-                ))}
-                <TableRow>
-                  <TableCell colSpan={4}></TableCell>
-                  <TableCell className="text-right font-bold">Toplam:</TableCell>
-                  <TableCell className="text-right font-bold">{formatCurrency(totalCommission)}</TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              Seçilen tarih aralığında hakediş bilgisi bulunamadı.
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+                </TableHeader>
+                <TableBody>
+                  {commissionItems.map((item, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{format(item.date, 'dd/MM/yyyy')}</TableCell>
+                      <TableCell>{item.customerName}</TableCell>
+                      <TableCell>{item.item}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
+                      <TableCell className="text-right">%{item.commissionRate}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(item.commissionAmount)}</TableCell>
+                    </TableRow>
+                  ))}
+                  <TableRow>
+                    <TableCell colSpan={4}></TableCell>
+                    <TableCell className="text-right font-bold">Toplam:</TableCell>
+                    <TableCell className="text-right font-bold">{formatCurrency(totalCommission)}</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                Seçilen tarih aralığında hakediş bilgisi bulunamadı.
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      )}
     </Card>
   );
 };
