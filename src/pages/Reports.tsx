@@ -80,11 +80,15 @@ const Reports = () => {
       if (sale.customerId) uniqueCustomers.add(sale.customerId);
     });
     
+    // Make sure all values in the return object are definitely numbers
+    const combinedSales = totalSales + totalServiceSales;
+    const profit = combinedSales - totalCosts;
+    
     return {
-      totalSales: totalSales + totalServiceSales,
+      totalSales: combinedSales,
       customerCount: uniqueCustomers.size,
       appointmentCount: periodServiceSales.length,
-      netProfit: totalSales + totalServiceSales - totalCosts
+      netProfit: profit
     };
   };
 
