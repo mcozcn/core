@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { 
   Tabs, 
@@ -70,9 +69,10 @@ const Reports = () => {
       new Date(cost.date) >= cutoffDate
     );
     
-    const totalSales = periodSales.reduce((sum, sale) => sum + (sale.totalPrice || sale.total), 0);
-    const totalServiceSales = periodServiceSales.reduce((sum, sale) => sum + sale.price, 0);
-    const totalCosts = periodCosts.reduce((sum, cost) => sum + cost.amount, 0);
+    // Fix type issues by using Number() to ensure we're working with numbers
+    const totalSales = periodSales.reduce((sum, sale) => sum + Number(sale.totalPrice || sale.total || 0), 0);
+    const totalServiceSales = periodServiceSales.reduce((sum, sale) => sum + Number(sale.price || 0), 0);
+    const totalCosts = periodCosts.reduce((sum, cost) => sum + Number(cost.amount || 0), 0);
     
     const uniqueCustomers = new Set();
     [...periodSales, ...periodServiceSales].forEach(sale => {
@@ -337,7 +337,7 @@ const Reports = () => {
                 <ol className="list-decimal list-inside text-muted-foreground">
                   {topProducts.length > 0 ? (
                     topProducts.map((product, index) => (
-                      <li key={index}>{product.name}: {product.count} adet</li>
+                      <li key={index}>{product.name}: {String(product.count)} adet</li>
                     ))
                   ) : (
                     <li>Veri bulunamadı</li>
@@ -349,7 +349,7 @@ const Reports = () => {
                 <ol className="list-decimal list-inside text-muted-foreground">
                   {topServices.length > 0 ? (
                     topServices.map((service, index) => (
-                      <li key={index}>{service.name}: {service.count} kez</li>
+                      <li key={index}>{service.name}: {String(service.count)} kez</li>
                     ))
                   ) : (
                     <li>Veri bulunamadı</li>

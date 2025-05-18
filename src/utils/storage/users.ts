@@ -3,6 +3,9 @@ import { getFromStorage, setToStorage } from './core';
 import { STORAGE_KEYS } from './storageKeys';
 import type { User } from './types';
 
+// Re-export the User type from types.ts
+export type { User } from './types';
+
 // Get all users from storage
 export const getUsers = async (): Promise<User[]> => {
   // Initialize default users if they don't exist
