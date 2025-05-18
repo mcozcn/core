@@ -19,8 +19,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const initAuth = async () => {
+      setLoading(true);
       try {
-        const currentUser = await getCurrentUser();
+        // Use localStorage as fallback when IndexedDB fails
+        const currentUser = await getCurrentUser().catch(() => {
+          const storedUser = localStorage.getItem('currentUser');
+          if (storedUser) {
+            try {
+              return JSON.parse(storedUser);
+            } catch (e) {
+              return null;
+            }
+          }
+          return null;
+        });
+        
         if (currentUser) {
           setUser(currentUser);
           setIsAuthenticated(true);
@@ -36,15 +49,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const login = async (userData: User) => {
-    setUser(userData);
-    await setCurrentUser(userData);
-    setIsAuthenticated(true);
+    try {
+      // First try with the storage API
+      await setCurrentUser(userData).catch(() => {
+        // Fallback to localStorage
+        localStorage.setItem('currentUser', JSON.stringify(userData));
+      });
+      
+      // Update state regardless of storage method
+      setUser(userData);
+      setIsAuthenticated(true);
+    } catch (error) {
+      console.error('Error during login:', error);
+      // Still update the state in memory even if storage fails
+      setUser(userData);
+      setIsAuthenticated(true);
+    }
   };
 
   const logout = async () => {
-    setUser(null);
-    await setCurrentUser(null);
-    setIsAuthenticated(false);
+    try {
+      await setCurrentUser(null).catch(() => {
+        localStorage.removeItem('currentUser');
+      });
+    } catch (error) {
+      console.error('Error during logout:', error);
+    } finally {
+      // Always clear the state
+      setUser(null);
+      setIsAuthenticated(false);
+    }
   };
 
   return (
