@@ -26,6 +26,9 @@ import CustomerValueReport from "@/components/reports/CustomerValueReport";
 import StaffPerformanceReport from "@/components/reports/StaffPerformanceReport";
 import CommissionReport from "@/components/reports/CommissionReport";
 import { Download, FileText, BarChart, PieChart } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { getSales, getServiceSales, getCosts } from "@/utils/storage";
+import { formatCurrency } from "@/utils/format";
 
 const Reports = () => {
   const [activeTab, setActiveTab] = useState("products");
@@ -34,6 +37,76 @@ const Reports = () => {
     to: new Date(),
   });
   const [reportType, setReportType] = useState("all");
+
+  const { data: sales = [] } = useQuery({
+    queryKey: ['sales'],
+    queryFn: getSales,
+  });
+
+  const { data: serviceSales = [] } = useQuery({
+    queryKey: ['serviceSales'],
+    queryFn: getServiceSales,
+  });
+
+  const { data: costs = [] } = useQuery({
+    queryKey: ['costs'],
+    queryFn: getCosts,
+  });
+
+  // Calculate summary statistics based on real data
+  const calculateSummaryStats = (days: number) => {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+    
+    const periodSales = sales.filter(sale => 
+      new Date(sale.saleDate || sale.date) >= cutoffDate
+    );
+    
+    const periodServiceSales = serviceSales.filter(sale => 
+      new Date(sale.saleDate) >= cutoffDate
+    );
+    
+    const periodCosts = costs.filter(cost => 
+      new Date(cost.date) >= cutoffDate
+    );
+    
+    const totalSales = periodSales.reduce((sum, sale) => sum + (sale.totalPrice || sale.total), 0);
+    const totalServiceSales = periodServiceSales.reduce((sum, sale) => sum + sale.price, 0);
+    const totalCosts = periodCosts.reduce((sum, cost) => sum + cost.amount, 0);
+    
+    const uniqueCustomers = new Set();
+    [...periodSales, ...periodServiceSales].forEach(sale => {
+      if (sale.customerId) uniqueCustomers.add(sale.customerId);
+    });
+    
+    return {
+      totalSales: totalSales + totalServiceSales,
+      customerCount: uniqueCustomers.size,
+      appointmentCount: periodServiceSales.length,
+      netProfit: totalSales + totalServiceSales - totalCosts
+    };
+  };
+
+  const weeklySummary = calculateSummaryStats(7);
+  const monthlySummary = calculateSummaryStats(30);
+
+  // Get top selling items
+  const getTopItems = (items: any[], count: number, nameKey: string) => {
+    const itemCounts = items.reduce((acc, item) => {
+      const name = item[nameKey];
+      if (!name) return acc;
+      acc[name] = (acc[name] || 0) + 1;
+      return acc;
+    }, {});
+    
+    return Object.entries(itemCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, count)
+      .map(([name, count]) => ({ name, count }));
+  };
+
+  const topProducts = getTopItems(sales, 3, 'productName');
+  const topServices = getTopItems(serviceSales, 3, 'serviceName');
 
   const handleDownloadReport = () => {
     // Burada PDF indirme işlemi gerçekleştirilecek
@@ -171,38 +244,6 @@ const Reports = () => {
             </div>
             <CustomerValueReport />
           </Card>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="p-4">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium">Müşteri Memnuniyet Oranı</h3>
-                <Button variant="outline" size="sm">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Detay
-                </Button>
-              </div>
-              <div className="h-[300px] flex items-center justify-center">
-                <div className="text-center text-muted-foreground">
-                  Memnuniyet verileri henüz mevcut değil
-                </div>
-              </div>
-            </Card>
-            
-            <Card className="p-4">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-medium">Müşteri Segmentasyonu</h3>
-                <Button variant="outline" size="sm">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Detay
-                </Button>
-              </div>
-              <div className="h-[300px] flex items-center justify-center">
-                <div className="text-center text-muted-foreground">
-                  Segmentasyon verileri henüz mevcut değil
-                </div>
-              </div>
-            </Card>
-          </div>
         </TabsContent>
 
         <TabsContent value="staff" className="space-y-8">
@@ -238,19 +279,19 @@ const Reports = () => {
               <div className="space-y-4">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Toplam Satış</span>
-                  <span className="font-medium">₺12,450</span>
+                  <span className="font-medium">{formatCurrency(weeklySummary.totalSales)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Müşteri Sayısı</span>
-                  <span className="font-medium">43</span>
+                  <span className="font-medium">{weeklySummary.customerCount}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Randevu Sayısı</span>
-                  <span className="font-medium">38</span>
+                  <span className="font-medium">{weeklySummary.appointmentCount}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Net Kâr</span>
-                  <span className="font-medium">₺8,275</span>
+                  <span className="font-medium">{formatCurrency(weeklySummary.netProfit)}</span>
                 </div>
               </div>
               <Button variant="outline" className="w-full mt-6">Detaylı Rapor</Button>
@@ -261,19 +302,19 @@ const Reports = () => {
               <div className="space-y-4">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Toplam Satış</span>
-                  <span className="font-medium">₺48,375</span>
+                  <span className="font-medium">{formatCurrency(monthlySummary.totalSales)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Müşteri Sayısı</span>
-                  <span className="font-medium">156</span>
+                  <span className="font-medium">{monthlySummary.customerCount}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Randevu Sayısı</span>
-                  <span className="font-medium">142</span>
+                  <span className="font-medium">{monthlySummary.appointmentCount}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Net Kâr</span>
-                  <span className="font-medium">₺32,580</span>
+                  <span className="font-medium">{formatCurrency(monthlySummary.netProfit)}</span>
                 </div>
               </div>
               <Button variant="outline" className="w-full mt-6">Detaylı Rapor</Button>
@@ -294,17 +335,25 @@ const Reports = () => {
               <div className="border rounded-lg p-4">
                 <h4 className="font-medium mb-2">En Çok Satan Ürünler</h4>
                 <ol className="list-decimal list-inside text-muted-foreground">
-                  <li>Şampuan X: 18 adet</li>
-                  <li>Krem Y: 15 adet</li>
-                  <li>Serum Z: 12 adet</li>
+                  {topProducts.length > 0 ? (
+                    topProducts.map((product, index) => (
+                      <li key={index}>{product.name}: {product.count} adet</li>
+                    ))
+                  ) : (
+                    <li>Veri bulunamadı</li>
+                  )}
                 </ol>
               </div>
               <div className="border rounded-lg p-4">
                 <h4 className="font-medium mb-2">En Çok Tercih Edilen Hizmetler</h4>
                 <ol className="list-decimal list-inside text-muted-foreground">
-                  <li>Saç Kesimi: 32 kez</li>
-                  <li>Manikür: 28 kez</li>
-                  <li>Pedikür: 25 kez</li>
+                  {topServices.length > 0 ? (
+                    topServices.map((service, index) => (
+                      <li key={index}>{service.name}: {service.count} kez</li>
+                    ))
+                  ) : (
+                    <li>Veri bulunamadı</li>
+                  )}
                 </ol>
               </div>
             </div>

@@ -1,3 +1,4 @@
+
 import { type DateRange } from 'react-day-picker';
 
 export interface Appointment {
@@ -199,3 +200,4 @@ export interface UserActivity {
   details: string;
   timestamp: string;
 }
+

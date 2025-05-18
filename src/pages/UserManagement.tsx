@@ -1,22 +1,48 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CreateUserForm from '@/components/users/CreateUserForm';
 import UsersList from '@/components/users/UsersList';
-import UserPerformanceComponent from '@/components/users/UserPerformance';
-import { getCurrentUser, getAllUsers, deleteUser, User } from '@/utils/auth';
+import { User, getUsers, deleteUser } from '@/utils/storage/users';
 
 const UserManagement = () => {
-  const currentUser = getCurrentUser();
-  const isAdmin = currentUser?.role === 'admin';
-  const [users, setUsers] = useState<User[]>(getAllUsers().filter(user => user.role !== 'admin'));
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleDeleteUser = (userId: number) => {
-    deleteUser(userId);
-    setUsers(getAllUsers().filter(user => user.role !== 'admin'));
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const loadedUsers = await getUsers();
+        // Filter out admin user from the list for normal users
+        setUsers(loadedUsers.filter(user => user.role !== 'admin' || user.username !== 'admin'));
+        setLoading(false);
+      } catch (error) {
+        console.error("Error loading users:", error);
+        setLoading(false);
+      }
+    };
+    
+    loadUsers();
+  }, []);
+
+  const handleDeleteUser = async (userId: number) => {
+    try {
+      await deleteUser(userId);
+      // Reload users after deletion
+      const updatedUsers = await getUsers();
+      setUsers(updatedUsers.filter(user => user.role !== 'admin' || user.username !== 'admin'));
+    } catch (error) {
+      console.error("Error deleting user:", error);
+    }
   };
 
-  const handleUserCreated = () => {
-    setUsers(getAllUsers().filter(user => user.role !== 'admin'));
+  const handleUserCreated = async () => {
+    try {
+      const updatedUsers = await getUsers();
+      setUsers(updatedUsers.filter(user => user.role !== 'admin' || user.username !== 'admin'));
+    } catch (error) {
+      console.error("Error reloading users:", error);
+    }
   };
 
   return (
@@ -25,35 +51,26 @@ const UserManagement = () => {
         <h1 className="text-4xl font-serif">Kullanıcı Yönetimi</h1>
       </div>
 
-      <Tabs defaultValue="performance" className="w-full">
+      <Tabs defaultValue="users" className="w-full">
         <TabsList>
-          <TabsTrigger value="performance">Performans</TabsTrigger>
-          {isAdmin && (
-            <>
-              <TabsTrigger value="users">Kullanıcılar</TabsTrigger>
-              <TabsTrigger value="create">Yeni Kullanıcı</TabsTrigger>
-            </>
-          )}
+          <TabsTrigger value="users">Kullanıcılar</TabsTrigger>
+          <TabsTrigger value="create">Yeni Kullanıcı</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="performance">
-          <UserPerformanceComponent />
+        <TabsContent value="users">
+          {loading ? (
+            <div className="text-center py-8">Kullanıcılar yükleniyor...</div>
+          ) : (
+            <UsersList 
+              users={users}
+              onDeleteUser={handleDeleteUser}
+            />
+          )}
         </TabsContent>
 
-        {isAdmin && (
-          <>
-            <TabsContent value="users">
-              <UsersList 
-                users={users}
-                onDeleteUser={handleDeleteUser}
-              />
-            </TabsContent>
-
-            <TabsContent value="create">
-              <CreateUserForm onSuccess={handleUserCreated} />
-            </TabsContent>
-          </>
-        )}
+        <TabsContent value="create">
+          <CreateUserForm onSuccess={handleUserCreated} />
+        </TabsContent>
       </Tabs>
     </div>
   );

@@ -1,9 +1,10 @@
-import { Card, CardContent } from "@/components/ui/card";
+
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Trash2 } from "lucide-react";
-import { User, updateUserPermissions } from "@/utils/auth";
+import { updateUserPermissions, type User } from "@/utils/storage/users";
 import { useToast } from "@/components/ui/use-toast";
 
 interface UsersListProps {
@@ -14,14 +15,31 @@ interface UsersListProps {
 const UsersList = ({ users, onDeleteUser }: UsersListProps) => {
   const { toast } = useToast();
 
-  const handlePermissionUpdate = (userId: number, type: 'edit' | 'delete', value: boolean) => {
-    updateUserPermissions(userId, { [type === 'edit' ? 'canEdit' : 'canDelete']: value });
-    
-    toast({
-      title: "Başarılı",
-      description: "Kullanıcı yetkileri güncellendi",
-    });
+  const handlePermissionUpdate = async (userId: number, type: 'edit' | 'delete', value: boolean) => {
+    try {
+      await updateUserPermissions(userId, { [type === 'edit' ? 'canEdit' : 'canDelete']: value });
+      
+      toast({
+        title: "Başarılı",
+        description: "Kullanıcı yetkileri güncellendi",
+      });
+    } catch (error) {
+      console.error("Error updating user permissions:", error);
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Kullanıcı yetkileri güncellenirken bir hata oluştu.",
+      });
+    }
   };
+
+  if (users.length === 0) {
+    return (
+      <Card className="p-6 text-center">
+        <p className="text-muted-foreground">Henüz kullanıcı bulunmamaktadır.</p>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -41,10 +59,24 @@ const UsersList = ({ users, onDeleteUser }: UsersListProps) => {
               )}
             </div>
             <p className="text-sm text-muted-foreground">
-              Rol: {user.role}
+              Rol: {user.role === 'admin' ? 'Yönetici' : 'Personel'}
             </p>
             <p className="text-sm text-muted-foreground">
-              İzinli Sayfalar: {user.allowedPages?.join(", ") || "Tümü"}
+              İzinli Sayfalar: {user.allowedPages?.map(page => {
+                const pageMap: Record<string, string> = {
+                  dashboard: "Ana Sayfa",
+                  appointments: "Randevular",
+                  customers: "Müşteriler",
+                  stock: "Stok",
+                  sales: "Satışlar",
+                  costs: "Masraflar",
+                  financial: "Finans",
+                  reports: "Raporlar",
+                  backup: "Yedekleme",
+                  personnel: "Personel"
+                };
+                return pageMap[page] || page;
+              }).join(", ") || "Tümü"}
             </p>
           </div>
           

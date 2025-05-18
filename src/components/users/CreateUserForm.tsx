@@ -1,153 +1,200 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
-import { register } from "@/utils/auth";
-import { UserPlus } from "lucide-react";
-import { Label } from "@/components/ui/label";
-import { HexColorPicker } from "react-colorful";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { addUser } from "@/utils/storage/users";
 
-const AVAILABLE_PAGES = [
-  { id: "dashboard", label: "Panel" },
+interface CreateUserFormProps {
+  onSuccess: () => void;
+}
+
+const availablePages = [
+  { id: "dashboard", label: "Ana Sayfa" },
   { id: "appointments", label: "Randevular" },
   { id: "customers", label: "Müşteriler" },
-  { id: "services", label: "Hizmetler" },
   { id: "stock", label: "Stok Yönetimi" },
   { id: "sales", label: "Satışlar" },
   { id: "costs", label: "Masraflar" },
   { id: "financial", label: "Finansal Takip" },
+  { id: "reports", label: "Raporlar" },
   { id: "backup", label: "Yedekleme" },
+  { id: "personnel", label: "Personel Yönetimi" },
 ];
 
-const CreateUserForm = ({ onSuccess }: { onSuccess: () => void }) => {
-  const [newUsername, setNewUsername] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [displayName, setDisplayName] = useState("");
-  const [selectedColor, setSelectedColor] = useState("#aabbcc");
-  const [selectedPages, setSelectedPages] = useState<string[]>(["dashboard"]);
-  const [showColorPicker, setShowColorPicker] = useState(false);
+const CreateUserForm = ({ onSuccess }: CreateUserFormProps) => {
   const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [title, setTitle] = useState("");
+  const [canEdit, setCanEdit] = useState(false);
+  const [canDelete, setCanDelete] = useState(false);
+  const [selectedPages, setSelectedPages] = useState<string[]>(["dashboard", "appointments", "customers"]);
 
-const handleCreateUser = () => {
-  if (!newUsername || !newPassword || !displayName) {
-    toast({
-      variant: "destructive",
-      title: "Hata",
-      description: "Tüm alanları doldurun",
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      if (!username || !password || !displayName) {
+        toast({
+          variant: "destructive",
+          title: "Hata",
+          description: "Lütfen gerekli alanları doldurun.",
+        });
+        return;
+      }
+
+      await addUser({
+        username,
+        password,
+        displayName,
+        email: `${username}@example.com`,
+        role: "staff",
+        title: title || "Personel",
+        color: '#6E59A5',
+        allowedPages: selectedPages,
+        canEdit,
+        canDelete,
+        createdAt: new Date(),
+      });
+
+      toast({
+        title: "Başarılı",
+        description: "Kullanıcı başarıyla oluşturuldu",
+      });
+
+      // Reset form
+      setUsername("");
+      setPassword("");
+      setDisplayName("");
+      setTitle("");
+      setCanEdit(false);
+      setCanDelete(false);
+      setSelectedPages(["dashboard", "appointments", "customers"]);
+
+      // Call success callback
+      onSuccess();
+    } catch (error) {
+      console.error("Error creating user:", error);
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Kullanıcı oluşturulurken bir hata oluştu.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const togglePage = (pageId: string) => {
+    setSelectedPages((current) => {
+      if (current.includes(pageId)) {
+        return current.filter((id) => id !== pageId);
+      } else {
+        return [...current, pageId];
+      }
     });
-    return;
-  }
-
-  const newUser = register(
-    displayName,
-    "Personel",
-    "staff",
-    selectedColor,
-    selectedPages
-  );
-
-  if (newUser) {
-    toast({
-      title: "Başarılı",
-      description: "Kullanıcı oluşturuldu",
-    });
-    setNewUsername("");
-    setNewPassword("");
-    setDisplayName("");
-    setSelectedPages(["dashboard"]);
-    onSuccess();
-  }
-};
-
-  const handlePageToggle = (pageId: string) => {
-    setSelectedPages(current =>
-      current.includes(pageId)
-        ? current.filter(id => id !== pageId)
-        : [...current, pageId]
-    );
   };
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="username">Kullanıcı Adı</Label>
-          <Input
-            id="username"
-            value={newUsername}
-            onChange={(e) => setNewUsername(e.target.value)}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="password">Şifre</Label>
-          <Input
-            id="password"
-            type="password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-          />
-        </div>
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="displayName">Görünen Ad</Label>
-        <Input
-          id="displayName"
-          value={displayName}
-          onChange={(e) => setDisplayName(e.target.value)}
-          placeholder="Personelin görünen adı"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label>Personel Rengi</Label>
-        <Popover open={showColorPicker} onOpenChange={setShowColorPicker}>
-          <PopoverTrigger asChild>
-            <Button 
-              variant="outline" 
-              className="w-full"
-              style={{ backgroundColor: selectedColor }}
-            >
-              Renk Seç
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0">
-            <HexColorPicker
-              color={selectedColor}
-              onChange={setSelectedColor}
-            />
-          </PopoverContent>
-        </Popover>
-      </div>
-      
-      <div className="space-y-2">
-        <Label>Erişim İzinleri</Label>
-        <div className="grid grid-cols-3 gap-2">
-          {AVAILABLE_PAGES.map((page) => (
-            <div key={page.id} className="flex items-center space-x-2">
-              <Checkbox
-                id={page.id}
-                checked={selectedPages.includes(page.id)}
-                onCheckedChange={() => handlePageToggle(page.id)}
+    <Card>
+      <CardContent className="pt-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="username">Kullanıcı Adı</Label>
+              <Input
+                id="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
               />
-              <Label
-                htmlFor={page.id}
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                {page.label}
-              </Label>
             </div>
-          ))}
-        </div>
-      </div>
-
-      <Button onClick={handleCreateUser} className="w-full">
-        <UserPlus className="mr-2 h-4 w-4" />
-        Personel Oluştur
-      </Button>
-    </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="password">Şifre</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="displayName">Görünen Ad</Label>
+              <Input
+                id="displayName"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="title">Ünvan</Label>
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Örn: Kuaför, Resepsiyonist, vb."
+              />
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">İzinler</h3>
+            
+            <div className="flex flex-wrap gap-6">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="canEdit"
+                  checked={canEdit}
+                  onCheckedChange={(checked) => setCanEdit(!!checked)}
+                />
+                <Label htmlFor="canEdit">Düzenleme İzni</Label>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="canDelete"
+                  checked={canDelete}
+                  onCheckedChange={(checked) => setCanDelete(!!checked)}
+                />
+                <Label htmlFor="canDelete">Silme İzni</Label>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium">Erişim Tanımlanan Sayfalar</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                {availablePages.map((page) => (
+                  <div key={page.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`page-${page.id}`}
+                      checked={selectedPages.includes(page.id)}
+                      onCheckedChange={() => togglePage(page.id)}
+                    />
+                    <Label htmlFor={`page-${page.id}`}>{page.label}</Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          
+          <Button type="submit" disabled={loading}>
+            {loading ? "Kaydediliyor..." : "Kullanıcı Oluştur"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 };
 

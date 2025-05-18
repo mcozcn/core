@@ -1,24 +1,48 @@
 
-import { Link, useLocation } from "react-router-dom";
-import { Calendar, Users, BarChart3, Package, DollarSign, CreditCard, ShoppingCart, Database, BarChart, Menu } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Calendar, Users, BarChart3, Package, DollarSign, CreditCard, ShoppingCart, Database, BarChart, Menu, User, LogOut } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from "./ui/button";
 
 const Navigation = () => {
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
   
   const links = [
-    { to: "/", label: "Panel", icon: BarChart3 },
-    { to: "/appointments", label: "Randevular", icon: Calendar },
-    { to: "/customers", label: "Müşteriler", icon: Users },
-    { to: "/stock", label: "Stok Yönetimi", icon: Package },
-    { to: "/sales", label: "Satışlar", icon: ShoppingCart },
-    { to: "/costs", label: "Masraflar", icon: DollarSign },
-    { to: "/financial", label: "Finansal Takip", icon: CreditCard },
-    { to: "/reports", label: "Raporlar", icon: BarChart },
-    { to: "/backup", label: "Yedekleme", icon: Database },
-    { to: "/personnel", label: "Personel Yönetimi", icon: Users },
+    { to: "/", label: "Panel", icon: BarChart3, permission: "dashboard" },
+    { to: "/appointments", label: "Randevular", icon: Calendar, permission: "appointments" },
+    { to: "/customers", label: "Müşteriler", icon: Users, permission: "customers" },
+    { to: "/stock", label: "Stok Yönetimi", icon: Package, permission: "stock" },
+    { to: "/sales", label: "Satışlar", icon: ShoppingCart, permission: "sales" },
+    { to: "/costs", label: "Masraflar", icon: DollarSign, permission: "costs" },
+    { to: "/financial", label: "Finansal Takip", icon: CreditCard, permission: "financial" },
+    { to: "/reports", label: "Raporlar", icon: BarChart, permission: "reports" },
+    { to: "/backup", label: "Yedekleme", icon: Database, permission: "backup" },
+    { to: "/personnel", label: "Personel", icon: Users, permission: "personnel" },
   ];
+
+  // Filter links based on user permissions
+  const allowedLinks = links.filter(link => 
+    user?.allowedPages?.includes(link.permission)
+  );
+  
+  // Add admin-only user management link
+  if (user?.role === 'admin') {
+    allowedLinks.push({
+      to: "/users",
+      label: "Kullanıcılar",
+      icon: User,
+      permission: "users"
+    });
+  }
 
   return (
     <nav className={`fixed top-0 left-0 h-full ${isCollapsed ? 'w-20' : 'w-64'} bg-background border-r border-border shadow-lg transition-all duration-300 z-50`}>
@@ -51,7 +75,7 @@ const Navigation = () => {
       </div>
       
       <div className="space-y-2 px-2">
-        {links.map(({ to, label, icon: Icon }) => (
+        {allowedLinks.map(({ to, label, icon: Icon }) => (
           <Link
             key={to}
             to={to}
@@ -65,6 +89,24 @@ const Navigation = () => {
             {!isCollapsed && <span>{label}</span>}
           </Link>
         ))}
+        
+        {/* User info and logout button */}
+        <div className={`mt-auto pt-4 border-t ${isCollapsed ? 'text-center' : ''}`}>
+          {!isCollapsed && user && (
+            <div className="px-4 py-2">
+              <p className="font-medium">{user.displayName}</p>
+              <p className="text-xs text-muted-foreground">{user.role === 'admin' ? 'Yönetici' : 'Kullanıcı'}</p>
+            </div>
+          )}
+          <Button
+            variant="ghost"
+            className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'justify-start px-4'} mt-2`}
+            onClick={handleLogout}
+          >
+            <LogOut size={20} />
+            {!isCollapsed && <span className="ml-3">Çıkış Yap</span>}
+          </Button>
+        </div>
       </div>
     </nav>
   );
