@@ -71,9 +71,9 @@ const Reports = () => {
     );
     
     // Ensure all values are numbers before performing calculations
-    const totalSales = periodSales.reduce((sum, sale) => sum + Number(sale.totalPrice || sale.total || 0), 0);
-    const totalServiceSales = periodServiceSales.reduce((sum, sale) => sum + Number(sale.price || 0), 0);
-    const totalCosts = periodCosts.reduce((sum, cost) => sum + Number(cost.amount || 0), 0);
+    const totalSales: number = periodSales.reduce((sum: number, sale) => sum + Number(sale.totalPrice || sale.total || 0), 0);
+    const totalServiceSales: number = periodServiceSales.reduce((sum: number, sale) => sum + Number(sale.price || 0), 0);
+    const totalCosts: number = periodCosts.reduce((sum: number, cost) => sum + Number(cost.amount || 0), 0);
     
     const uniqueCustomers = new Set();
     [...periodSales, ...periodServiceSales].forEach(sale => {
@@ -81,10 +81,10 @@ const Reports = () => {
     });
     
     return {
-      totalSales: Number(totalSales) + Number(totalServiceSales),
+      totalSales: totalSales + totalServiceSales,
       customerCount: uniqueCustomers.size,
       appointmentCount: periodServiceSales.length,
-      netProfit: Number(totalSales) + Number(totalServiceSales) - Number(totalCosts)
+      netProfit: totalSales + totalServiceSales - totalCosts
     };
   };
 
