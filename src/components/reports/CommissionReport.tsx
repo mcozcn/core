@@ -94,12 +94,12 @@ const CommissionReport = () => {
       }
       
       const staffData = commissionsByStaff.get(staffId);
-      staffData.totalCommission += sale.commissionAmount;
+      staffData.totalCommission += Number(sale.commissionAmount);
       staffData.sales.push({
         date: new Date(sale.saleDate || sale.date).toLocaleDateString(),
         itemName: sale.productName || 'Ürün Satışı',
-        amount: sale.price || sale.total,
-        commissionAmount: sale.commissionAmount,
+        amount: Number(sale.price || sale.total),
+        commissionAmount: Number(sale.commissionAmount),
         customerName: sale.customerName || 'Müşteri'
       });
     }
@@ -121,12 +121,12 @@ const CommissionReport = () => {
       }
       
       const staffData = commissionsByStaff.get(staffId);
-      staffData.totalCommission += sale.commissionAmount;
+      staffData.totalCommission += Number(sale.commissionAmount);
       staffData.sales.push({
         date: new Date(sale.saleDate).toLocaleDateString(),
         itemName: sale.serviceName || 'Hizmet Satışı',
-        amount: sale.price,
-        commissionAmount: sale.commissionAmount,
+        amount: Number(sale.price),
+        commissionAmount: Number(sale.commissionAmount),
         customerName: sale.customerName || 'Müşteri'
       });
     }

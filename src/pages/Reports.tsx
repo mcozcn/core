@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { 
   Tabs, 
@@ -83,7 +84,7 @@ const Reports = () => {
       totalSales: totalSales + totalServiceSales,
       customerCount: uniqueCustomers.size,
       appointmentCount: periodServiceSales.length,
-      netProfit: totalSales + totalServiceSales - totalCosts
+      netProfit: (totalSales + totalServiceSales) - totalCosts  // Fixed parentheses for clarity
     };
   };
 
