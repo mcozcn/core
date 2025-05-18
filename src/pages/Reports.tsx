@@ -70,19 +70,32 @@ const Reports = () => {
       new Date(cost.date) >= cutoffDate
     );
     
-    // Ensure all values are numbers before performing calculations
-    const totalSales: number = periodSales.reduce((sum: number, sale) => sum + Number(sale.totalPrice || sale.total || 0), 0);
-    const totalServiceSales: number = periodServiceSales.reduce((sum: number, sale) => sum + Number(sale.price || 0), 0);
-    const totalCosts: number = periodCosts.reduce((sum: number, cost) => sum + Number(cost.amount || 0), 0);
+    // Safely convert all sales to numbers before summing
+    const totalSalesNum: number = periodSales.reduce((sum: number, sale) => {
+      const saleAmount = Number(sale.totalPrice || sale.total || 0);
+      return sum + (isNaN(saleAmount) ? 0 : saleAmount);
+    }, 0);
+    
+    // Safely convert all service sales to numbers before summing
+    const totalServiceSalesNum: number = periodServiceSales.reduce((sum: number, sale) => {
+      const serviceAmount = Number(sale.price || 0);
+      return sum + (isNaN(serviceAmount) ? 0 : serviceAmount);
+    }, 0);
+    
+    // Safely convert all costs to numbers before summing
+    const totalCostsNum: number = periodCosts.reduce((sum: number, cost) => {
+      const costAmount = Number(cost.amount || 0);
+      return sum + (isNaN(costAmount) ? 0 : costAmount);
+    }, 0);
     
     const uniqueCustomers = new Set();
     [...periodSales, ...periodServiceSales].forEach(sale => {
       if (sale.customerId) uniqueCustomers.add(sale.customerId);
     });
     
-    // Make sure all values in the return object are definitely numbers
-    const combinedSales = totalSales + totalServiceSales;
-    const profit = combinedSales - totalCosts;
+    // Explicitly define all variables as numbers to avoid type issues
+    const combinedSales: number = totalSalesNum + totalServiceSalesNum;
+    const profit: number = combinedSales - totalCostsNum;
     
     return {
       totalSales: combinedSales,
