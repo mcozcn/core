@@ -1,3 +1,4 @@
+import { type UTCDateString } from 'react-day-picker';
 
 export interface Appointment {
   id: number;
@@ -19,14 +20,13 @@ export interface Appointment {
 
 export interface Customer {
   id: number;
-  firstName?: string;
-  lastName?: string;
-  name: string;          // Added since components use this
+  name: string;
   phone: string;
   email?: string;
   address?: string;
   notes?: string;
-  createdAt?: Date;
+  createdAt: Date;
+  updatedAt?: Date;
 }
 
 export interface CustomerRecord {

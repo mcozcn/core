@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DialogFooter } from "@/components/ui/dialog";
 import { getCustomers, setCustomers, type Customer } from '@/utils/storage';
+import { Textarea } from "@/components/ui/textarea";
 
 interface AddCustomerFormProps {
   onSuccess?: () => void;
@@ -15,6 +16,8 @@ const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [address, setAddress] = useState('');
+  const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
@@ -28,6 +31,8 @@ const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
         name,
         phone,
         email,
+        address,
+        notes,
         createdAt: new Date(),
       };
 
@@ -45,6 +50,8 @@ const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
       setName('');
       setPhone('');
       setEmail('');
+      setAddress('');
+      setNotes('');
 
       if (onSuccess) {
         onSuccess();
@@ -95,6 +102,28 @@ const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="E-posta adresini girin"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="address">Adres</Label>
+        <Input
+          id="address"
+          type="text"
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          placeholder="Adres bilgisini girin"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="notes">Notlar</Label>
+        <Textarea
+          id="notes"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Müşteri hakkında notlar"
+          className="min-h-[80px]"
         />
       </div>
 

@@ -28,11 +28,13 @@ const EditCustomerForm = ({ customer, open, onOpenChange, onSuccess }: EditCusto
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  // Customer bilgileri değiştiğinde form state'ini güncelle
+  // Update form state when customer prop changes
   useEffect(() => {
-    setName(customer.name);
-    setPhone(customer.phone);
-    setEmail(customer.email || '');
+    if (customer) {
+      setName(customer.name);
+      setPhone(customer.phone);
+      setEmail(customer.email || '');
+    }
   }, [customer]);
 
   const handleSubmit = async (e: React.FormEvent) => {
