@@ -94,8 +94,8 @@ const Reports = () => {
     });
     
     // Explicitly define all variables as numbers to avoid type issues
-    const combinedSales: number = totalSalesNum + totalServiceSalesNum;
-    const profit: number = combinedSales - totalCostsNum;
+    const combinedSales = Number(totalSalesNum) + Number(totalServiceSalesNum);
+    const profit = Number(combinedSales) - Number(totalCostsNum);
     
     return {
       totalSales: combinedSales,
