@@ -7,6 +7,17 @@ import {
   TabsTrigger 
 } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { DateRange } from "react-day-picker";
+import { addDays } from "date-fns";
 import ServiceProfitLossAnalysis from "@/components/dashboard/ServiceProfitLossAnalysis";
 import ProductProfitLossAnalysis from "@/components/dashboard/ProductProfitLossAnalysis";
 import TopSellingProducts from "@/components/reports/TopSellingProducts";
@@ -14,55 +25,290 @@ import TopSellingServices from "@/components/reports/TopSellingServices";
 import CustomerValueReport from "@/components/reports/CustomerValueReport";
 import StaffPerformanceReport from "@/components/reports/StaffPerformanceReport";
 import CommissionReport from "@/components/reports/CommissionReport";
+import { Download, FileText, BarChart, PieChart } from "lucide-react";
 
 const Reports = () => {
+  const [activeTab, setActiveTab] = useState("products");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: addDays(new Date(), -30),
+    to: new Date(),
+  });
+  const [reportType, setReportType] = useState("all");
+
+  const handleDownloadReport = () => {
+    // Burada PDF indirme işlemi gerçekleştirilecek
+    console.log("Rapor indiriliyor:", activeTab, reportType, dateRange);
+  };
+
   return (
     <div className="p-8 pl-72 animate-fadeIn space-y-8">
-      <h1 className="text-3xl font-serif">Performans Raporları</h1>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <h1 className="text-3xl font-serif">Performans Raporları</h1>
+        
+        <div className="flex flex-wrap gap-3">
+          <DatePickerWithRange 
+            date={dateRange} 
+            setDate={setDateRange} 
+          />
+          
+          <Select value={reportType} onValueChange={setReportType}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Rapor türü" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tüm Rapor</SelectItem>
+              <SelectItem value="daily">Günlük Rapor</SelectItem>
+              <SelectItem value="weekly">Haftalık Rapor</SelectItem>
+              <SelectItem value="monthly">Aylık Rapor</SelectItem>
+              <SelectItem value="yearly">Yıllık Rapor</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Button onClick={handleDownloadReport}>
+            <Download className="mr-2 h-4 w-4" />
+            PDF İndir
+          </Button>
+        </div>
+      </div>
 
-      <Tabs defaultValue="products" className="space-y-6">
-        <TabsList className="grid grid-cols-6 w-full max-w-5xl">
-          <TabsTrigger value="products">Ürün Analizi</TabsTrigger>
-          <TabsTrigger value="services">Hizmet Analizi</TabsTrigger>
-          <TabsTrigger value="customers">Müşteri Analizi</TabsTrigger>
-          <TabsTrigger value="staff">Personel Performansı</TabsTrigger>
-          <TabsTrigger value="commission">Hakediş</TabsTrigger>
-          <TabsTrigger value="summary">Genel Özet</TabsTrigger>
+      <Tabs 
+        defaultValue="products" 
+        className="space-y-6"
+        value={activeTab}
+        onValueChange={setActiveTab}
+      >
+        <TabsList className="bg-muted/20 p-1 grid grid-cols-2 md:grid-cols-6 w-full max-w-5xl gap-1">
+          <TabsTrigger value="products" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <BarChart className="h-4 w-4" />
+            <span className="hidden sm:inline">Ürün</span> Analizi
+          </TabsTrigger>
+          <TabsTrigger value="services" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <PieChart className="h-4 w-4" />
+            <span className="hidden sm:inline">Hizmet</span> Analizi
+          </TabsTrigger>
+          <TabsTrigger value="customers" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            Müşteri Analizi
+          </TabsTrigger>
+          <TabsTrigger value="staff" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            Personel Performansı
+          </TabsTrigger>
+          <TabsTrigger value="commission" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            Hakediş
+          </TabsTrigger>
+          <TabsTrigger value="summary" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            Genel Özet
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="products" className="space-y-8">
-          <ProductProfitLossAnalysis />
-          <TopSellingProducts />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card className="p-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium">Ürün Kâr/Zarar Analizi</h3>
+                <Button variant="outline" size="sm">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Detay
+                </Button>
+              </div>
+              <div className="h-[350px]">
+                <ProductProfitLossAnalysis />
+              </div>
+            </Card>
+            
+            <Card className="p-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium">En Çok Satan Ürünler</h3>
+                <Button variant="outline" size="sm">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Detay
+                </Button>
+              </div>
+              <div className="h-[350px]">
+                <TopSellingProducts />
+              </div>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="services" className="space-y-8">
-          <ServiceProfitLossAnalysis />
-          <TopSellingServices />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card className="p-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium">Hizmet Kâr/Zarar Analizi</h3>
+                <Button variant="outline" size="sm">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Detay
+                </Button>
+              </div>
+              <div className="h-[350px]">
+                <ServiceProfitLossAnalysis />
+              </div>
+            </Card>
+            
+            <Card className="p-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium">En Çok Satan Hizmetler</h3>
+                <Button variant="outline" size="sm">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Detay
+                </Button>
+              </div>
+              <div className="h-[350px]">
+                <TopSellingServices />
+              </div>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="customers" className="space-y-8">
-          <CustomerValueReport />
+          <Card className="p-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium">Müşteri Değer Analizi</h3>
+              <Button variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Excel İndir
+              </Button>
+            </div>
+            <CustomerValueReport />
+          </Card>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card className="p-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium">Müşteri Memnuniyet Oranı</h3>
+                <Button variant="outline" size="sm">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Detay
+                </Button>
+              </div>
+              <div className="h-[300px] flex items-center justify-center">
+                <div className="text-center text-muted-foreground">
+                  Memnuniyet verileri henüz mevcut değil
+                </div>
+              </div>
+            </Card>
+            
+            <Card className="p-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium">Müşteri Segmentasyonu</h3>
+                <Button variant="outline" size="sm">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Detay
+                </Button>
+              </div>
+              <div className="h-[300px] flex items-center justify-center">
+                <div className="text-center text-muted-foreground">
+                  Segmentasyon verileri henüz mevcut değil
+                </div>
+              </div>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="staff" className="space-y-8">
-          <StaffPerformanceReport />
+          <Card className="p-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium">Personel Performans Raporu</h3>
+              <Button variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Excel İndir
+              </Button>
+            </div>
+            <StaffPerformanceReport />
+          </Card>
         </TabsContent>
         
         <TabsContent value="commission" className="space-y-8">
-          <CommissionReport />
+          <Card className="p-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium">Personel Hakediş Raporu</h3>
+              <Button variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-2" />
+                Excel İndir
+              </Button>
+            </div>
+            <CommissionReport />
+          </Card>
         </TabsContent>
 
         <TabsContent value="summary" className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card className="p-6">
               <h3 className="text-xl font-semibold mb-4">Haftalık Özet</h3>
-              <p className="text-muted-foreground">Haftalık performans özetini görebilirsiniz.</p>
+              <div className="space-y-4">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Toplam Satış</span>
+                  <span className="font-medium">₺12,450</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Müşteri Sayısı</span>
+                  <span className="font-medium">43</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Randevu Sayısı</span>
+                  <span className="font-medium">38</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Net Kâr</span>
+                  <span className="font-medium">₺8,275</span>
+                </div>
+              </div>
+              <Button variant="outline" className="w-full mt-6">Detaylı Rapor</Button>
             </Card>
+            
             <Card className="p-6">
               <h3 className="text-xl font-semibold mb-4">Aylık Özet</h3>
-              <p className="text-muted-foreground">Aylık performans özetini görebilirsiniz.</p>
+              <div className="space-y-4">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Toplam Satış</span>
+                  <span className="font-medium">₺48,375</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Müşteri Sayısı</span>
+                  <span className="font-medium">156</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Randevu Sayısı</span>
+                  <span className="font-medium">142</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Net Kâr</span>
+                  <span className="font-medium">₺32,580</span>
+                </div>
+              </div>
+              <Button variant="outline" className="w-full mt-6">Detaylı Rapor</Button>
             </Card>
           </div>
+
+          <Card className="p-6">
+            <h3 className="text-xl font-semibold mb-4">Diğer İstatistikler</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="border rounded-lg p-4">
+                <h4 className="font-medium mb-2">En Yoğun Günler</h4>
+                <ol className="list-decimal list-inside text-muted-foreground">
+                  <li>Cumartesi: 24 randevu</li>
+                  <li>Cuma: 18 randevu</li>
+                  <li>Pazar: 15 randevu</li>
+                </ol>
+              </div>
+              <div className="border rounded-lg p-4">
+                <h4 className="font-medium mb-2">En Çok Satan Ürünler</h4>
+                <ol className="list-decimal list-inside text-muted-foreground">
+                  <li>Şampuan X: 18 adet</li>
+                  <li>Krem Y: 15 adet</li>
+                  <li>Serum Z: 12 adet</li>
+                </ol>
+              </div>
+              <div className="border rounded-lg p-4">
+                <h4 className="font-medium mb-2">En Çok Tercih Edilen Hizmetler</h4>
+                <ol className="list-decimal list-inside text-muted-foreground">
+                  <li>Saç Kesimi: 32 kez</li>
+                  <li>Manikür: 28 kez</li>
+                  <li>Pedikür: 25 kez</li>
+                </ol>
+              </div>
+            </div>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

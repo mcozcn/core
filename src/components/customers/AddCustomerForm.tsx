@@ -1,11 +1,11 @@
 
 import React, { useState } from 'react';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DialogFooter } from "@/components/ui/dialog";
-import { getCustomers, setCustomers, type Customer } from '@/utils/localStorage';
+import { getCustomers, setCustomers, type Customer } from '@/utils/storage';
 
 interface AddCustomerFormProps {
   onSuccess?: () => void;

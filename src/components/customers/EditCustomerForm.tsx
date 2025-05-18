@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +29,7 @@ const EditCustomerForm = ({ customer, open, onOpenChange, onSuccess }: EditCusto
   const { toast } = useToast();
 
   // Customer bilgileri değiştiğinde form state'ini güncelle
-  React.useEffect(() => {
+  useEffect(() => {
     setName(customer.name);
     setPhone(customer.phone);
     setEmail(customer.email || '');
