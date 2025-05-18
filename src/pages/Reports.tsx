@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { 
   Tabs, 
@@ -94,14 +93,14 @@ const Reports = () => {
     });
     
     // Explicitly define all variables as numbers to avoid type issues
-    const combinedSales = Number(totalSalesNum) + Number(totalServiceSalesNum);
-    const profit = Number(combinedSales) - Number(totalCostsNum);
+    const combinedSalesNum: number = Number(totalSalesNum) + Number(totalServiceSalesNum);
+    const profitNum: number = Number(combinedSalesNum) - Number(totalCostsNum);
     
     return {
-      totalSales: combinedSales,
+      totalSales: combinedSalesNum,
       customerCount: uniqueCustomers.size,
       appointmentCount: periodServiceSales.length,
-      netProfit: profit
+      netProfit: profitNum
     };
   };
 
