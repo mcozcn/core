@@ -70,7 +70,7 @@ const Reports = () => {
       new Date(cost.date) >= cutoffDate
     );
     
-    // Fix type issues by using Number() to ensure we're working with numbers
+    // Ensure all values are numbers before performing calculations
     const totalSales = periodSales.reduce((sum, sale) => sum + Number(sale.totalPrice || sale.total || 0), 0);
     const totalServiceSales = periodServiceSales.reduce((sum, sale) => sum + Number(sale.price || 0), 0);
     const totalCosts = periodCosts.reduce((sum, cost) => sum + Number(cost.amount || 0), 0);
@@ -81,10 +81,10 @@ const Reports = () => {
     });
     
     return {
-      totalSales: totalSales + totalServiceSales,
+      totalSales: Number(totalSales) + Number(totalServiceSales),
       customerCount: uniqueCustomers.size,
       appointmentCount: periodServiceSales.length,
-      netProfit: (totalSales + totalServiceSales) - totalCosts  // Fixed parentheses for clarity
+      netProfit: Number(totalSales) + Number(totalServiceSales) - Number(totalCosts)
     };
   };
 
