@@ -21,12 +21,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+// Define a viewMode type to avoid type comparison errors
+type ViewMode = 'grid' | 'table';
+
 const Customers = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
+  const [viewMode, setViewMode] = useState<ViewMode>('table');
   const queryClient = useQueryClient();
 
   const { data: customers = [], isLoading: isLoadingCustomers } = useQuery({

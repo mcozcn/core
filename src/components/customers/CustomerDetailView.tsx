@@ -24,16 +24,16 @@ const CustomerDetailView = ({ customer, onEdit }: CustomerDetailViewProps) => {
   
   const { data: records = [] } = useQuery({
     queryKey: ['customerRecords', customer.id],
-    queryFn: () => {
-      const allRecords = getCustomerRecords();
+    queryFn: async () => {
+      const allRecords = await getCustomerRecords();
       return allRecords.filter(record => record.customerId === customer.id);
     }
   });
 
   const { data: appointments = [] } = useQuery({
     queryKey: ['customerAppointments', customer.id],
-    queryFn: () => {
-      const allAppointments = getAppointments();
+    queryFn: async () => {
+      const allAppointments = await getAppointments();
       return allAppointments.filter(apt => apt.customerId === customer.id);
     }
   });

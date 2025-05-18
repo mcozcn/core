@@ -1,4 +1,4 @@
-import { type UTCDateString } from 'react-day-picker';
+import { type DateRange } from 'react-day-picker';
 
 export interface Appointment {
   id: number;

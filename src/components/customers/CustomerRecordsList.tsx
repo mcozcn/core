@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card } from "@/components/ui/card";
 import {
@@ -9,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useQuery } from "@tanstack/react-query";
-import { getCustomerRecords, type CustomerRecord } from '@/utils/localStorage';
+import { getCustomerRecords, type CustomerRecord } from '@/utils/storage';
 import { formatCurrency } from '@/utils/format';
 
 interface CustomerRecordsListProps {
@@ -27,7 +28,7 @@ const CustomerRecordsList = ({ searchTerm = '', records }: CustomerRecordsListPr
   
   const filteredRecords = recordsToUse
     .filter(record =>
-      record.itemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      record.itemName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.description?.toLowerCase().includes(searchTerm.toLowerCase())
     )
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
