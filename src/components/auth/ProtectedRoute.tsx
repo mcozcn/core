@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -26,11 +26,12 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  // Rol kontrolü (admin her sayfaya erişebilir)
   if (requiredRole && user?.role !== requiredRole && user?.role !== 'admin') {
     return <Navigate to="/" replace />;
   }
   
-  // Check if the user has permission to access this page
+  // Sayfa erişim kontrolü
   if (user && user.allowedPages && !user.allowedPages.includes(currentPage)) {
     return <Navigate to="/" replace />;
   }

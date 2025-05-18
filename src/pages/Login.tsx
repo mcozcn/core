@@ -19,18 +19,39 @@ const Login = () => {
   const { login, isAuthenticated } = useAuth();
   
   // Check if user is already authenticated and redirect accordingly
+  // Only run once on component mount
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/', { replace: true });
+      const from = location.state?.from?.pathname || '/';
+      navigate(from, { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, location.state]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const users = await getUsers();
+      // Önce localStorage'dan kullanıcıları kontrol edelim
+      let users = [];
+      try {
+        const localStorageUsers = localStorage.getItem('users');
+        if (localStorageUsers) {
+          users = JSON.parse(localStorageUsers);
+        }
+      } catch (error) {
+        console.error('LocalStorage users parsing error:', error);
+      }
+      
+      // Eğer localStorage'da kullanıcı yoksa, IndexedDB'yi deneyelim
+      if (!users.length) {
+        try {
+          users = await getUsers();
+        } catch (error) {
+          console.error('IndexedDB users fetch error:', error);
+        }
+      }
+
       const user = users.find(u => u.username === username && u.password === password);
 
       if (user) {
