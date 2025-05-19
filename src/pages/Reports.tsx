@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { 
   Tabs, 
@@ -92,9 +93,9 @@ const Reports = () => {
       if (sale.customerId) uniqueCustomers.add(sale.customerId);
     });
     
-    // Explicitly define all variables as numbers to avoid type issues
-    const combinedSalesNum: number = Number(totalSalesNum) + Number(totalServiceSalesNum);
-    const profitNum: number = Number(combinedSalesNum) - Number(totalCostsNum);
+    // Fix for line 120-121: Explicitly ensure all values are numbers
+    const combinedSalesNum: number = totalSalesNum + totalServiceSalesNum;
+    const profitNum: number = combinedSalesNum - totalCostsNum;
     
     return {
       totalSales: combinedSalesNum,
