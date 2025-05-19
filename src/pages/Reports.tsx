@@ -93,15 +93,15 @@ const Reports = () => {
       if (sale.customerId) uniqueCustomers.add(sale.customerId);
     });
     
-    // Fix for line 120-121: Explicitly ensure all values are numbers
-    const combinedSalesNum: number = totalSalesNum + totalServiceSalesNum;
-    const profitNum: number = combinedSalesNum - totalCostsNum;
+    // Fix: Ensure all values in the arithmetic operations are explicitly typed as numbers
+    const combinedSales = Number(totalSalesNum) + Number(totalServiceSalesNum);
+    const profit = Number(combinedSales) - Number(totalCostsNum);
     
     return {
-      totalSales: combinedSalesNum,
+      totalSales: combinedSales,
       customerCount: uniqueCustomers.size,
       appointmentCount: periodServiceSales.length,
-      netProfit: profitNum
+      netProfit: profit
     };
   };
 
