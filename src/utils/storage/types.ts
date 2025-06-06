@@ -1,5 +1,6 @@
-
 import { type DateRange } from 'react-day-picker';
+
+export type UserRole = 'admin' | 'power_user' | 'staff';
 
 export interface Appointment {
   id: number;
@@ -136,17 +137,17 @@ export interface Payment {
 export interface User {
   id: number;
   username: string;
+  password: string;
+  displayName: string;
   email: string;
-  role: 'admin' | 'staff';
-  displayName?: string;
-  title?: string;
-  color?: string;
-  name?: string;
-  password?: string;      // Added for login functionality
-  allowedPages?: string[];
-  canEdit?: boolean;
-  canDelete?: boolean;
-  createdAt?: Date;
+  role: UserRole;
+  title: string;
+  color: string;
+  allowedPages: string[];
+  canEdit: boolean;
+  canDelete: boolean;
+  createdAt: Date;
+  isVisible?: boolean; // Admin ve power user gizli olacak
 }
 
 export interface StaffPerformance {
@@ -200,4 +201,3 @@ export interface UserActivity {
   details: string;
   timestamp: string;
 }
-

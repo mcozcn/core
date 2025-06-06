@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from '@/contexts/AuthContext';
-import { getUsers } from '@/utils/storage/users';
+import { authenticateUser } from '@/utils/storage/users';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -18,8 +18,6 @@ const Login = () => {
   const { toast } = useToast();
   const { login, isAuthenticated } = useAuth();
   
-  // Check if user is already authenticated and redirect accordingly
-  // Only run once on component mount
   useEffect(() => {
     if (isAuthenticated) {
       const from = location.state?.from?.pathname || '/';
@@ -32,36 +30,15 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      // Önce localStorage'dan kullanıcıları kontrol edelim
-      let users = [];
-      try {
-        const localStorageUsers = localStorage.getItem('users');
-        if (localStorageUsers) {
-          users = JSON.parse(localStorageUsers);
-        }
-      } catch (error) {
-        console.error('LocalStorage users parsing error:', error);
-      }
-      
-      // Eğer localStorage'da kullanıcı yoksa, IndexedDB'yi deneyelim
-      if (!users.length) {
-        try {
-          users = await getUsers();
-        } catch (error) {
-          console.error('IndexedDB users fetch error:', error);
-        }
-      }
-
-      const user = users.find(u => u.username === username && u.password === password);
+      const user = await authenticateUser(username, password);
 
       if (user) {
         await login(user);
         toast({
           title: "Giriş başarılı",
-          description: "Hoş geldiniz!",
+          description: `Hoş geldiniz ${user.displayName}!`,
         });
         
-        // Get the intended destination from location state or default to dashboard
         const from = location.state?.from?.pathname || '/';
         navigate(from, { replace: true });
       } else {
@@ -86,7 +63,15 @@ const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <Card className="w-full max-w-md p-6">
-        <h1 className="text-2xl font-serif mb-6 text-center">Giriş Yap</h1>
+        <div className="text-center mb-6">
+          <img 
+            src="/lovable-uploads/18599c6d-da00-4149-814e-e1ce55f990d5.png" 
+            alt="Beautiq Logo" 
+            className="w-48 mx-auto mb-4"
+          />
+          <h1 className="text-2xl font-serif">Giriş Yap</h1>
+        </div>
+        
         <form onSubmit={handleLogin} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="username">Kullanıcı Adı</Label>
@@ -95,6 +80,7 @@ const Login = () => {
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              placeholder="admin, mco veya personel"
               required
             />
           </div>
@@ -105,6 +91,7 @@ const Login = () => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              placeholder="Şifrenizi girin"
               required
             />
           </div>
@@ -116,6 +103,15 @@ const Login = () => {
             {isLoading ? "Giriş yapılıyor..." : "Giriş Yap"}
           </Button>
         </form>
+        
+        <div className="mt-6 p-4 bg-muted/50 rounded-lg">
+          <p className="text-sm font-medium mb-2">Test Kullanıcıları:</p>
+          <div className="space-y-1 text-xs text-muted-foreground">
+            <div><strong>Admin:</strong> admin / admin</div>
+            <div><strong>Power User:</strong> mco / 1474</div>
+            <div><strong>Personel:</strong> personel / personel</div>
+          </div>
+        </div>
       </Card>
     </div>
   );

@@ -21,22 +21,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const initAuth = async () => {
       setLoading(true);
       try {
-        // Önce localStorage kontrolü yapalım - IndexedDB sorunları için fallback
+        // Önce localStorage kontrolü
         const localStorageUser = localStorage.getItem('currentUser');
         let currentUser = null;
         
         if (localStorageUser) {
           try {
             currentUser = JSON.parse(localStorageUser);
+            console.log('LocalStorage user found:', currentUser);
           } catch (error) {
             console.error('LocalStorage user parsing error:', error);
           }
         }
         
-        // Eğer localStorage'da kullanıcı yoksa, IndexedDB'yi deneyelim
+        // Eğer localStorage'da kullanıcı yoksa, IndexedDB'yi dene
         if (!currentUser) {
           try {
             currentUser = await getCurrentUser();
+            console.log('IndexedDB user found:', currentUser);
           } catch (error) {
             console.error('IndexedDB user fetch error:', error);
           }
@@ -45,6 +47,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (currentUser) {
           setUser(currentUser);
           setIsAuthenticated(true);
+          console.log('User authenticated:', currentUser.username);
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
@@ -58,45 +61,41 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const login = async (userData: User) => {
     try {
-      // Önce state'i güncelleyelim ki kullanıcı deneyimi kesilmesin
+      console.log('Logging in user:', userData.username);
       setUser(userData);
       setIsAuthenticated(true);
       
-      // Sonra localStorage'a kaydedelim (hızlı erişim için)
+      // localStorage'a kaydet
       localStorage.setItem('currentUser', JSON.stringify(userData));
       
-      // Son olarak IndexedDB'ye kaydedelim (daha kalıcı depolama için)
+      // IndexedDB'ye kaydet
       try {
         await setCurrentUser(userData);
       } catch (error) {
         console.error('IndexedDB login error:', error);
-        // localStorage zaten güncellendiği için ek işleme gerek yok
       }
     } catch (error) {
       console.error('Error during login:', error);
-      // Hata durumunda bile state'i güncellemek istiyoruz çünkü localStorage bu noktada güncellenmiş olmalı
     }
   };
 
   const logout = async () => {
     try {
-      // Önce state'i temizleyelim
+      console.log('Logging out user');
       setUser(null);
       setIsAuthenticated(false);
       
-      // localStorage'dan çıkış
+      // localStorage'dan temizle
       localStorage.removeItem('currentUser');
       
-      // IndexedDB'den çıkış
+      // IndexedDB'den temizle
       try {
         await setCurrentUser(null);
       } catch (error) {
         console.error('IndexedDB logout error:', error);
-        // localStorage zaten temizlendiği için ek işleme gerek yok
       }
     } catch (error) {
       console.error('Error during logout:', error);
-      // Hata durumunda bile state'i temizliyoruz, çünkü localStorage bu noktada temizlenmiş olmalı
     }
   };
 

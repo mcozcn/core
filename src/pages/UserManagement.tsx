@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import CreateUserForm from '@/components/users/CreateUserForm';
-import UsersList from '@/components/users/UsersList';
-import { User, getUsers, deleteUser } from '@/utils/storage/users';
+import NewCreateUserForm from '@/components/users/NewCreateUserForm';
+import NewUsersList from '@/components/users/NewUsersList';
+import { User, getVisibleUsers, deleteUser } from '@/utils/storage/users';
 import { useToast } from "@/components/ui/use-toast";
 import { Users, UserPlus, Shield } from "lucide-react";
 
@@ -20,9 +20,10 @@ const UserManagement = () => {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      const loadedUsers = await getUsers();
-      // Admin kullanıcısını listeden çıkar
-      setUsers(loadedUsers.filter(user => !(user.role === 'admin' && user.username === 'admin')));
+      // Sadece görünür kullanıcıları yükle (admin ve power user gizli)
+      const visibleUsers = await getVisibleUsers();
+      setUsers(visibleUsers);
+      console.log('Loaded visible users:', visibleUsers);
     } catch (error) {
       console.error("Error loading users:", error);
       toast({
@@ -37,12 +38,20 @@ const UserManagement = () => {
 
   const handleDeleteUser = async (userId: number) => {
     try {
-      await deleteUser(userId);
-      await loadUsers(); // Listeyi yeniden yükle
-      toast({
-        title: "Başarılı",
-        description: "Kullanıcı başarıyla silindi.",
-      });
+      const success = await deleteUser(userId);
+      if (success) {
+        await loadUsers();
+        toast({
+          title: "Başarılı",
+          description: "Kullanıcı başarıyla silindi.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Hata",
+          description: "Bu kullanıcı silinemez.",
+        });
+      }
     } catch (error) {
       console.error("Error deleting user:", error);
       toast({
@@ -100,7 +109,7 @@ const UserManagement = () => {
                   <span className="ml-3">Kullanıcılar yükleniyor...</span>
                 </div>
               ) : (
-                <UsersList 
+                <NewUsersList 
                   users={users}
                   onDeleteUser={handleDeleteUser}
                   onUserUpdated={handleUserUpdated}
@@ -119,7 +128,7 @@ const UserManagement = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <CreateUserForm onSuccess={handleUserCreated} />
+              <NewCreateUserForm onSuccess={handleUserCreated} />
             </CardContent>
           </Card>
         </TabsContent>

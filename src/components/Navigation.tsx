@@ -1,3 +1,4 @@
+
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Calendar, Users, BarChart3, Package, DollarSign, CreditCard, ShoppingCart, Database, BarChart, Menu, User, LogOut } from "lucide-react";
 import { useState } from "react";
@@ -30,19 +31,23 @@ const Navigation = () => {
     { to: "/performance", label: "Performans", icon: BarChart3, permission: "performance" },
   ];
 
-  console.log('Navigation - Kullanıcı izinleri:', user?.allowedPages);
+  console.log('Navigation - User info:', {
+    role: user?.role,
+    allowedPages: user?.allowedPages,
+    username: user?.username
+  });
 
   // Filter links based on user permissions
   const allowedLinks = links.filter(link => {
-    // Admin kullanıcıları tüm linkleri görebilir
-    if (user?.role === 'admin') {
+    // Admin ve power_user kullanıcıları tüm linkleri görebilir
+    if (user?.role === 'admin' || user?.role === 'power_user') {
       return true;
     }
     // Staff kullanıcıları sadece izinli sayfaları görebilir
     return user?.allowedPages?.includes(link.permission);
   });
   
-  // Add admin-only user management link
+  // Admin-only user management link (sadece admin görebilir)
   if (user?.role === 'admin') {
     allowedLinks.push({
       to: "/users",
@@ -52,7 +57,7 @@ const Navigation = () => {
     });
   }
 
-  console.log('Navigation - Görüntülenecek linkler:', allowedLinks.map(l => l.label));
+  console.log('Navigation - Visible links:', allowedLinks.map(l => l.label));
 
   return (
     <nav className={`fixed top-0 left-0 h-full ${isCollapsed ? 'w-20' : 'w-64'} bg-background border-r border-border shadow-lg transition-all duration-300 z-50`}>
@@ -105,7 +110,9 @@ const Navigation = () => {
           {!isCollapsed && user && (
             <div className="px-4 py-2">
               <p className="font-medium">{user.displayName}</p>
-              <p className="text-xs text-muted-foreground">{user.role === 'admin' ? 'Yönetici' : 'Kullanıcı'}</p>
+              <p className="text-xs text-muted-foreground">
+                {user.role === 'admin' ? 'Yönetici' : user.role === 'power_user' ? 'Power User' : 'Personel'}
+              </p>
             </div>
           )}
           <Button
