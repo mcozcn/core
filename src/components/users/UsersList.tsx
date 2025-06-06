@@ -25,11 +25,11 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Trash2, Edit, Shield, User, Eye } from "lucide-react";
-import { updateUserPermissions, type User } from "@/utils/storage/users";
+import { updateUserPermissions, type User as UserType } from "@/utils/storage/users";
 import { useToast } from "@/components/ui/use-toast";
 
 interface UsersListProps {
-  users: User[];
+  users: UserType[];
   onDeleteUser: (userId: number) => void;
   onUserUpdated: () => void;
 }
