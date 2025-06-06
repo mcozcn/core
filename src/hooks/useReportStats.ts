@@ -72,19 +72,19 @@ export const useReportStats = () => {
     };
   };
 
-  // Get top selling items
-  const getTopItems = (items: any[], count: number, nameKey: string) => {
+  // Get top selling items - Fixed to properly type the count as number
+  const getTopItems = (items: any[], count: number, nameKey: string): Array<{ name: string; count: number }> => {
     const itemCounts = items.reduce((acc, item) => {
       const name = item[nameKey];
       if (!name) return acc;
       acc[name] = (acc[name] || 0) + 1;
       return acc;
-    }, {});
+    }, {} as Record<string, number>);
     
     return Object.entries(itemCounts)
-      .sort((a: [string, any], b: [string, any]) => b[1] - a[1])
+      .sort((a: [string, number], b: [string, number]) => b[1] - a[1])
       .slice(0, count)
-      .map(([name, count]) => ({ name, count }));
+      .map(([name, count]: [string, number]) => ({ name, count }));
   };
 
   // Memoize calculations for efficiency
