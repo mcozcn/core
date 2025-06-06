@@ -62,18 +62,21 @@ const CreateUserForm = ({ onSuccess }: CreateUserFormProps) => {
       if (selectedPages.length === 0) {
         toast({
           variant: "destructive",
-          title: "Yetki Hatası",
+          title: "Yetki Hatası", 
           description: "En az bir sayfa yetkisi seçmelisiniz.",
         });
         return;
       }
 
       console.log("Yeni kullanıcı oluşturuluyor:", {
-        ...formData,
-        allowedPages: selectedPages
+        username: formData.username,
+        displayName: formData.displayName,
+        selectedPages: selectedPages,
+        canEdit: formData.canEdit,
+        canDelete: formData.canDelete
       });
 
-      await addUser({
+      const newUser = await addUser({
         username: formData.username,
         password: formData.password,
         displayName: formData.displayName,
@@ -86,6 +89,8 @@ const CreateUserForm = ({ onSuccess }: CreateUserFormProps) => {
         canDelete: formData.canDelete,
         createdAt: new Date(),
       });
+
+      console.log("Kullanıcı başarıyla oluşturuldu:", newUser);
 
       toast({
         title: "Başarılı",
@@ -133,11 +138,15 @@ const CreateUserForm = ({ onSuccess }: CreateUserFormProps) => {
   };
 
   const selectAllPages = () => {
-    setSelectedPages(availablePages.map(page => page.id));
+    const allPageIds = availablePages.map(page => page.id);
+    setSelectedPages(allPageIds);
+    console.log("Tüm sayfa yetkileri seçildi:", allPageIds);
   };
 
   const selectBasicPages = () => {
-    setSelectedPages(["dashboard", "appointments", "customers", "services"]);
+    const basicPages = ["dashboard", "appointments", "customers", "services"];
+    setSelectedPages(basicPages);
+    console.log("Temel sayfa yetkileri seçildi:", basicPages);
   };
 
   return (
@@ -269,11 +278,12 @@ const CreateUserForm = ({ onSuccess }: CreateUserFormProps) => {
             {availablePages.map((page) => (
               <div
                 key={page.id}
-                className={`p-3 border rounded-lg transition-all ${
+                className={`p-3 border rounded-lg transition-all cursor-pointer ${
                   selectedPages.includes(page.id)
                     ? 'border-primary bg-primary/5'
                     : 'border-border hover:border-primary/50'
                 }`}
+                onClick={() => togglePage(page.id)}
               >
                 <div className="flex items-start space-x-3">
                   <Checkbox

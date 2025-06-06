@@ -20,7 +20,8 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     userAllowedPages: user?.allowedPages,
     userRole: user?.role,
     requiredRole,
-    isAuthenticated
+    isAuthenticated,
+    user: user ? { id: user.id, username: user.username, role: user.role } : null
   });
   
   if (loading) {
@@ -47,15 +48,25 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   }
   
   // Sayfa erişim kontrolü - sadece staff kullanıcıları için
-  if (user && user.role === 'staff' && user.allowedPages) {
+  if (user && user.role === 'staff') {
     // Ana sayfa her zaman erişilebilir olmalı
     if (currentPage === '' || currentPage === 'dashboard') {
+      console.log('Ana sayfa erişimi sağlandı');
       return <>{children}</>;
+    }
+    
+    // allowedPages kontrolü
+    if (!user.allowedPages || !Array.isArray(user.allowedPages)) {
+      console.log('Kullanıcının allowedPages tanımlı değil, ana sayfaya yönlendiriliyor');
+      return <Navigate to="/" replace />;
     }
     
     // Diğer sayfalar için izin kontrolü
     if (!user.allowedPages.includes(currentPage)) {
-      console.log('Sayfa erişim izni yok, ana sayfaya yönlendiriliyor:', currentPage);
+      console.log('Sayfa erişim izni yok, ana sayfaya yönlendiriliyor:', {
+        currentPage,
+        allowedPages: user.allowedPages
+      });
       return <Navigate to="/" replace />;
     }
   }
