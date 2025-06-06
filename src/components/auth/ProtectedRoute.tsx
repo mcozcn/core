@@ -21,7 +21,7 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     userRole: user?.role,
     requiredRole,
     isAuthenticated,
-    user: user ? { id: user.id, username: user.username, role: user.role } : null
+    user: user ? { id: user.id, username: user.username, role: user.role, allowedPages: user.allowedPages } : null
   });
   
   if (loading) {
@@ -55,9 +55,9 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
       return <>{children}</>;
     }
     
-    // allowedPages kontrolü
-    if (!user.allowedPages || !Array.isArray(user.allowedPages)) {
-      console.log('Kullanıcının allowedPages tanımlı değil, ana sayfaya yönlendiriliyor');
+    // allowedPages kontrolü - null, undefined veya boş array kontrolü
+    if (!user.allowedPages || !Array.isArray(user.allowedPages) || user.allowedPages.length === 0) {
+      console.log('Kullanıcının allowedPages tanımlı değil veya boş, ana sayfaya yönlendiriliyor');
       return <Navigate to="/" replace />;
     }
     
@@ -65,10 +65,16 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     if (!user.allowedPages.includes(currentPage)) {
       console.log('Sayfa erişim izni yok, ana sayfaya yönlendiriliyor:', {
         currentPage,
-        allowedPages: user.allowedPages
+        allowedPages: user.allowedPages,
+        includes: user.allowedPages.includes(currentPage)
       });
       return <Navigate to="/" replace />;
     }
+
+    console.log('Sayfa erişim izni var:', {
+      currentPage,
+      allowedPages: user.allowedPages
+    });
   }
 
   console.log('Erişim izni verildi');

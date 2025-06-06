@@ -84,13 +84,16 @@ const CreateUserForm = ({ onSuccess }: CreateUserFormProps) => {
         role: "staff",
         title: formData.title || "Personel",
         color: '#6E59A5',
-        allowedPages: selectedPages,
+        allowedPages: [...selectedPages], // Array'i kopyala
         canEdit: formData.canEdit,
         canDelete: formData.canDelete,
         createdAt: new Date(),
       });
 
-      console.log("Kullanıcı başarıyla oluşturuldu:", newUser);
+      console.log("Kullanıcı başarıyla oluşturuldu:", {
+        ...newUser,
+        allowedPages: newUser.allowedPages
+      });
 
       toast({
         title: "Başarılı",
@@ -122,12 +125,12 @@ const CreateUserForm = ({ onSuccess }: CreateUserFormProps) => {
   };
 
   const togglePage = (pageId: string) => {
+    if (pageId === "dashboard") {
+      // Dashboard her zaman seçili kalmalı
+      return;
+    }
+    
     setSelectedPages(current => {
-      if (pageId === "dashboard") {
-        // Dashboard her zaman seçili kalmalı
-        return current;
-      }
-      
       const newSelection = current.includes(pageId)
         ? current.filter(id => id !== pageId)
         : [...current, pageId];
