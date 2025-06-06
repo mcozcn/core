@@ -16,6 +16,7 @@ const availablePages = [
   { id: "dashboard", label: "Ana Sayfa" },
   { id: "appointments", label: "Randevular" },
   { id: "customers", label: "Müşteriler" },
+  { id: "services", label: "Hizmetler" },
   { id: "stock", label: "Stok Yönetimi" },
   { id: "sales", label: "Satışlar" },
   { id: "costs", label: "Masraflar" },
@@ -23,6 +24,7 @@ const availablePages = [
   { id: "reports", label: "Raporlar" },
   { id: "backup", label: "Yedekleme" },
   { id: "personnel", label: "Personel Yönetimi" },
+  { id: "performance", label: "Performans" },
 ];
 
 const CreateUserForm = ({ onSuccess }: CreateUserFormProps) => {
@@ -49,6 +51,8 @@ const CreateUserForm = ({ onSuccess }: CreateUserFormProps) => {
         });
         return;
       }
+
+      console.log("Kullanıcı oluşturuluyor, izinli sayfalar:", selectedPages);
 
       await addUser({
         username,
@@ -94,11 +98,12 @@ const CreateUserForm = ({ onSuccess }: CreateUserFormProps) => {
 
   const togglePage = (pageId: string) => {
     setSelectedPages((current) => {
-      if (current.includes(pageId)) {
-        return current.filter((id) => id !== pageId);
-      } else {
-        return [...current, pageId];
-      }
+      const newSelection = current.includes(pageId)
+        ? current.filter((id) => id !== pageId)
+        : [...current, pageId];
+      
+      console.log("Sayfa seçimi güncellendi:", pageId, newSelection);
+      return newSelection;
     });
   };
 
@@ -173,7 +178,7 @@ const CreateUserForm = ({ onSuccess }: CreateUserFormProps) => {
             </div>
             
             <div className="space-y-2">
-              <h4 className="text-sm font-medium">Erişim Tanımlanan Sayfalar</h4>
+              <h4 className="text-sm font-medium">Erişim İzni Verilen Sayfalar</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                 {availablePages.map((page) => (
                   <div key={page.id} className="flex items-center space-x-2">

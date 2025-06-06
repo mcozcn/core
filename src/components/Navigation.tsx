@@ -1,4 +1,3 @@
-
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Calendar, Users, BarChart3, Package, DollarSign, CreditCard, ShoppingCart, Database, BarChart, Menu, User, LogOut } from "lucide-react";
 import { useState } from "react";
@@ -20,6 +19,7 @@ const Navigation = () => {
     { to: "/", label: "Panel", icon: BarChart3, permission: "dashboard" },
     { to: "/appointments", label: "Randevular", icon: Calendar, permission: "appointments" },
     { to: "/customers", label: "Müşteriler", icon: Users, permission: "customers" },
+    { to: "/services", label: "Hizmetler", icon: Calendar, permission: "services" },
     { to: "/stock", label: "Stok Yönetimi", icon: Package, permission: "stock" },
     { to: "/sales", label: "Satışlar", icon: ShoppingCart, permission: "sales" },
     { to: "/costs", label: "Masraflar", icon: DollarSign, permission: "costs" },
@@ -27,12 +27,20 @@ const Navigation = () => {
     { to: "/reports", label: "Raporlar", icon: BarChart, permission: "reports" },
     { to: "/backup", label: "Yedekleme", icon: Database, permission: "backup" },
     { to: "/personnel", label: "Personel", icon: Users, permission: "personnel" },
+    { to: "/performance", label: "Performans", icon: BarChart3, permission: "performance" },
   ];
 
+  console.log('Navigation - Kullanıcı izinleri:', user?.allowedPages);
+
   // Filter links based on user permissions
-  const allowedLinks = links.filter(link => 
-    user?.allowedPages?.includes(link.permission)
-  );
+  const allowedLinks = links.filter(link => {
+    // Admin kullanıcıları tüm linkleri görebilir
+    if (user?.role === 'admin') {
+      return true;
+    }
+    // Staff kullanıcıları sadece izinli sayfaları görebilir
+    return user?.allowedPages?.includes(link.permission);
+  });
   
   // Add admin-only user management link
   if (user?.role === 'admin') {
@@ -43,6 +51,8 @@ const Navigation = () => {
       permission: "users"
     });
   }
+
+  console.log('Navigation - Görüntülenecek linkler:', allowedLinks.map(l => l.label));
 
   return (
     <nav className={`fixed top-0 left-0 h-full ${isCollapsed ? 'w-20' : 'w-64'} bg-background border-r border-border shadow-lg transition-all duration-300 z-50`}>
