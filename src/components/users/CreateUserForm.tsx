@@ -278,12 +278,11 @@ const CreateUserForm = ({ onSuccess }: CreateUserFormProps) => {
             {availablePages.map((page) => (
               <div
                 key={page.id}
-                className={`p-3 border rounded-lg transition-all cursor-pointer ${
+                className={`p-3 border rounded-lg transition-all ${
                   selectedPages.includes(page.id)
                     ? 'border-primary bg-primary/5'
                     : 'border-border hover:border-primary/50'
                 }`}
-                onClick={() => togglePage(page.id)}
               >
                 <div className="flex items-start space-x-3">
                   <Checkbox
