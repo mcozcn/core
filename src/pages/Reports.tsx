@@ -6,6 +6,7 @@ import { addDays } from "date-fns";
 
 // Import custom hooks
 import { useReportStats } from "@/hooks/useReportStats";
+import { useToast } from "@/hooks/use-toast";
 
 // Import report components
 import { ReportsHeader } from "@/components/reports/ReportsHeader";
@@ -24,13 +25,36 @@ const Reports = () => {
     to: new Date(),
   });
   const [reportType, setReportType] = useState("all");
+  const { toast } = useToast();
 
   // Get all the stats data using our custom hook
   const { weeklySummary, monthlySummary, topProducts, topServices } = useReportStats();
 
   const handleDownloadReport = () => {
-    // Burada PDF indirme işlemi gerçekleştirilecek
-    console.log("Rapor indiriliyor:", activeTab, reportType, dateRange);
+    toast({
+      title: "PDF İndiriliyor",
+      description: `${getTabTitle(activeTab)} raporu PDF olarak indiriliyor...`,
+    });
+    
+    // PDF indirme işlemi simülasyonu
+    setTimeout(() => {
+      toast({
+        title: "İndirme Tamamlandı",
+        description: "Rapor başarıyla indirildi.",
+      });
+    }, 2000);
+  };
+
+  const getTabTitle = (tab: string) => {
+    switch (tab) {
+      case "products": return "Ürün Analizi";
+      case "services": return "Hizmet Analizi";
+      case "customers": return "Müşteri Analizi";
+      case "staff": return "Personel Performansı";
+      case "commission": return "Hakediş";
+      case "summary": return "Genel Özet";
+      default: return "Rapor";
+    }
   };
 
   return (

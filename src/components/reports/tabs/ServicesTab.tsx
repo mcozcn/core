@@ -1,38 +1,192 @@
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText } from "lucide-react";
+import { FileText, TrendingUp, Scissors, DollarSign } from "lucide-react";
 import ServiceProfitLossAnalysis from "@/components/dashboard/ServiceProfitLossAnalysis";
 import TopSellingServices from "@/components/reports/TopSellingServices";
+import ServicePieChart from "@/components/reports/charts/ServicePieChart";
+import ServiceRevenueChart from "@/components/reports/charts/ServiceRevenueChart";
+import { useToast } from "@/hooks/use-toast";
 
 export const ServicesTab = () => {
+  const { toast } = useToast();
+
+  const handleDetailClick = (reportType: string) => {
+    toast({
+      title: "Detay Raporu",
+      description: `${reportType} detay raporu açılıyor...`,
+    });
+  };
+
+  const handleDownloadPDF = (reportType: string) => {
+    toast({
+      title: "PDF İndiriliyor",
+      description: `${reportType} raporu PDF olarak indiriliyor...`,
+    });
+  };
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <Card className="p-4">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-medium">Hizmet Kâr/Zarar Analizi</h3>
-          <Button variant="outline" size="sm">
-            <FileText className="h-4 w-4 mr-2" />
-            Detay
-          </Button>
-        </div>
-        <div className="h-[350px]">
-          <ServiceProfitLossAnalysis />
-        </div>
-      </Card>
-      
-      <Card className="p-4">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-medium">En Çok Satan Hizmetler</h3>
-          <Button variant="outline" size="sm">
-            <FileText className="h-4 w-4 mr-2" />
-            Detay
-          </Button>
-        </div>
-        <div className="h-[350px]">
-          <TopSellingServices />
-        </div>
-      </Card>
+    <div className="space-y-6">
+      {/* Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="p-4 bg-gradient-to-r from-pink-50 to-pink-100 border-pink-200">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-pink-500 rounded-lg">
+              <Scissors className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <p className="text-sm text-pink-600 font-medium">Toplam Hizmet</p>
+              <p className="text-2xl font-bold text-pink-700">156</p>
+            </div>
+          </div>
+        </Card>
+        
+        <Card className="p-4 bg-gradient-to-r from-emerald-50 to-emerald-100 border-emerald-200">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-emerald-500 rounded-lg">
+              <DollarSign className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <p className="text-sm text-emerald-600 font-medium">Toplam Gelir</p>
+              <p className="text-2xl font-bold text-emerald-700">₺67,890</p>
+            </div>
+          </div>
+        </Card>
+        
+        <Card className="p-4 bg-gradient-to-r from-orange-50 to-orange-100 border-orange-200">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-orange-500 rounded-lg">
+              <TrendingUp className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <p className="text-sm text-orange-600 font-medium">Kar Marjı</p>
+              <p className="text-2xl font-bold text-orange-700">78.2%</p>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h3 className="text-xl font-semibold mb-2">Hizmet Satış Dağılımı</h3>
+              <p className="text-sm text-muted-foreground">En çok tercih edilen hizmetler</p>
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => handleDetailClick("Hizmet Satış Dağılımı")}
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Detay
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => handleDownloadPDF("Hizmet Satış Dağılımı")}
+              >
+                PDF
+              </Button>
+            </div>
+          </div>
+          <div className="h-[300px]">
+            <ServicePieChart />
+          </div>
+        </Card>
+        
+        <Card className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h3 className="text-xl font-semibold mb-2">Hizmet Gelir Trendi</h3>
+              <p className="text-sm text-muted-foreground">Aylık hizmet geliri</p>
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => handleDetailClick("Hizmet Gelir Trendi")}
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Detay
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => handleDownloadPDF("Hizmet Gelir Trendi")}
+              >
+                PDF
+              </Button>
+            </div>
+          </div>
+          <div className="h-[300px]">
+            <ServiceRevenueChart />
+          </div>
+        </Card>
+      </div>
+
+      {/* Detailed Analysis Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h3 className="text-xl font-semibold mb-2">Hizmet Kâr/Zarar Analizi</h3>
+              <p className="text-sm text-muted-foreground">Detaylı karlılık analizi</p>
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => handleDetailClick("Hizmet Kâr/Zarar Analizi")}
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Detay
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => handleDownloadPDF("Hizmet Kâr/Zarar Analizi")}
+              >
+                PDF
+              </Button>
+            </div>
+          </div>
+          <div className="h-[400px]">
+            <ServiceProfitLossAnalysis />
+          </div>
+        </Card>
+        
+        <Card className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h3 className="text-xl font-semibold mb-2">En Çok Satan Hizmetler</h3>
+              <p className="text-sm text-muted-foreground">Hizmet performansı sıralaması</p>
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => handleDetailClick("En Çok Satan Hizmetler")}
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Detay
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => handleDownloadPDF("En Çok Satan Hizmetler")}
+              >
+                PDF
+              </Button>
+            </div>
+          </div>
+          <div className="h-[400px]">
+            <TopSellingServices />
+          </div>
+        </Card>
+      </div>
     </div>
   );
 };
