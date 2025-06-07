@@ -1,16 +1,42 @@
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useQuery } from "@tanstack/react-query";
+import { getSales } from "@/utils/localStorage";
 
 const ProductRevenueChart = () => {
-  // Mock data - gerçek verilerle değiştirilebilir
-  const data = [
-    { month: 'Oca', gelir: 12000 },
-    { month: 'Şub', gelir: 15000 },
-    { month: 'Mar', gelir: 18000 },
-    { month: 'Nis', gelir: 14000 },
-    { month: 'May', gelir: 22000 },
-    { month: 'Haz', gelir: 25000 }
-  ];
+  const { data: sales = [] } = useQuery({
+    queryKey: ['sales'],
+    queryFn: getSales,
+  });
+
+  // Calculate monthly revenue from real sales data
+  const calculateMonthlyRevenue = () => {
+    const monthlyData = new Map();
+    
+    sales.forEach(sale => {
+      const date = new Date(sale.saleDate);
+      const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
+      const monthName = date.toLocaleDateString('tr-TR', { month: 'short' });
+      
+      if (!monthlyData.has(monthKey)) {
+        monthlyData.set(monthKey, {
+          month: monthName,
+          gelir: 0,
+          date: date
+        });
+      }
+      
+      monthlyData.get(monthKey).gelir += sale.totalPrice;
+    });
+
+    // Sort by date and get last 6 months
+    return Array.from(monthlyData.values())
+      .sort((a, b) => a.date.getTime() - b.date.getTime())
+      .slice(-6)
+      .map(({ month, gelir }) => ({ month, gelir }));
+  };
+
+  const data = calculateMonthlyRevenue();
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -23,6 +49,14 @@ const ProductRevenueChart = () => {
     }
     return null;
   };
+
+  if (data.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full text-muted-foreground">
+        <p>Henüz gelir verisi bulunmuyor</p>
+      </div>
+    );
+  }
 
   return (
     <ResponsiveContainer width="100%" height="100%">
@@ -38,7 +72,7 @@ const ProductRevenueChart = () => {
           axisLine={false}
           tickLine={false}
           className="text-muted-foreground"
-          tickFormatter={(value) => `₺${value / 1000}k`}
+          tickFormatter={(value) => `₺${value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value}`}
         />
         <Tooltip content={<CustomTooltip />} />
         <Line 

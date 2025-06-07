@@ -7,9 +7,37 @@ import TopSellingServices from "@/components/reports/TopSellingServices";
 import ServicePieChart from "@/components/reports/charts/ServicePieChart";
 import ServiceRevenueChart from "@/components/reports/charts/ServiceRevenueChart";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
+import { getServiceSales, getCosts } from "@/utils/localStorage";
 
 export const ServicesTab = () => {
   const { toast } = useToast();
+
+  const { data: serviceSales = [] } = useQuery({
+    queryKey: ['serviceSales'],
+    queryFn: getServiceSales,
+  });
+
+  const { data: costs = [] } = useQuery({
+    queryKey: ['costs'],
+    queryFn: getCosts,
+  });
+
+  // Calculate real statistics
+  const calculateStats = () => {
+    const totalServices = new Set(serviceSales.map(sale => sale.serviceId)).size;
+    const totalRevenue = serviceSales.reduce((sum, sale) => sum + sale.price, 0);
+    const totalCosts = costs.reduce((sum, cost) => sum + cost.amount, 0);
+    const profitMargin = totalRevenue > 0 ? ((totalRevenue - totalCosts) / totalRevenue) * 100 : 0;
+
+    return {
+      totalServices,
+      totalRevenue,
+      profitMargin
+    };
+  };
+
+  const stats = calculateStats();
 
   const handleDetailClick = (reportType: string) => {
     toast({
@@ -36,7 +64,7 @@ export const ServicesTab = () => {
             </div>
             <div>
               <p className="text-sm text-pink-600 font-medium">Toplam Hizmet</p>
-              <p className="text-2xl font-bold text-pink-700">156</p>
+              <p className="text-2xl font-bold text-pink-700">{stats.totalServices}</p>
             </div>
           </div>
         </Card>
@@ -48,7 +76,7 @@ export const ServicesTab = () => {
             </div>
             <div>
               <p className="text-sm text-emerald-600 font-medium">Toplam Gelir</p>
-              <p className="text-2xl font-bold text-emerald-700">₺67,890</p>
+              <p className="text-2xl font-bold text-emerald-700">₺{stats.totalRevenue.toLocaleString('tr-TR')}</p>
             </div>
           </div>
         </Card>
@@ -60,7 +88,7 @@ export const ServicesTab = () => {
             </div>
             <div>
               <p className="text-sm text-orange-600 font-medium">Kar Marjı</p>
-              <p className="text-2xl font-bold text-orange-700">78.2%</p>
+              <p className="text-2xl font-bold text-orange-700">{stats.profitMargin.toFixed(1)}%</p>
             </div>
           </div>
         </Card>
@@ -128,7 +156,7 @@ export const ServicesTab = () => {
       </div>
 
       {/* Detailed Analysis Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6">
         <Card className="p-6">
           <div className="flex justify-between items-center mb-6">
             <div>
@@ -153,7 +181,7 @@ export const ServicesTab = () => {
               </Button>
             </div>
           </div>
-          <div className="h-[400px]">
+          <div className="min-h-[300px]">
             <ServiceProfitLossAnalysis />
           </div>
         </Card>
@@ -182,7 +210,7 @@ export const ServicesTab = () => {
               </Button>
             </div>
           </div>
-          <div className="h-[400px]">
+          <div className="min-h-[400px] overflow-auto">
             <TopSellingServices />
           </div>
         </Card>

@@ -1,16 +1,42 @@
 
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useQuery } from "@tanstack/react-query";
+import { getServiceSales } from "@/utils/localStorage";
 
 const ServiceRevenueChart = () => {
-  // Mock data - gerçek verilerle değiştirilebilir
-  const data = [
-    { month: 'Oca', gelir: 18000 },
-    { month: 'Şub', gelir: 22000 },
-    { month: 'Mar', gelir: 25000 },
-    { month: 'Nis', gelir: 20000 },
-    { month: 'May', gelir: 28000 },
-    { month: 'Haz', gelir: 32000 }
-  ];
+  const { data: serviceSales = [] } = useQuery({
+    queryKey: ['serviceSales'],
+    queryFn: getServiceSales,
+  });
+
+  // Calculate monthly service revenue from real data
+  const calculateMonthlyRevenue = () => {
+    const monthlyData = new Map();
+    
+    serviceSales.forEach(sale => {
+      const date = new Date(sale.saleDate);
+      const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
+      const monthName = date.toLocaleDateString('tr-TR', { month: 'short' });
+      
+      if (!monthlyData.has(monthKey)) {
+        monthlyData.set(monthKey, {
+          month: monthName,
+          gelir: 0,
+          date: date
+        });
+      }
+      
+      monthlyData.get(monthKey).gelir += sale.price;
+    });
+
+    // Sort by date and get last 6 months
+    return Array.from(monthlyData.values())
+      .sort((a, b) => a.date.getTime() - b.date.getTime())
+      .slice(-6)
+      .map(({ month, gelir }) => ({ month, gelir }));
+  };
+
+  const data = calculateMonthlyRevenue();
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -23,6 +49,14 @@ const ServiceRevenueChart = () => {
     }
     return null;
   };
+
+  if (data.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full text-muted-foreground">
+        <p>Henüz hizmet gelir verisi bulunmuyor</p>
+      </div>
+    );
+  }
 
   return (
     <ResponsiveContainer width="100%" height="100%">
@@ -44,7 +78,7 @@ const ServiceRevenueChart = () => {
           axisLine={false}
           tickLine={false}
           className="text-muted-foreground"
-          tickFormatter={(value) => `₺${value / 1000}k`}
+          tickFormatter={(value) => `₺${value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value}`}
         />
         <Tooltip content={<CustomTooltip />} />
         <Area 

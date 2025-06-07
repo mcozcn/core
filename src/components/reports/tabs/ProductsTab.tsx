@@ -7,9 +7,40 @@ import TopSellingProducts from "@/components/reports/TopSellingProducts";
 import ProductPieChart from "@/components/reports/charts/ProductPieChart";
 import ProductRevenueChart from "@/components/reports/charts/ProductRevenueChart";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
+import { getSales, getStock } from "@/utils/localStorage";
 
 export const ProductsTab = () => {
   const { toast } = useToast();
+
+  const { data: sales = [] } = useQuery({
+    queryKey: ['sales'],
+    queryFn: getSales,
+  });
+
+  const { data: stock = [] } = useQuery({
+    queryKey: ['stock'],
+    queryFn: getStock,
+  });
+
+  // Calculate real statistics
+  const calculateStats = () => {
+    const totalProducts = stock.length;
+    const totalRevenue = sales.reduce((sum, sale) => sum + sale.totalPrice, 0);
+    const totalCost = sales.reduce((sum, sale) => {
+      const product = stock.find(item => item.productId === sale.productId);
+      return sum + (product?.cost || 0) * sale.quantity;
+    }, 0);
+    const profitMargin = totalRevenue > 0 ? ((totalRevenue - totalCost) / totalRevenue) * 100 : 0;
+
+    return {
+      totalProducts,
+      totalRevenue,
+      profitMargin
+    };
+  };
+
+  const stats = calculateStats();
 
   const handleDetailClick = (reportType: string) => {
     toast({
@@ -36,7 +67,7 @@ export const ProductsTab = () => {
             </div>
             <div>
               <p className="text-sm text-blue-600 font-medium">Toplam Ürün</p>
-              <p className="text-2xl font-bold text-blue-700">247</p>
+              <p className="text-2xl font-bold text-blue-700">{stats.totalProducts}</p>
             </div>
           </div>
         </Card>
@@ -48,7 +79,7 @@ export const ProductsTab = () => {
             </div>
             <div>
               <p className="text-sm text-green-600 font-medium">Toplam Gelir</p>
-              <p className="text-2xl font-bold text-green-700">₺45,230</p>
+              <p className="text-2xl font-bold text-green-700">₺{stats.totalRevenue.toLocaleString('tr-TR')}</p>
             </div>
           </div>
         </Card>
@@ -60,7 +91,7 @@ export const ProductsTab = () => {
             </div>
             <div>
               <p className="text-sm text-purple-600 font-medium">Kar Marjı</p>
-              <p className="text-2xl font-bold text-purple-700">34.5%</p>
+              <p className="text-2xl font-bold text-purple-700">{stats.profitMargin.toFixed(1)}%</p>
             </div>
           </div>
         </Card>
@@ -128,7 +159,7 @@ export const ProductsTab = () => {
       </div>
 
       {/* Detailed Analysis Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6">
         <Card className="p-6">
           <div className="flex justify-between items-center mb-6">
             <div>
@@ -153,7 +184,7 @@ export const ProductsTab = () => {
               </Button>
             </div>
           </div>
-          <div className="h-[400px]">
+          <div className="min-h-[300px]">
             <ProductProfitLossAnalysis />
           </div>
         </Card>
@@ -182,7 +213,7 @@ export const ProductsTab = () => {
               </Button>
             </div>
           </div>
-          <div className="h-[400px]">
+          <div className="min-h-[400px] overflow-auto">
             <TopSellingProducts />
           </div>
         </Card>
