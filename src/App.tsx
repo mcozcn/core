@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
@@ -16,7 +17,6 @@ import Financial from '@/pages/Financial';
 import Reports from '@/pages/Reports';
 import Backup from '@/pages/Backup';
 import UserManagement from '@/pages/UserManagement';
-import Personnel from '@/pages/Personnel';
 import Performance from '@/pages/Performance';
 
 const AppContent = () => {
@@ -47,7 +47,6 @@ const AppContent = () => {
           <Route path="/reports" element={<Reports />} />
           <Route path="/backup" element={<Backup />} />
           <Route path="/users" element={<UserManagement />} />
-          <Route path="/personnel" element={<Personnel />} />
           <Route path="/performance" element={<Performance />} />
         </Routes>
       </AccessControl>

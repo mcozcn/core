@@ -1,11 +1,11 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: 'admin' | 'power_user' | 'staff';
+  requiredRole?: 'admin' | 'manager' | 'user';
 }
 
 const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
@@ -41,13 +41,13 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     return <>{children}</>;
   }
 
-  // Power user kullanıcıları admin dışındaki her yere erişebilir
-  if (user?.role === 'power_user') {
+  // Manager kullanıcıları admin dışındaki her yere erişebilir
+  if (user?.role === 'manager') {
     if (currentPage === 'users') {
-      console.log('Power user - kullanıcı yönetimine erişim engellendi');
+      console.log('Manager - kullanıcı yönetimine erişim engellendi');
       return <Navigate to="/" replace />;
     }
-    console.log('Power user erişimi - sayfa izin verildi');
+    console.log('Manager erişimi - sayfa izin verildi');
     return <>{children}</>;
   }
 
@@ -57,8 +57,8 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     return <Navigate to="/" replace />;
   }
   
-  // Staff kullanıcıları için sayfa erişim kontrolü
-  if (user?.role === 'staff') {
+  // User kullanıcıları için sayfa erişim kontrolü
+  if (user?.role === 'user') {
     // Ana sayfa her zaman erişilebilir
     if (currentPage === '' || currentPage === 'dashboard') {
       console.log('Ana sayfa erişimi - izin verildi');
@@ -67,20 +67,20 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     
     // allowedPages kontrolü
     if (!user.allowedPages || !Array.isArray(user.allowedPages) || user.allowedPages.length === 0) {
-      console.log('Staff kullanıcı - allowedPages tanımlı değil, ana sayfaya yönlendiriliyor');
+      console.log('User kullanıcı - allowedPages tanımlı değil, ana sayfaya yönlendiriliyor');
       return <Navigate to="/" replace />;
     }
     
     // Sayfa erişim kontrolü
     if (!user.allowedPages.includes(currentPage)) {
-      console.log('Staff kullanıcı - sayfa erişim izni yok:', {
+      console.log('User kullanıcı - sayfa erişim izni yok:', {
         currentPage,
         allowedPages: user.allowedPages
       });
       return <Navigate to="/" replace />;
     }
 
-    console.log('Staff kullanıcı - sayfa erişim izni var:', {
+    console.log('User kullanıcı - sayfa erişim izni var:', {
       currentPage,
       allowedPages: user.allowedPages
     });
