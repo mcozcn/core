@@ -1,12 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import NewCreateUserForm from '@/components/users/NewCreateUserForm';
-import NewUsersList from '@/components/users/NewUsersList';
-import { User, getVisibleUsers, deleteUser } from '@/utils/storage/users';
-import { useToast } from "@/components/ui/use-toast";
-import { Users, UserPlus, Shield } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import UserForm from '@/components/users/UserForm';
+import UserList from '@/components/users/UserList';
+import { getVisibleUsers } from '@/utils/storage/userManager';
+import { useToast } from '@/hooks/use-toast';
+import { User } from '@/types/user';
+import { Users, UserPlus, Shield } from 'lucide-react';
 
 const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -20,54 +21,18 @@ const UserManagement = () => {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      // Sadece görünür kullanıcıları yükle (admin ve power user gizli)
       const visibleUsers = await getVisibleUsers();
       setUsers(visibleUsers);
-      console.log('Loaded visible users:', visibleUsers);
     } catch (error) {
-      console.error("Error loading users:", error);
+      console.error('Error loading users:', error);
       toast({
-        variant: "destructive",
-        title: "Hata",
-        description: "Kullanıcılar yüklenirken bir hata oluştu.",
+        variant: 'destructive',
+        title: 'Hata',
+        description: 'Kullanıcılar yüklenemedi.'
       });
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleDeleteUser = async (userId: number) => {
-    try {
-      const success = await deleteUser(userId);
-      if (success) {
-        await loadUsers();
-        toast({
-          title: "Başarılı",
-          description: "Kullanıcı başarıyla silindi.",
-        });
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Hata",
-          description: "Bu kullanıcı silinemez.",
-        });
-      }
-    } catch (error) {
-      console.error("Error deleting user:", error);
-      toast({
-        variant: "destructive",
-        title: "Hata",
-        description: "Kullanıcı silinirken bir hata oluştu.",
-      });
-    }
-  };
-
-  const handleUserCreated = async () => {
-    await loadUsers();
-  };
-
-  const handleUserUpdated = async () => {
-    await loadUsers();
   };
 
   return (
@@ -78,7 +43,7 @@ const UserManagement = () => {
           <h1 className="text-4xl font-serif">Kullanıcı Yönetimi</h1>
         </div>
         <p className="text-muted-foreground">
-          Personel kullanıcılarını yönetin ve yetkilendirmelerini düzenleyin
+          Personel kullanıcılarını yönetin ve yetkilendirmeleri düzenleyin
         </p>
       </div>
 
@@ -106,14 +71,10 @@ const UserManagement = () => {
               {loading ? (
                 <div className="flex items-center justify-center py-12">
                   <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
-                  <span className="ml-3">Kullanıcılar yükleniyor...</span>
+                  <span className="ml-3">Yükleniyor...</span>
                 </div>
               ) : (
-                <NewUsersList 
-                  users={users}
-                  onDeleteUser={handleDeleteUser}
-                  onUserUpdated={handleUserUpdated}
-                />
+                <UserList users={users} onUserUpdated={loadUsers} />
               )}
             </CardContent>
           </Card>
@@ -128,7 +89,7 @@ const UserManagement = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <NewCreateUserForm onSuccess={handleUserCreated} />
+              <UserForm onSuccess={loadUsers} />
             </CardContent>
           </Card>
         </TabsContent>

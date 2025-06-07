@@ -1,4 +1,3 @@
-
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Calendar, Users, BarChart3, Package, DollarSign, CreditCard, ShoppingCart, Database, BarChart, Menu, User, LogOut } from "lucide-react";
 import { useState } from "react";
@@ -39,15 +38,15 @@ const Navigation = () => {
 
   // Filter links based on user permissions
   const allowedLinks = links.filter(link => {
-    // Admin ve power_user kullanıcıları tüm linkleri görebilir
-    if (user?.role === 'admin' || user?.role === 'power_user') {
+    // Admin ve manager kullanıcıları tüm linkleri görebilir
+    if (user?.role === 'admin' || user?.role === 'manager') {
       return true;
     }
-    // Staff kullanıcıları sadece izinli sayfaları görebilir
+    // User kullanıcıları sadece izinli sayfaları görebilir
     return user?.allowedPages?.includes(link.permission);
   });
   
-  // Admin-only user management link (sadece admin görebilir)
+  // Admin-only user management link
   if (user?.role === 'admin') {
     allowedLinks.push({
       to: "/users",
@@ -111,7 +110,7 @@ const Navigation = () => {
             <div className="px-4 py-2">
               <p className="font-medium">{user.displayName}</p>
               <p className="text-xs text-muted-foreground">
-                {user.role === 'admin' ? 'Yönetici' : user.role === 'power_user' ? 'Power User' : 'Personel'}
+                {user.role === 'admin' ? 'Yönetici' : user.role === 'manager' ? 'Manager' : 'Personel'}
               </p>
             </div>
           )}

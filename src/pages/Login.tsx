@@ -1,13 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { authenticateUser } from '@/utils/storage/users';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -30,30 +29,29 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const user = await authenticateUser(username, password);
+      const success = await login(username, password);
 
-      if (user) {
-        await login(user);
+      if (success) {
         toast({
-          title: "Giriş başarılı",
-          description: `Hoş geldiniz ${user.displayName}!`,
+          title: 'Giriş başarılı',
+          description: 'Hoş geldiniz!'
         });
         
         const from = location.state?.from?.pathname || '/';
         navigate(from, { replace: true });
       } else {
         toast({
-          variant: "destructive",
-          title: "Giriş başarısız",
-          description: "Kullanıcı adı veya şifre hatalı.",
+          variant: 'destructive',
+          title: 'Giriş başarısız',
+          description: 'Kullanıcı adı veya şifre hatalı.'
         });
       }
     } catch (error) {
       console.error('Login error:', error);
       toast({
-        variant: "destructive",
-        title: "Hata",
-        description: "Giriş yapılırken bir hata oluştu.",
+        variant: 'destructive',
+        title: 'Hata',
+        description: 'Giriş yapılırken bir hata oluştu.'
       });
     } finally {
       setIsLoading(false);
@@ -100,7 +98,7 @@ const Login = () => {
             className="w-full"
             disabled={isLoading}
           >
-            {isLoading ? "Giriş yapılıyor..." : "Giriş Yap"}
+            {isLoading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
           </Button>
         </form>
         
@@ -108,7 +106,7 @@ const Login = () => {
           <p className="text-sm font-medium mb-2">Test Kullanıcıları:</p>
           <div className="space-y-1 text-xs text-muted-foreground">
             <div><strong>Admin:</strong> admin / admin</div>
-            <div><strong>Power User:</strong> mco / 1474</div>
+            <div><strong>Manager:</strong> mco / 1474</div>
             <div><strong>Personel:</strong> personel / personel</div>
           </div>
         </div>
