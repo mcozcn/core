@@ -74,7 +74,7 @@ const CostsDashboard = ({ dateRange }: CostsDashboardProps) => {
           <DollarSign className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-red-600">₺{totalCosts.toLocaleString('tr-TR')}</div>
+          <div className="text-2xl font-bold text-red-600">₺{totalCosts.toLocaleString()}</div>
           {previousMetrics && (
             <div className="flex items-center text-xs text-muted-foreground">
               {costsChange >= 0 ? (
@@ -97,7 +97,7 @@ const CostsDashboard = ({ dateRange }: CostsDashboardProps) => {
           <Calculator className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">₺{averageCost.toLocaleString('tr-TR')}</div>
+          <div className="text-2xl font-bold">₺{averageCost.toLocaleString()}</div>
           <p className="text-xs text-muted-foreground">
             işlem başına ortalama
           </p>
@@ -127,7 +127,7 @@ const CostsDashboard = ({ dateRange }: CostsDashboardProps) => {
             {topCategory ? topCategory[0] : 'Veri Yok'}
           </div>
           <p className="text-xs text-muted-foreground">
-            {topCategory ? `₺${topCategory[1].toLocaleString('tr-TR')}` : 'Henüz masraf yok'}
+            {topCategory ? `₺${topCategory[1].toLocaleString()}` : 'Henüz masraf yok'}
           </p>
         </CardContent>
       </Card>
