@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,6 +14,10 @@ import { DateRange } from "react-day-picker";
 import { tr } from 'date-fns/locale';
 import { useToast } from "@/hooks/use-toast";
 import CostsTable from "@/components/costs/CostsTable";
+import FinancialDashboard from "@/components/financial/FinancialDashboard";
+import RevenueExpenseChart from "@/components/financial/RevenueExpenseChart";
+import CashFlowChart from "@/components/financial/CashFlowChart";
+import RevenueSourceChart from "@/components/financial/RevenueSourceChart";
 
 const Financial = () => {
   const [dateRange, setDateRange] = useState<DateRange>({
@@ -119,12 +124,25 @@ const Financial = () => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 gap-8">
-        <MonthlyFinancialSummary 
-          customerRecords={filteredRecords}
-          costs={filteredCosts}
-        />
+      <div className="space-y-8">
+        {/* Dashboard Cards */}
+        <FinancialDashboard dateRange={dateRange} />
         
+        {/* Charts Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <RevenueExpenseChart />
+          <CashFlowChart />
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <RevenueSourceChart />
+          <MonthlyFinancialSummary 
+            customerRecords={filteredRecords}
+            costs={filteredCosts}
+          />
+        </div>
+        
+        {/* Detailed Tables */}
         <Card className="p-4">
           <Tabs defaultValue="all" className="w-full">
             <TabsList className="w-full justify-start">
