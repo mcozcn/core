@@ -3,9 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { getCustomerRecords, getCosts, getSales, getServiceSales } from "@/utils/localStorage";
 import { TrendingUp, TrendingDown, DollarSign, CreditCard } from "lucide-react";
+import { DateRange } from "react-day-picker";
 
 interface FinancialDashboardProps {
-  dateRange: { from: Date; to: Date } | undefined;
+  dateRange: DateRange | undefined;
 }
 
 const FinancialDashboard = ({ dateRange }: FinancialDashboardProps) => {
@@ -74,7 +75,7 @@ const FinancialDashboard = ({ dateRange }: FinancialDashboardProps) => {
       return recordDate >= previousFrom && recordDate <= previousTo;
     });
     
-    const prevCosts = costs.filter(cost => {
+    const prevCostsArray = costs.filter(cost => {
       const costDate = new Date(cost.date);
       return costDate >= previousFrom && costDate <= previousTo;
     });
@@ -91,10 +92,10 @@ const FinancialDashboard = ({ dateRange }: FinancialDashboardProps) => {
     
     const prevRevenue = prevSales.reduce((sum, sale) => sum + sale.totalPrice, 0) +
                        prevServiceSales.reduce((sum, sale) => sum + sale.price, 0);
-    const prevCosts = prevCosts.reduce((sum, cost) => sum + cost.amount, 0);
-    const prevProfit = prevRevenue - prevCosts;
+    const prevCostsTotal = prevCostsArray.reduce((sum, cost) => sum + cost.amount, 0);
+    const prevProfit = prevRevenue - prevCostsTotal;
     
-    return { prevRevenue, prevCosts, prevProfit };
+    return { prevRevenue, prevCosts: prevCostsTotal, prevProfit };
   };
 
   const previousMetrics = getPreviousPeriodMetrics();
