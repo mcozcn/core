@@ -1,13 +1,14 @@
 
 import React, { useState } from 'react';
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getCustomers, getCustomerRecords, getAppointments } from '@/utils/storage';
 import SearchInput from '@/components/common/SearchInput';
 import CustomerDetailView from '@/components/customers/CustomerDetailView';
-import { Edit, Plus, User } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Edit, Plus, User, Users, Calendar, DollarSign, TrendingUp } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import AddCustomerForm from '@/components/customers/AddCustomerForm';
 import EditCustomerForm from '@/components/customers/EditCustomerForm';
 import {
@@ -59,26 +60,118 @@ const Customers = () => {
     setShowEditDialog(false);
   };
 
+  // Calculate stats
+  const totalCustomers = customers.length;
+  const activeCustomers = customers.filter(customer => {
+    const customerRecords = records.filter(record => record.customerId === customer.id);
+    return customerRecords.length > 0;
+  }).length;
+  
+  const totalRevenue = records
+    .filter(record => record.type !== 'payment')
+    .reduce((sum, record) => sum + record.amount, 0);
+
+  const totalDebt = Math.max(0, 
+    records.reduce((acc, record) => 
+      record.type !== 'payment' ? acc + record.amount : acc, 0
+    ) - 
+    records.reduce((acc, record) => 
+      record.type === 'payment' ? acc + Math.abs(record.amount) : acc, 0
+    )
+  );
+
   return (
-    <div className="p-8 pl-72 animate-fadeIn">
-      <div className="mb-8 sticky top-0 z-10 bg-background pt-4 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-4xl font-serif">Müşteri İşlemleri</h1>
-        <div className="flex gap-2">
-          <Button onClick={() => setShowAddDialog(true)}>
-            <Plus className="mr-2 h-4 w-4" /> Yeni Müşteri
-          </Button>
+    <div className="p-6 pl-72 animate-fadeIn space-y-6">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-serif">Müşteri Yönetimi</h1>
+          <p className="text-muted-foreground mt-1">Müşterilerinizi yönetin ve ilişkilerinizi güçlendirin</p>
         </div>
+        <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+          <DialogTrigger asChild>
+            <Button className="bg-primary hover:bg-primary/90 gap-2">
+              <Plus className="h-4 w-4" />
+              Yeni Müşteri
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Yeni Müşteri Ekle</DialogTitle>
+            </DialogHeader>
+            <AddCustomerForm onSuccess={handleAddSuccess} />
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-500 rounded-lg">
+                <Users className="h-4 w-4 text-white" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Toplam Müşteri</p>
+                <p className="text-2xl font-bold text-blue-600">{totalCustomers}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-green-500 rounded-lg">
+                <TrendingUp className="h-4 w-4 text-white" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Aktif Müşteri</p>
+                <p className="text-2xl font-bold text-green-600">{activeCustomers}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border-purple-200">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-purple-500 rounded-lg">
+                <DollarSign className="h-4 w-4 text-white" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Toplam Gelir</p>
+                <p className="text-2xl font-bold text-purple-600">₺{totalRevenue.toLocaleString()}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 border-orange-200">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-orange-500 rounded-lg">
+                <Calendar className="h-4 w-4 text-white" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Toplam Borç</p>
+                <p className="text-2xl font-bold text-orange-600">₺{totalDebt.toLocaleString()}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {selectedCustomer ? (
-        <div className="space-y-6 mb-6">
+        <div className="space-y-6">
           <div className="flex items-center justify-between">
             <Button 
               variant="outline" 
               onClick={() => setSelectedCustomerId(null)}
-              className="mb-4"
+              className="gap-2"
             >
-              ← Müşteri Listesine Dön
+              ← Müşteri Listesi
             </Button>
           </div>
           <CustomerDetailView 
@@ -87,16 +180,50 @@ const Customers = () => {
           />
         </div>
       ) : (
-        <div className="space-y-4">
-          <Card className="p-6">
-            <div className="mb-4">
-              <SearchInput
-                value={searchTerm}
-                onChange={setSearchTerm}
-                placeholder="Müşteri ara..."
-              />
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <User className="h-5 w-5" />
+              Müşteri Listesi
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Search Section */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <SearchInput
+                  value={searchTerm}
+                  onChange={setSearchTerm}
+                  placeholder="Müşteri adı, telefon veya e-posta ile ara..."
+                />
+              </div>
             </div>
 
+            {/* Quick Filters */}
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="outline" className="cursor-pointer hover:bg-accent">
+                Tümü ({totalCustomers})
+              </Badge>
+              <Badge variant="outline" className="cursor-pointer hover:bg-accent text-green-600">
+                Aktif ({activeCustomers})
+              </Badge>
+              <Badge variant="outline" className="cursor-pointer hover:bg-accent text-orange-600">
+                Borçlu ({customers.filter(customer => {
+                  const customerRecords = records.filter(record => record.customerId === customer.id);
+                  const debt = Math.max(0, 
+                    customerRecords.reduce((acc, record) => 
+                      record.type !== 'payment' ? acc + record.amount : acc, 0
+                    ) - 
+                    customerRecords.reduce((acc, record) => 
+                      record.type === 'payment' ? acc + Math.abs(record.amount) : acc, 0
+                    )
+                  );
+                  return debt > 0;
+                }).length})
+              </Badge>
+            </div>
+
+            {/* Customer Table */}
             <div className="rounded-md border">
               <Table>
                 <TableHeader>
@@ -105,13 +232,14 @@ const Customers = () => {
                     <TableHead>Telefon</TableHead>
                     <TableHead>E-posta</TableHead>
                     <TableHead>Son İşlem</TableHead>
+                    <TableHead>Durum</TableHead>
                     <TableHead>İşlemler</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {isLoadingCustomers ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center h-32">Müşteriler yükleniyor...</TableCell>
+                      <TableCell colSpan={6} className="text-center h-32">Müşteriler yükleniyor...</TableCell>
                     </TableRow>
                   ) : filteredCustomers.length > 0 ? (
                     filteredCustomers.map((customer) => {
@@ -120,6 +248,15 @@ const Customers = () => {
                       const lastRecord = customerRecords.length > 0 
                         ? customerRecords.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
                         : null;
+                      
+                      const debt = Math.max(0, 
+                        customerRecords.reduce((acc, record) => 
+                          record.type !== 'payment' ? acc + record.amount : acc, 0
+                        ) - 
+                        customerRecords.reduce((acc, record) => 
+                          record.type === 'payment' ? acc + Math.abs(record.amount) : acc, 0
+                        )
+                      );
                       
                       return (
                         <TableRow 
@@ -134,6 +271,15 @@ const Customers = () => {
                             {lastRecord 
                               ? new Date(lastRecord.date).toLocaleDateString('tr-TR') 
                               : "İşlem yok"}
+                          </TableCell>
+                          <TableCell>
+                            {debt > 0 ? (
+                              <Badge variant="destructive">Borçlu (₺{debt.toLocaleString()})</Badge>
+                            ) : customerRecords.length > 0 ? (
+                              <Badge variant="default" className="bg-green-500">Aktif</Badge>
+                            ) : (
+                              <Badge variant="outline">Yeni</Badge>
+                            )}
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-2">
@@ -165,25 +311,17 @@ const Customers = () => {
                     })
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center h-32">Müşteri bulunamadı</TableCell>
+                      <TableCell colSpan={6} className="text-center h-32">
+                        {searchTerm ? 'Arama sonucu bulunamadı' : 'Henüz müşteri eklenmemiş'}
+                      </TableCell>
                     </TableRow>
                   )}
                 </TableBody>
               </Table>
             </div>
-          </Card>
-        </div>
+          </CardContent>
+        </Card>
       )}
-
-      {/* Add Customer Modal Dialog */}
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Yeni Müşteri Ekle</DialogTitle>
-          </DialogHeader>
-          <AddCustomerForm onSuccess={handleAddSuccess} />
-        </DialogContent>
-      </Dialog>
 
       {/* Edit Customer Modal Dialog */}
       {selectedCustomer && (
