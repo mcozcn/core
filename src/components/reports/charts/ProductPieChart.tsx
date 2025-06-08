@@ -22,7 +22,7 @@ const ProductPieChart = () => {
       if (!productSales.has(sale.productId)) {
         const product = stock.find(item => item.productId === sale.productId);
         productSales.set(sale.productId, {
-          name: sale.productName || product?.name || 'Bilinmeyen Ürün',
+          name: sale.productName || product?.productName || 'Bilinmeyen Ürün',
           value: 0,
           count: 0
         });
