@@ -8,6 +8,9 @@ import { DateRange } from "react-day-picker";
 import { addDays } from "date-fns";
 import AddCostForm from "@/components/costs/AddCostForm";
 import CostsTable from "@/components/costs/CostsTable";
+import CostsDashboard from "@/components/costs/CostsDashboard";
+import CostsCategoryChart from "@/components/costs/CostsCategoryChart";
+import CostsTrendChart from "@/components/costs/CostsTrendChart";
 import { useQuery } from "@tanstack/react-query";
 import { getCosts } from "@/utils/storage";
 import { tr } from 'date-fns/locale';
@@ -18,7 +21,6 @@ const Costs = () => {
     from: new Date(),
     to: addDays(new Date(), 7)
   });
-  const [showForm, setShowForm] = useState(false);
 
   const { data: costs = [] } = useQuery({
     queryKey: ['costs'],
@@ -31,6 +33,13 @@ const Costs = () => {
       to: addDays(new Date(), 7)
     });
   };
+
+  // Filter costs by date range
+  const filteredCosts = costs.filter(cost => {
+    if (!dateRange.from || !dateRange.to) return true;
+    const costDate = new Date(cost.date);
+    return costDate >= dateRange.from && costDate <= dateRange.to;
+  });
 
   return (
     <div className="p-8 pl-72 animate-fadeIn">
@@ -65,7 +74,22 @@ const Costs = () => {
         </Button>
       </div>
 
-      <CostsTable costs={costs} />
+      <div className="space-y-8">
+        {/* Dashboard Cards */}
+        <CostsDashboard dateRange={dateRange} />
+        
+        {/* Charts Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <CostsCategoryChart dateRange={dateRange} />
+          <CostsTrendChart dateRange={dateRange} />
+        </div>
+        
+        {/* Costs Table */}
+        <Card className="p-6">
+          <h2 className="text-xl font-semibold mb-4">Masraf Detayları</h2>
+          <CostsTable costs={filteredCosts} />
+        </Card>
+      </div>
     </div>
   );
 };
