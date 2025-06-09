@@ -6,8 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { deleteUser, updateUser } from '@/utils/storage/userManager';
-import { User } from '@/types/user';
+import { deleteUser, updateUser, User } from '@/utils/storage/userManager';
 import { Trash2, Eye, EyeOff, User as UserIcon } from 'lucide-react';
 
 interface UserListProps {

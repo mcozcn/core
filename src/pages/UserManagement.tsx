@@ -9,7 +9,7 @@ import UserForm from '@/components/users/UserForm';
 import UserList from '@/components/users/UserList';
 import { getVisibleUsers } from '@/utils/storage/userManager';
 import { useToast } from '@/hooks/use-toast';
-import { User } from '@/utils/storage/types'; // Changed from '@/types/user' to use the correct type
+import { User } from '@/utils/storage/userManager'; // Use the User type from userManager
 import { Users, UserPlus, Shield, Search, Settings } from 'lucide-react';
 
 const UserManagement = () => {
@@ -46,7 +46,7 @@ const UserManagement = () => {
   );
 
   return (
-    <div className="p-6 pl-72 animate-fadeIn space-y-6">
+    <div className="container mx-auto p-6 animate-fadeIn space-y-6 max-w-7xl">
       {/* Header Section */}
       <div className="text-center space-y-4">
         <div className="flex items-center justify-center gap-3 mb-2">
@@ -96,7 +96,7 @@ const UserManagement = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Personel</p>
-                <p className="text-2xl font-bold text-orange-600">{users.filter(u => u.role === 'staff').length}</p>
+                <p className="text-2xl font-bold text-orange-600">{users.filter(u => u.role === 'user').length}</p>
               </div>
             </div>
           </CardContent>
@@ -161,7 +161,7 @@ const UserManagement = () => {
                   Admin ({users.filter(u => u.role === 'admin').length})
                 </Badge>
                 <Badge variant="outline" className="cursor-pointer hover:bg-accent text-blue-600">
-                  Personel ({users.filter(u => u.role === 'staff').length})
+                  Personel ({users.filter(u => u.role === 'user').length})
                 </Badge>
               </div>
 
