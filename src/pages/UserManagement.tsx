@@ -9,7 +9,7 @@ import UserForm from '@/components/users/UserForm';
 import UserList from '@/components/users/UserList';
 import { getVisibleUsers } from '@/utils/storage/userManager';
 import { useToast } from '@/hooks/use-toast';
-import { User } from '@/types/user';
+import { User } from '@/utils/storage/types'; // Changed from '@/types/user' to use the correct type
 import { Users, UserPlus, Shield, Search, Settings } from 'lucide-react';
 
 const UserManagement = () => {
