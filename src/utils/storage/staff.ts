@@ -11,9 +11,9 @@ export const getStaffPerformance = async (
   startDate?: Date, 
   endDate?: Date
 ): Promise<StaffPerformance[]> => {
-  // Get all users who are staff
+  // Get all users who are staff (using the correct role types)
   const users = await getAllUsers();
-  const staffUsers = users.filter(user => user.role === 'staff' || user.role === 'user');
+  const staffUsers = users.filter(user => user.role === 'user' || user.role === 'manager');
   
   // Get real data
   const appointments = await getAppointments();
