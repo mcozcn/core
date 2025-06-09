@@ -13,7 +13,7 @@ export const getStaffPerformance = async (
 ): Promise<StaffPerformance[]> => {
   // Get all users who are staff
   const users = await getAllUsers();
-  const staffUsers = users.filter(user => user.role === 'user' || user.role === 'staff');
+  const staffUsers = users.filter(user => user.role === 'staff' || user.role === 'user');
   
   // Get real data
   const appointments = await getAppointments();
