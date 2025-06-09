@@ -1,362 +1,212 @@
 
-import React, { useEffect, useState } from 'react';
-import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { formatCurrency } from "@/utils/format";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { User } from '@/utils/auth';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend,
-  ResponsiveContainer 
-} from 'recharts';
-import { DatePickerWithRange } from "@/components/ui/date-range-picker";
-import { DateRange } from "react-day-picker";
-import { addDays, isWithinInterval, format, startOfDay, endOfDay } from "date-fns";
-import { useQuery } from "@tanstack/react-query";
-import { getSales, getServiceSales, getAppointments } from "@/utils/localStorage";
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Calendar, TrendingUp, Users, DollarSign, Award, Clock } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { getStaffPerformance } from '@/utils/storage/staff';
+import { User } from '@/utils/storage/userManager';
 
 interface StaffPerformanceDetailProps {
   staff: User;
 }
 
-interface PerformanceDataPoint {
-  date: string;
-  appointments: number;
-  sales: number;
-  revenue: number;
-}
-
-// Define a type for commission items to use in our component
-interface CommissionItem {
-  date: Date;
-  item: string;
-  amount: number;
-  commissionRate: number;
-  commissionAmount: number;
-  customerName: string;
-}
-
-const StaffPerformanceDetail: React.FC<StaffPerformanceDetailProps> = ({ staff }) => {
-  const [date, setDate] = useState<DateRange | undefined>({
-    from: new Date(),
-    to: addDays(new Date(), 7),
+const StaffPerformanceDetail = ({ staff }: StaffPerformanceDetailProps) => {
+  const { data: staffPerformance = [], isLoading } = useQuery({
+    queryKey: ['staffPerformance'],
+    queryFn: () => getStaffPerformance(),
   });
 
-  const { data: sales = [], isLoading: salesLoading } = useQuery({
-    queryKey: ['sales', date?.from?.toISOString(), date?.to?.toISOString(), staff.id],
-    queryFn: () => getSales(),
-  });
+  const staffData = staffPerformance.find(s => s.id === staff.id);
 
-  const { data: serviceSales = [], isLoading: serviceSalesLoading } = useQuery({
-    queryKey: ['serviceSales', date?.from?.toISOString(), date?.to?.toISOString(), staff.id],
-    queryFn: () => getServiceSales(),
-  });
-  
-  const { data: appointments = [], isLoading: appointmentsLoading } = useQuery({
-    queryKey: ['appointments', date?.from?.toISOString(), date?.to?.toISOString(), staff.id],
-    queryFn: () => getAppointments(),
-  });
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="animate-pulse">
+          <div className="h-8 bg-muted rounded w-1/3 mb-4"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="h-24 bg-muted rounded"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  const isLoading = salesLoading || serviceSalesLoading || appointmentsLoading;
+  if (!staffData) {
+    return (
+      <Card className="p-8 text-center">
+        <div className="space-y-3">
+          <Users className="h-12 w-12 text-muted-foreground mx-auto" />
+          <h3 className="text-lg font-medium text-muted-foreground">Veri Bulunamadı</h3>
+          <p className="text-muted-foreground">Bu personel için performans verisi bulunamadı.</p>
+        </div>
+      </Card>
+    );
+  }
 
-  // Filter data by staff and date range
-  const filterByStaffAndDate = (item: any) => {
-    // Handle both date and saleDate properties
-    const itemDate = new Date(item.date || item.saleDate || new Date());
-    const staffMatch = item.staffId === staff.id;
-    
-    if (!date?.from) return staffMatch;
-    
-    const fromDate = startOfDay(date.from);
-    const toDate = date.to ? endOfDay(date.to) : endOfDay(date.from);
-    
-    return staffMatch && isWithinInterval(itemDate, { start: fromDate, end: toDate });
-  };
-  
-  // Get staff data from different sources
-  const staffSales = sales.filter(filterByStaffAndDate);
-  const staffServiceSales = serviceSales.filter(filterByStaffAndDate);
-  const staffAppointments = appointments.filter(filterByStaffAndDate);
-
-  // Process commission data - with proper type safety
-  const commissionItems: CommissionItem[] = [
-    ...staffSales.map(sale => ({
-      date: new Date(sale.saleDate || sale.date || new Date()),
-      item: sale.productName || 'Ürün Satışı',
-      amount: sale.price || (sale as any).total || 0,
-      commissionRate: (sale as any).commissionRate ?? 0,
-      commissionAmount: sale.commissionAmount || 0,
-      customerName: sale.customerName || 'Müşteri'
-    })),
-    ...staffServiceSales.map(sale => ({
-      date: new Date(sale.saleDate || new Date()),
-      item: sale.serviceName || 'Hizmet Satışı',
-      amount: sale.price || 0,
-      commissionRate: (sale as any).commissionRate ?? 0,
-      commissionAmount: sale.commissionAmount || 0,
-      customerName: sale.customerName || 'Müşteri'
-    }))
-  ];
-  
-  // Sort items by date
-  commissionItems.sort((a, b) => b.date.getTime() - a.date.getTime());
-  
-  // Calculate total commission
-  const totalCommission = commissionItems.reduce((sum, item) => sum + item.commissionAmount, 0);
-  
-  // Group data by date for chart
-  const generatePerformanceData = (): PerformanceDataPoint[] => {
-    const dataMap = new Map<string, PerformanceDataPoint>();
-    
-    // Start with an empty data point for each day in the range
-    if (date?.from && date?.to) {
-      const currentDate = new Date(date.from);
-      const endDate = new Date(date.to);
-      
-      while (currentDate <= endDate) {
-        const dateKey = format(currentDate, 'yyyy-MM-dd');
-        dataMap.set(dateKey, {
-          date: format(currentDate, 'dd/MM/yyyy'),
-          appointments: 0,
-          sales: 0,
-          revenue: 0
-        });
-        currentDate.setDate(currentDate.getDate() + 1);
-      }
+  const performanceCards = [
+    {
+      title: "Toplam Randevu",
+      value: staffData.appointmentsCount,
+      icon: Calendar,
+      color: "text-blue-600",
+      bgColor: "bg-blue-50 dark:bg-blue-900/20"
+    },
+    {
+      title: "Onaylanan Randevular",
+      value: staffData.confirmedAppointments,
+      icon: Award,
+      color: "text-green-600",
+      bgColor: "bg-green-50 dark:bg-green-900/20"
+    },
+    {
+      title: "İptal Edilen Randevular",
+      value: staffData.cancelledAppointments,
+      icon: Clock,
+      color: "text-red-600",
+      bgColor: "bg-red-50 dark:bg-red-900/20"
+    },
+    {
+      title: "Bekleyen Randevular",
+      value: staffData.pendingAppointments,
+      icon: Clock,
+      color: "text-yellow-600",
+      bgColor: "bg-yellow-50 dark:bg-yellow-900/20"
+    },
+    {
+      title: "Verilen Hizmetler",
+      value: staffData.servicesProvided,
+      icon: Users,
+      color: "text-purple-600",
+      bgColor: "bg-purple-50 dark:bg-purple-900/20"
+    },
+    {
+      title: "Ürün Satışları",
+      value: staffData.productSales,
+      icon: TrendingUp,
+      color: "text-indigo-600",
+      bgColor: "bg-indigo-50 dark:bg-indigo-900/20"
     }
-    
-    // Add appointment data
-    staffAppointments.forEach(appointment => {
-      const appointmentDate = new Date(appointment.date);
-      const dateKey = format(appointmentDate, 'yyyy-MM-dd');
-      
-      if (dataMap.has(dateKey)) {
-        const data = dataMap.get(dateKey)!;
-        data.appointments++;
-      } else {
-        dataMap.set(dateKey, {
-          date: format(appointmentDate, 'dd/MM/yyyy'),
-          appointments: 1,
-          sales: 0,
-          revenue: 0
-        });
-      }
-    });
-    
-    // Add sales data - safely handle different data structures
-    [...staffSales, ...staffServiceSales].forEach(sale => {
-      // Handle both date formats safely
-      const saleDate = new Date(sale.saleDate || (sale as any).date || new Date());
-      const dateKey = format(saleDate, 'yyyy-MM-dd');
-      
-      // Handle both price structures safely
-      const saleAmount = ('price' in sale) ? sale.price : 
-                        ('total' in (sale as any)) ? (sale as any).total : 0;
-      
-      if (dataMap.has(dateKey)) {
-        const data = dataMap.get(dateKey)!;
-        data.sales++;
-        data.revenue += saleAmount;
-      } else {
-        dataMap.set(dateKey, {
-          date: format(saleDate, 'dd/MM/yyyy'),
-          appointments: 0,
-          sales: 1,
-          revenue: saleAmount
-        });
-      }
-    });
-    
-    return Array.from(dataMap.values()).sort((a, b) => {
-      // Sort by date
-      const dateA = new Date(a.date.split('/').reverse().join('-'));
-      const dateB = new Date(b.date.split('/').reverse().join('-'));
-      return dateA.getTime() - dateB.getTime();
-    });
-  };
+  ];
 
-  const performanceData = generatePerformanceData();
-  
-  // Calculate summary metrics
-  const totalAppointments = staffAppointments.length;
-  const totalSales = staffSales.length + staffServiceSales.length;
-  
-  // Safely calculate total revenue
-  const totalRevenue = [...staffSales, ...staffServiceSales].reduce(
-    (sum, sale) => {
-      // Handle both price structures safely
-      const amount = 'price' in sale ? sale.price : 
-                    ('total' in (sale as any)) ? (sale as any).total : 0;
-      return sum + amount;
-    }, 
-    0
-  );
-  
-  const avgDailyRevenue = performanceData.length > 0 
-    ? totalRevenue / performanceData.length 
-    : 0;
-  
   return (
-    <Card className="p-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center space-x-4">
+        <div 
+          className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg"
+          style={{ backgroundColor: staff.color }}
+        >
+          {staff.displayName?.charAt(0).toUpperCase()}
+        </div>
         <div>
-          <h3 className="text-xl font-semibold flex items-center">
-            {staff.displayName || staff.username}
-            <span 
-              className="ml-2 w-3 h-3 rounded-full" 
-              style={{ backgroundColor: staff.color }}
-            />
-          </h3>
-          <p className="text-muted-foreground">{staff.title || 'Personel'}</p>
+          <h2 className="text-2xl font-bold">{staff.displayName}</h2>
+          <p className="text-muted-foreground">{staff.title}</p>
         </div>
-        
-        <DatePickerWithRange 
-          className="mt-3 sm:mt-0" 
-          date={date} 
-          setDate={setDate} 
-        />
       </div>
-      
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <Card className="p-4 bg-accent/20">
-          <p className="text-sm text-muted-foreground mb-1">Toplam Randevu</p>
-          <p className="text-2xl font-bold">{totalAppointments}</p>
+
+      {/* Performance Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {performanceCards.map((card, index) => (
+          <Card key={index} className={card.bgColor}>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-muted-foreground">{card.title}</p>
+                  <p className={`text-2xl font-bold ${card.color}`}>{card.value}</p>
+                </div>
+                <card.icon className={`h-8 w-8 ${card.color}`} />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <Separator />
+
+      {/* Financial Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5" />
+              Finansal Özet
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Toplam Gelir:</span>
+              <Badge variant="secondary" className="text-lg font-bold">
+                ₺{staffData.totalRevenue.toLocaleString('tr-TR')}
+              </Badge>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Toplam Komisyon:</span>
+              <Badge variant="outline" className="text-lg font-bold">
+                ₺{staffData.totalCommission.toLocaleString('tr-TR')}
+              </Badge>
+            </div>
+          </CardContent>
         </Card>
-        
-        <Card className="p-4 bg-accent/20">
-          <p className="text-sm text-muted-foreground mb-1">Toplam Satış</p>
-          <p className="text-2xl font-bold">{totalSales}</p>
-        </Card>
-        
-        <Card className="p-4 bg-accent/20">
-          <p className="text-sm text-muted-foreground mb-1">Toplam Gelir</p>
-          <p className="text-2xl font-bold">{formatCurrency(totalRevenue)}</p>
-        </Card>
-        
-        <Card className="p-4 bg-accent/20">
-          <p className="text-sm text-muted-foreground mb-1">Günlük Ort. Gelir</p>
-          <p className="text-2xl font-bold">{formatCurrency(avgDailyRevenue)}</p>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              Performans Oranları
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Onay Oranı</span>
+                <span className="font-medium">
+                  {staffData.appointmentsCount > 0 
+                    ? `${Math.round((staffData.confirmedAppointments / staffData.appointmentsCount) * 100)}%`
+                    : '0%'
+                  }
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-green-500 h-2 rounded-full" 
+                  style={{ 
+                    width: staffData.appointmentsCount > 0 
+                      ? `${(staffData.confirmedAppointments / staffData.appointmentsCount) * 100}%`
+                      : '0%'
+                  }}
+                ></div>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>İptal Oranı</span>
+                <span className="font-medium">
+                  {staffData.appointmentsCount > 0 
+                    ? `${Math.round((staffData.cancelledAppointments / staffData.appointmentsCount) * 100)}%`
+                    : '0%'
+                  }
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-red-500 h-2 rounded-full" 
+                  style={{ 
+                    width: staffData.appointmentsCount > 0 
+                      ? `${(staffData.cancelledAppointments / staffData.appointmentsCount) * 100}%`
+                      : '0%'
+                  }}
+                ></div>
+              </div>
+            </div>
+          </CardContent>
         </Card>
       </div>
-      
-      {isLoading ? (
-        <div className="flex justify-center items-center p-8">
-          <p className="text-muted-foreground">Veriler yükleniyor...</p>
-        </div>
-      ) : (
-        <Tabs defaultValue="chart">
-          <TabsList className="mb-4">
-            <TabsTrigger value="chart">Grafik</TabsTrigger>
-            <TabsTrigger value="table">Tablo</TabsTrigger>
-            <TabsTrigger value="commissions">Hakediş</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="chart" className="space-y-4">
-            {performanceData.length > 0 ? (
-              <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={performanceData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis yAxisId="left" orientation="left" />
-                    <YAxis yAxisId="right" orientation="right" />
-                    <Tooltip />
-                    <Legend />
-                    <Bar yAxisId="left" dataKey="appointments" name="Randevu" fill="#8884d8" />
-                    <Bar yAxisId="left" dataKey="sales" name="Satış" fill="#82ca9d" />
-                    <Bar yAxisId="right" dataKey="revenue" name="Gelir" fill="#ffc658" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                Seçilen tarih aralığında veri bulunamadı.
-              </div>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="table">
-            {performanceData.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Tarih</TableHead>
-                    <TableHead className="text-right">Randevu</TableHead>
-                    <TableHead className="text-right">Satış</TableHead>
-                    <TableHead className="text-right">Gelir</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {performanceData.map((day, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{day.date}</TableCell>
-                      <TableCell className="text-right">{day.appointments}</TableCell>
-                      <TableCell className="text-right">{day.sales}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(day.revenue)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                Seçilen tarih aralığında veri bulunamadı.
-              </div>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="commissions">
-            {commissionItems.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Tarih</TableHead>
-                    <TableHead>Müşteri</TableHead>
-                    <TableHead>Ürün/Hizmet</TableHead>
-                    <TableHead className="text-right">Tutar</TableHead>
-                    <TableHead className="text-right">Komisyon %</TableHead>
-                    <TableHead className="text-right">Hakediş</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {commissionItems.map((item, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{format(item.date, 'dd/MM/yyyy')}</TableCell>
-                      <TableCell>{item.customerName}</TableCell>
-                      <TableCell>{item.item}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(item.amount)}</TableCell>
-                      <TableCell className="text-right">%{item.commissionRate}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(item.commissionAmount)}</TableCell>
-                    </TableRow>
-                  ))}
-                  <TableRow>
-                    <TableCell colSpan={4}></TableCell>
-                    <TableCell className="text-right font-bold">Toplam:</TableCell>
-                    <TableCell className="text-right font-bold">{formatCurrency(totalCommission)}</TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                Seçilen tarih aralığında hakediş bilgisi bulunamadı.
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
-      )}
-    </Card>
+    </div>
   );
 };
 
