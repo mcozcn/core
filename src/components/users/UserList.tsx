@@ -5,9 +5,11 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { deleteUser, updateUser, type User } from '@/utils/storage/userManager';
-import { Trash2, Eye, EyeOff, User as UserIcon } from 'lucide-react';
+import { Trash2, Eye, EyeOff, User as UserIcon, Edit } from 'lucide-react';
+import UserForm from '@/components/users/UserForm';
 
 interface UserListProps {
   users: User[];
@@ -19,6 +21,8 @@ interface UserListProps {
 const UserList = ({ users, onUserUpdated, currentUser, canEdit }: UserListProps) => {
   const { toast } = useToast();
   const [expandedUser, setExpandedUser] = useState<number | null>(null);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
   const handleDelete = async (userId: number) => {
     try {
@@ -43,6 +47,17 @@ const UserList = ({ users, onUserUpdated, currentUser, canEdit }: UserListProps)
         description: 'Bir hata oluştu.'
       });
     }
+  };
+
+  const handleEdit = (user: User) => {
+    setEditingUser(user);
+    setShowEditDialog(true);
+  };
+
+  const handleEditSuccess = () => {
+    setShowEditDialog(false);
+    setEditingUser(null);
+    onUserUpdated();
   };
 
   const getRoleBadge = (role: string) => {
@@ -134,6 +149,14 @@ const UserList = ({ users, onUserUpdated, currentUser, canEdit }: UserListProps)
                     >
                       {expandedUser === user.id ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEdit(user)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
                     
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
@@ -207,6 +230,19 @@ const UserList = ({ users, onUserUpdated, currentUser, canEdit }: UserListProps)
           </CardContent>
         </Card>
       )}
+
+      {/* Edit User Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          {editingUser && (
+            <UserForm 
+              editingUser={editingUser}
+              onSuccess={handleEditSuccess}
+              onCancel={() => setShowEditDialog(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

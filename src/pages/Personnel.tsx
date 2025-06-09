@@ -7,7 +7,8 @@ import { UserPlus, Users, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getPersonnel, type Personnel } from '@/utils/storage/personnel';
 import PersonnelList from '@/components/personnel/PersonnelList';
-import PersonnelAccountCard from '@/components/personnel/PersonnelAccountCard';
+import PersonnelDetailView from '@/components/personnel/PersonnelDetailView';
+import CreatePersonnelForm from '@/components/personnel/CreatePersonnelForm';
 import { Input } from '@/components/ui/input';
 
 const Personnel = () => {
@@ -16,7 +17,6 @@ const Personnel = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [selectedPersonnel, setSelectedPersonnel] = useState<Personnel | null>(null);
-  const [showDetailCard, setShowDetailCard] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -45,15 +45,29 @@ const Personnel = () => {
     setShowCreateDialog(false);
   };
 
-  const handleViewDetails = (person: Personnel) => {
+  const handlePersonnelClick = (person: Personnel) => {
     setSelectedPersonnel(person);
-    setShowDetailCard(true);
+  };
+
+  const handleBackToList = () => {
+    setSelectedPersonnel(null);
   };
 
   const filteredPersonnel = personnel.filter(person =>
     person.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     person.title?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (selectedPersonnel) {
+    return (
+      <div className="p-6 pl-72 animate-fadeIn">
+        <PersonnelDetailView 
+          personnel={selectedPersonnel} 
+          onBack={handleBackToList}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 pl-72 animate-fadeIn space-y-6">
@@ -71,12 +85,8 @@ const Personnel = () => {
               Yeni Personel Ekle
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[550px]">
-            {/* CreatePersonnelForm component will be updated to use new Personnel type */}
-            <div className="p-4">
-              <h3 className="text-lg font-medium">Yeni Personel Formu</h3>
-              <p className="text-sm text-muted-foreground">Form yakında eklenecek</p>
-            </div>
+          <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
+            <CreatePersonnelForm onSuccess={handlePersonnelUpdate} />
           </DialogContent>
         </Dialog>
       </div>
@@ -157,23 +167,11 @@ const Personnel = () => {
             <PersonnelList 
               personnel={filteredPersonnel} 
               onUpdate={handlePersonnelUpdate}
-              onViewDetails={handleViewDetails}
+              onPersonnelClick={handlePersonnelClick}
             />
           )}
         </CardContent>
       </Card>
-
-      {/* Personnel Detail Modal */}
-      <Dialog open={showDetailCard} onOpenChange={setShowDetailCard}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-          {selectedPersonnel && (
-            <PersonnelAccountCard 
-              personnel={selectedPersonnel} 
-              onClose={() => setShowDetailCard(false)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
