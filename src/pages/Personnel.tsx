@@ -9,6 +9,7 @@ import { getAllUsers } from '@/utils/auth';
 import { User } from '@/utils/auth';
 import CreatePersonnelForm from '@/components/personnel/CreatePersonnelForm';
 import PersonnelList from '@/components/personnel/PersonnelList';
+import PersonnelDetailCard from '@/components/personnel/PersonnelDetailCard';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 
@@ -17,6 +18,8 @@ const Personnel = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [selectedPersonnel, setSelectedPersonnel] = useState<User | null>(null);
+  const [showDetailCard, setShowDetailCard] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -44,6 +47,11 @@ const Personnel = () => {
   const handlePersonnelUpdate = () => {
     loadPersonnel();
     setShowCreateDialog(false);
+  };
+
+  const handleViewDetails = (person: User) => {
+    setSelectedPersonnel(person);
+    setShowDetailCard(true);
   };
 
   const filteredPersonnel = personnel.filter(person =>
@@ -159,12 +167,25 @@ const Personnel = () => {
               
               <PersonnelList 
                 personnel={filteredPersonnel} 
-                onUpdate={handlePersonnelUpdate} 
+                onUpdate={handlePersonnelUpdate}
+                onViewDetails={handleViewDetails}
               />
             </>
           )}
         </CardContent>
       </Card>
+
+      {/* Personnel Detail Modal */}
+      <Dialog open={showDetailCard} onOpenChange={setShowDetailCard}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          {selectedPersonnel && (
+            <PersonnelDetailCard 
+              personnel={selectedPersonnel} 
+              onClose={() => setShowDetailCard(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

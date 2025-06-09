@@ -1,8 +1,7 @@
-
 import { getFromStorage, setToStorage } from './core';
 import { STORAGE_KEYS } from './storageKeys';
 import type { StaffPerformance } from './types';
-import { getAllUsers } from './userManager';
+import { getVisibleUsers } from './userManager';
 import { getAppointments } from './appointments';
 import { getServiceSales } from './services';
 import { getSales } from './stock';
@@ -11,16 +10,15 @@ export const getStaffPerformance = async (
   startDate?: Date, 
   endDate?: Date
 ): Promise<StaffPerformance[]> => {
-  // Get all users who are staff (using the correct role types)
-  const users = await getAllUsers();
-  const staffUsers = users.filter(user => user.role === 'user' || user.role === 'manager');
+  // Get visible users (personnel from personnel section)
+  const users = await getVisibleUsers();
   
   // Get real data
   const appointments = await getAppointments();
   const serviceSales = await getServiceSales();
   const productSales = await getSales();
   
-  const staffPerformance = await Promise.all(staffUsers.map(async (user) => {
+  const staffPerformance = await Promise.all(users.map(async (user) => {
     // Filter appointments for this user
     const userAppointments = appointments.filter(apt => apt.staffId === user.id);
     

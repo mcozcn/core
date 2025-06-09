@@ -1,6 +1,7 @@
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { Trash2, Eye } from "lucide-react";
 import { User, deleteUser } from "@/utils/auth";
 import { useToast } from "@/components/ui/use-toast";
 import {
@@ -18,9 +19,10 @@ import { useState } from "react";
 interface PersonnelListProps {
   personnel: User[];
   onUpdate: () => void;
+  onViewDetails: (person: User) => void;
 }
 
-const PersonnelList = ({ personnel, onUpdate }: PersonnelListProps) => {
+const PersonnelList = ({ personnel, onUpdate, onViewDetails }: PersonnelListProps) => {
   const { toast } = useToast();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedPersonnel, setSelectedPersonnel] = useState<User | null>(null);
@@ -62,13 +64,23 @@ const PersonnelList = ({ personnel, onUpdate }: PersonnelListProps) => {
               </p>
             </div>
             
-            <Button
-              variant="destructive"
-              size="icon"
-              onClick={() => handleDeleteClick(person)}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => onViewDetails(person)}
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+              
+              <Button
+                variant="destructive"
+                size="icon"
+                onClick={() => handleDeleteClick(person)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </Card>
       ))}
