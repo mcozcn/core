@@ -74,7 +74,7 @@ const Dashboard = () => {
   });
 
   return (
-    <div className="p-6 space-y-8 animate-fadeIn">
+    <div className="p-6 pl-72 animate-fadeIn space-y-8">
       {/* Header Section */}
       <div className="text-center space-y-4">
         <div className="flex justify-center mb-6">
