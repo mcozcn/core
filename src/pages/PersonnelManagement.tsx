@@ -1,28 +1,41 @@
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import CreatePersonnelForm from "@/components/personnel/CreatePersonnelForm";
 import PersonnelList from "@/components/personnel/PersonnelList";
 import StaffPerformanceDetail from "@/components/personnel/StaffPerformanceDetail";
-import { getAllUsers } from "@/utils/auth";
-import { useState } from "react";
+import { getVisibleUsers, User } from "@/utils/storage/userManager";
+import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { UserPlus, Users, TrendingUp, Award } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { User } from "@/utils/auth";
 import PersonnelDetailCard from "@/components/personnel/PersonnelDetailCard";
 
 const PersonnelManagement = () => {
-  const [personnel, setPersonnel] = useState(getAllUsers());
+  const [personnel, setPersonnel] = useState<User[]>([]);
   const [selectedStaff, setSelectedStaff] = useState<User | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [selectedPersonnel, setSelectedPersonnel] = useState<User | null>(null);
   const [showDetailCard, setShowDetailCard] = useState(false);
   const queryClient = useQueryClient();
 
+  useEffect(() => {
+    loadPersonnel();
+  }, []);
+
+  const loadPersonnel = async () => {
+    try {
+      const visibleUsers = await getVisibleUsers();
+      setPersonnel(visibleUsers);
+    } catch (error) {
+      console.error('Error loading personnel:', error);
+    }
+  };
+
   const handlePersonnelUpdate = () => {
-    setPersonnel(getAllUsers());
+    loadPersonnel();
     setShowCreateDialog(false);
     queryClient.invalidateQueries({ queryKey: ['staffPerformance'] });
   };
@@ -78,7 +91,7 @@ const PersonnelManagement = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Aktif Personel</p>
-                <p className="text-2xl font-bold text-green-600">{personnel.filter(p => p.role === 'staff').length}</p>
+                <p className="text-2xl font-bold text-green-600">{personnel.filter(p => p.role === 'user').length}</p>
               </div>
             </div>
           </CardContent>

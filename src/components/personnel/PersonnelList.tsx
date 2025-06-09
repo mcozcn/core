@@ -2,7 +2,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Trash2, Eye } from "lucide-react";
-import { User, deleteUser } from "@/utils/auth";
+import { User, deleteUser } from "@/utils/storage/userManager";
 import { useToast } from "@/components/ui/use-toast";
 import {
   AlertDialog,
@@ -32,17 +32,25 @@ const PersonnelList = ({ personnel, onUpdate, onViewDetails }: PersonnelListProp
     setShowDeleteDialog(true);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (selectedPersonnel) {
-      deleteUser(selectedPersonnel.id);
-      onUpdate();
-      setShowDeleteDialog(false);
-      setSelectedPersonnel(null);
-      
-      toast({
-        title: "Başarılı",
-        description: "Personel silindi",
-      });
+      const success = await deleteUser(selectedPersonnel.id);
+      if (success) {
+        onUpdate();
+        setShowDeleteDialog(false);
+        setSelectedPersonnel(null);
+        
+        toast({
+          title: "Başarılı",
+          description: "Personel silindi",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Hata",
+          description: "Personel silinemedi",
+        });
+      }
     }
   };
 
