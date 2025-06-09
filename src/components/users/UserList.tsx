@@ -12,9 +12,11 @@ import { Trash2, Eye, EyeOff, User as UserIcon } from 'lucide-react';
 interface UserListProps {
   users: User[];
   onUserUpdated: () => void;
+  currentUser: User | null;
+  canEdit: boolean;
 }
 
-const UserList = ({ users, onUserUpdated }: UserListProps) => {
+const UserList = ({ users, onUserUpdated, currentUser, canEdit }: UserListProps) => {
   const { toast } = useToast();
   const [expandedUser, setExpandedUser] = useState<number | null>(null);
 
@@ -82,7 +84,7 @@ const UserList = ({ users, onUserUpdated }: UserListProps) => {
             <TableHead>Rol</TableHead>
             <TableHead>Sayfa Sayısı</TableHead>
             <TableHead>Son Giriş</TableHead>
-            <TableHead className="text-right">İşlemler</TableHead>
+            {canEdit && <TableHead className="text-right">İşlemler</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -122,42 +124,44 @@ const UserList = ({ users, onUserUpdated }: UserListProps) => {
                 </div>
               </TableCell>
 
-              <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setExpandedUser(expandedUser === user.id ? null : user.id)}
-                  >
-                    {expandedUser === user.id ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
-                  
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="destructive" size="sm">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Kullanıcıyı Sil</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          <strong>{user.displayName}</strong> kullanıcısını silmek istediğinizden emin misiniz?
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>İptal</AlertDialogCancel>
-                        <AlertDialogAction 
-                          onClick={() => handleDelete(user.id)}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        >
-                          Sil
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </TableCell>
+              {canEdit && (
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setExpandedUser(expandedUser === user.id ? null : user.id)}
+                    >
+                      {expandedUser === user.id ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                    
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="sm">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Kullanıcıyı Sil</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            <strong>{user.displayName}</strong> kullanıcısını silmek istediğinizden emin misiniz?
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>İptal</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={() => handleDelete(user.id)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Sil
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </TableCell>
+              )}
             </TableRow>
           ))}
         </TableBody>
