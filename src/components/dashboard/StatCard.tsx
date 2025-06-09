@@ -1,6 +1,8 @@
+
 import React from 'react';
 import { Card } from "@/components/ui/card";
 import { LucideIcon } from 'lucide-react';
+import { cn } from "@/lib/utils";
 
 interface StatCardProps {
   title: string;
@@ -11,6 +13,7 @@ interface StatCardProps {
     direction: 'up' | 'down' | 'none';
   };
   showTrend?: boolean;
+  className?: string;
 }
 
 const StatCard = ({ 
@@ -18,9 +21,10 @@ const StatCard = ({
   value, 
   icon: Icon, 
   trend, 
-  showTrend = true 
+  showTrend = true,
+  className 
 }: StatCardProps) => (
-  <Card className="p-6 card-hover">
+  <Card className={cn("p-6 card-hover", className)}>
     <div className="flex items-start justify-between">
       <div>
         <p className="text-sm text-gray-500">{title}</p>
