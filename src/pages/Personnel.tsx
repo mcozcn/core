@@ -1,12 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { UserPlus, Users, Search, Filter } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { getAllUsers } from '@/utils/auth';
-import { User } from '@/utils/auth';
+import { getVisibleUsers, type User } from '@/utils/storage/userManager';
 import CreatePersonnelForm from '@/components/personnel/CreatePersonnelForm';
 import PersonnelList from '@/components/personnel/PersonnelList';
 import PersonnelDetailCard from '@/components/personnel/PersonnelDetailCard';
@@ -26,12 +24,11 @@ const Personnel = () => {
     loadPersonnel();
   }, []);
 
-  const loadPersonnel = () => {
+  const loadPersonnel = async () => {
     try {
       setLoading(true);
-      const allUsers = getAllUsers();
-      const staffUsers = allUsers.filter(user => user.role === 'staff');
-      setPersonnel(staffUsers);
+      const visibleUsers = await getVisibleUsers();
+      setPersonnel(visibleUsers);
     } catch (error) {
       console.error('Error loading personnel:', error);
       toast({

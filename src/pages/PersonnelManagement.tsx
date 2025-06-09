@@ -1,4 +1,3 @@
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import CreatePersonnelForm from "@/components/personnel/CreatePersonnelForm";
@@ -12,17 +11,25 @@ import { Button } from "@/components/ui/button";
 import { UserPlus, Users, TrendingUp, Award } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { User } from "@/utils/auth";
+import PersonnelDetailCard from "@/components/personnel/PersonnelDetailCard";
 
 const PersonnelManagement = () => {
   const [personnel, setPersonnel] = useState(getAllUsers());
   const [selectedStaff, setSelectedStaff] = useState<User | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [selectedPersonnel, setSelectedPersonnel] = useState<User | null>(null);
+  const [showDetailCard, setShowDetailCard] = useState(false);
   const queryClient = useQueryClient();
 
   const handlePersonnelUpdate = () => {
     setPersonnel(getAllUsers());
     setShowCreateDialog(false);
     queryClient.invalidateQueries({ queryKey: ['staffPerformance'] });
+  };
+
+  const handleViewDetails = (person: User) => {
+    setSelectedPersonnel(person);
+    setShowDetailCard(true);
   };
 
   return (
@@ -117,6 +124,7 @@ const PersonnelManagement = () => {
               <PersonnelList 
                 personnel={personnel} 
                 onUpdate={handlePersonnelUpdate} 
+                onViewDetails={handleViewDetails}
               />
             </TabsContent>
             
@@ -164,6 +172,18 @@ const PersonnelManagement = () => {
           </Tabs>
         </CardContent>
       </Card>
+
+      {/* Personnel Detail Modal */}
+      <Dialog open={showDetailCard} onOpenChange={setShowDetailCard}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          {selectedPersonnel && (
+            <PersonnelDetailCard 
+              personnel={selectedPersonnel} 
+              onClose={() => setShowDetailCard(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
