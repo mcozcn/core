@@ -2,45 +2,62 @@
 import { getFromStorage, setToStorage } from './core';
 import { STORAGE_KEYS } from './storageKeys';
 import type { StaffPerformance } from './types';
-import { getAllUsers } from '@/utils/auth';
+import { getAllUsers } from './userManager';
+import { getAppointments } from './appointments';
+import { getServiceSales } from './services';
+import { getSales } from './stock';
 
 export const getStaffPerformance = async (
   startDate?: Date, 
   endDate?: Date
 ): Promise<StaffPerformance[]> => {
-  const result = await getFromStorage<StaffPerformance>(STORAGE_KEYS.STAFF);
+  // Get all users who are staff
+  const users = await getAllUsers();
+  const staffUsers = users.filter(user => user.role === 'user' || user.role === 'staff');
   
-  // Ensure we have an array and avgRating is a number
-  let staffPerformance = [];
-  if (Array.isArray(result)) {
-    staffPerformance = result.map((staff: any) => ({
-      ...staff,
-      avgRating: typeof staff.avgRating === 'string' ? parseFloat(staff.avgRating) : staff.avgRating
-    })) as StaffPerformance[];
-  }
+  // Get real data
+  const appointments = await getAppointments();
+  const serviceSales = await getServiceSales();
+  const productSales = await getSales();
   
-  // If no data, create default entries for all staff
-  if (staffPerformance.length === 0) {
-    const users = getAllUsers().filter(user => user.role === 'staff');
-    staffPerformance = users.map(user => ({
+  const staffPerformance = await Promise.all(staffUsers.map(async (user) => {
+    // Filter appointments for this user
+    const userAppointments = appointments.filter(apt => apt.staffId === user.id);
+    
+    // Calculate appointment metrics
+    const totalAppointments = userAppointments.length;
+    const confirmedAppointments = userAppointments.filter(apt => apt.status === 'confirmed').length;
+    const cancelledAppointments = userAppointments.filter(apt => apt.status === 'cancelled').length;
+    const pendingAppointments = userAppointments.filter(apt => apt.status === 'pending').length;
+    
+    // Filter sales for this user
+    const userServiceSales = serviceSales.filter(sale => sale.staffId === user.id);
+    const userProductSales = productSales.filter(sale => sale.staffId === user.id);
+    
+    // Calculate revenue
+    const serviceRevenue = userServiceSales.reduce((sum, sale) => sum + (sale.totalPrice || sale.price || 0), 0);
+    const productRevenue = userProductSales.reduce((sum, sale) => sum + (sale.totalPrice || 0), 0);
+    const totalRevenue = serviceRevenue + productRevenue;
+    
+    // Calculate commission
+    const totalCommission = userServiceSales.reduce((sum, sale) => sum + (sale.commissionAmount || 0), 0) +
+                           userProductSales.reduce((sum, sale) => sum + (sale.commissionAmount || 0), 0);
+    
+    return {
       id: user.id,
       name: user.displayName || user.username,
       role: user.title || 'Personel',
-      servicesProvided: 0,
-      totalRevenue: 0,
-      appointmentsCount: 0,
-      avgRating: 0
-    }));
-    
-    // Save the default data
-    await setToStorage(STORAGE_KEYS.STAFF, staffPerformance);
-  }
-  
-  // Filter by date range if provided
-  if (startDate && endDate) {
-    // In a real app, you would filter the data by date range
-    // This is placeholder for demonstration
-  }
+      servicesProvided: userServiceSales.length,
+      totalRevenue,
+      appointmentsCount: totalAppointments,
+      confirmedAppointments,
+      cancelledAppointments,
+      pendingAppointments,
+      productSales: userProductSales.length,
+      totalCommission,
+      avgRating: 0 // Removed rating system
+    };
+  }));
   
   return staffPerformance;
 };
@@ -81,33 +98,6 @@ export const updateStaffAppointmentCount = async (
       return {
         ...staff,
         appointmentsCount: staff.appointmentsCount + appointmentCount
-      };
-    }
-    return staff;
-  });
-  
-  await setStaffPerformance(updatedStaffList);
-};
-
-export const updateStaffRating = async (
-  staffId: number, 
-  rating: number
-): Promise<void> => {
-  const staffList = await getStaffPerformance();
-  
-  const targetStaff = staffList.find(staff => staff.id === staffId);
-  if (!targetStaff) return;
-  
-  const updatedStaffList = staffList.map(staff => {
-    if (staff.id === staffId) {
-      // Calculate new average rating
-      const oldRatingTotal = staff.avgRating * (staff.servicesProvided || 1);
-      const newRatingTotal = oldRatingTotal + rating;
-      const newAvgRating = newRatingTotal / (staff.servicesProvided + 1);
-      
-      return {
-        ...staff,
-        avgRating: parseFloat(newAvgRating.toFixed(2))
       };
     }
     return staff;

@@ -157,7 +157,12 @@ export interface StaffPerformance {
   servicesProvided: number;
   totalRevenue: number;
   appointmentsCount: number;
-  avgRating: number; // Changed from string to number as per error
+  confirmedAppointments: number;
+  cancelledAppointments: number;
+  pendingAppointments: number;
+  productSales: number;
+  totalCommission: number;
+  avgRating?: number; // Made optional since we're removing rating system
 }
 
 export interface StaffCommission {

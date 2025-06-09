@@ -8,11 +8,45 @@ import {
 } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import UserPerformanceComponent from "@/components/users/UserPerformance";
-import CommissionReport from "@/components/reports/CommissionReport";
-import { TrendingUp, Target, Award, BarChart3, Users, Calendar } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { getStaffPerformance } from "@/utils/storage/staff";
+import StaffPerformanceCard from "@/components/performance/StaffPerformanceCard";
+import StaffPerformanceCharts from "@/components/performance/StaffPerformanceCharts";
+import { formatCurrency } from "@/utils/format";
+import { 
+  TrendingUp, 
+  Target, 
+  Award, 
+  BarChart3, 
+  Users, 
+  Calendar,
+  DollarSign 
+} from "lucide-react";
 
 const Performance = () => {
+  const { data: staffPerformance = [], isLoading } = useQuery({
+    queryKey: ['staffPerformance'],
+    queryFn: () => getStaffPerformance(),
+  });
+
+  // Calculate overall statistics
+  const totalRevenue = staffPerformance.reduce((sum, staff) => sum + staff.totalRevenue, 0);
+  const totalAppointments = staffPerformance.reduce((sum, staff) => sum + staff.appointmentsCount, 0);
+  const totalConfirmed = staffPerformance.reduce((sum, staff) => sum + staff.confirmedAppointments, 0);
+  const totalCommission = staffPerformance.reduce((sum, staff) => sum + staff.totalCommission, 0);
+  const overallSuccessRate = totalAppointments > 0 ? Math.round((totalConfirmed / totalAppointments) * 100) : 0;
+
+  if (isLoading) {
+    return (
+      <div className="p-6 pl-72 animate-fadeIn">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
+          <span className="ml-3">Performans verileri yükleniyor...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 pl-72 animate-fadeIn space-y-6">
       {/* Header Section */}
@@ -32,8 +66,8 @@ const Performance = () => {
                 <TrendingUp className="h-4 w-4 text-white" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Ortalama Performans</p>
-                <p className="text-2xl font-bold text-blue-600">94.2%</p>
+                <p className="text-sm text-muted-foreground">Başarı Oranı</p>
+                <p className="text-2xl font-bold text-blue-600">{overallSuccessRate}%</p>
               </div>
             </div>
           </CardContent>
@@ -43,11 +77,11 @@ const Performance = () => {
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-green-500 rounded-lg">
-                <Target className="h-4 w-4 text-white" />
+                <DollarSign className="h-4 w-4 text-white" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Hedef Tamamlama</p>
-                <p className="text-2xl font-bold text-green-600">87%</p>
+                <p className="text-sm text-muted-foreground">Toplam Gelir</p>
+                <p className="text-2xl font-bold text-green-600">{formatCurrency(totalRevenue)}</p>
               </div>
             </div>
           </CardContent>
@@ -57,11 +91,11 @@ const Performance = () => {
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-orange-500 rounded-lg">
-                <Award className="h-4 w-4 text-white" />
+                <Calendar className="h-4 w-4 text-white" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Müşteri Memnuniyeti</p>
-                <p className="text-2xl font-bold text-orange-600">4.8/5</p>
+                <p className="text-sm text-muted-foreground">Toplam Randevu</p>
+                <p className="text-2xl font-bold text-orange-600">{totalAppointments}</p>
               </div>
             </div>
           </CardContent>
@@ -71,11 +105,11 @@ const Performance = () => {
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-purple-500 rounded-lg">
-                <BarChart3 className="h-4 w-4 text-white" />
+                <Award className="h-4 w-4 text-white" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Aylık Gelir</p>
-                <p className="text-2xl font-bold text-purple-600">₺45,230</p>
+                <p className="text-sm text-muted-foreground">Toplam Hakediş</p>
+                <p className="text-2xl font-bold text-purple-600">{formatCurrency(totalCommission)}</p>
               </div>
             </div>
           </CardContent>
@@ -91,74 +125,44 @@ const Performance = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid grid-cols-3 w-full max-w-md">
-              <TabsTrigger value="overview" className="gap-2">
-                <TrendingUp className="h-4 w-4" />
-                Genel Bakış
+          <Tabs defaultValue="cards" className="space-y-6">
+            <TabsList className="grid grid-cols-2 w-full max-w-md">
+              <TabsTrigger value="cards" className="gap-2">
+                <Users className="h-4 w-4" />
+                Personel Kartları
               </TabsTrigger>
-              <TabsTrigger value="commission" className="gap-2">
-                <Award className="h-4 w-4" />
-                Hakediş
-              </TabsTrigger>
-              <TabsTrigger value="activity" className="gap-2">
-                <Calendar className="h-4 w-4" />
-                Aktivite
+              <TabsTrigger value="charts" className="gap-2">
+                <BarChart3 className="h-4 w-4" />
+                Grafikler
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="overview" className="space-y-6">
-              <UserPerformanceComponent />
+            <TabsContent value="cards" className="space-y-6">
+              {staffPerformance.length === 0 ? (
+                <div className="text-center py-12">
+                  <Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">Henüz personel verisi yok</h3>
+                  <p className="text-muted-foreground">Personel performans verileri görüntülenecek.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {staffPerformance.map((staff) => (
+                    <StaffPerformanceCard key={staff.id} staff={staff} />
+                  ))}
+                </div>
+              )}
             </TabsContent>
 
-            <TabsContent value="commission" className="space-y-6">
-              <CommissionReport />
-            </TabsContent>
-
-            <TabsContent value="activity" className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card className="p-6 bg-accent/20">
-                  <h4 className="font-medium mb-4 flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    Randevu Tamamlama Detayları
-                  </h4>
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-sm">Tamamlanan Randevular:</span>
-                      <Badge variant="secondary">142</Badge>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">İptal Edilen:</span>
-                      <Badge variant="destructive">8</Badge>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Başarı Oranı:</span>
-                      <Badge variant="default">94.7%</Badge>
-                    </div>
-                  </div>
-                </Card>
-                
-                <Card className="p-6 bg-accent/20">
-                  <h4 className="font-medium mb-4 flex items-center gap-2">
-                    <Award className="h-4 w-4" />
-                    Müşteri Değerlendirmeleri
-                  </h4>
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-sm">Ortalama Puan:</span>
-                      <Badge variant="secondary">4.8/5</Badge>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Toplam Değerlendirme:</span>
-                      <Badge variant="outline">89</Badge>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Memnuniyet Oranı:</span>
-                      <Badge variant="default">96%</Badge>
-                    </div>
-                  </div>
-                </Card>
-              </div>
+            <TabsContent value="charts" className="space-y-6">
+              {staffPerformance.length === 0 ? (
+                <div className="text-center py-12">
+                  <BarChart3 className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">Henüz grafik verisi yok</h3>
+                  <p className="text-muted-foreground">Personel performans grafikleri görüntülenecek.</p>
+                </div>
+              ) : (
+                <StaffPerformanceCharts data={staffPerformance} />
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>
