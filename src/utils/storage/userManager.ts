@@ -1,7 +1,9 @@
-
 import { User, CreateUserRequest, AuthResponse, UserRole } from '@/types/user';
 import { hashPassword, verifyPassword, generateToken } from '@/utils/auth/security';
 import { getFromStorage, setToStorage } from './core';
+
+// Export the User type so it can be imported from this module
+export type { User } from '@/types/user';
 
 const USERS_KEY = 'users_v2';
 const CURRENT_USER_KEY = 'current_user_v2';

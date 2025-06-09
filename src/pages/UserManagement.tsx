@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,9 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import UserForm from '@/components/users/UserForm';
 import UserList from '@/components/users/UserList';
-import { getVisibleUsers } from '@/utils/storage/userManager';
+import { getVisibleUsers, type User } from '@/utils/storage/userManager';
 import { useToast } from '@/hooks/use-toast';
-import { User } from '@/utils/storage/userManager'; // Use the User type from userManager
 import { Users, UserPlus, Shield, Search, Settings } from 'lucide-react';
 
 const UserManagement = () => {
