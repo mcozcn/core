@@ -1,22 +1,21 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
-import { UserPlus, Users, Search, Filter } from 'lucide-react';
+import { UserPlus, Users, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { getVisibleUsers, type User } from '@/utils/storage/userManager';
-import CreatePersonnelForm from '@/components/personnel/CreatePersonnelForm';
+import { getPersonnel, type Personnel } from '@/utils/storage/personnel';
 import PersonnelList from '@/components/personnel/PersonnelList';
-import PersonnelDetailCard from '@/components/personnel/PersonnelDetailCard';
+import PersonnelAccountCard from '@/components/personnel/PersonnelAccountCard';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 
 const Personnel = () => {
-  const [personnel, setPersonnel] = useState<User[]>([]);
+  const [personnel, setPersonnel] = useState<Personnel[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [selectedPersonnel, setSelectedPersonnel] = useState<User | null>(null);
+  const [selectedPersonnel, setSelectedPersonnel] = useState<Personnel | null>(null);
   const [showDetailCard, setShowDetailCard] = useState(false);
   const { toast } = useToast();
 
@@ -27,8 +26,8 @@ const Personnel = () => {
   const loadPersonnel = async () => {
     try {
       setLoading(true);
-      const visibleUsers = await getVisibleUsers();
-      setPersonnel(visibleUsers);
+      const personnelData = await getPersonnel();
+      setPersonnel(personnelData);
     } catch (error) {
       console.error('Error loading personnel:', error);
       toast({
@@ -46,13 +45,13 @@ const Personnel = () => {
     setShowCreateDialog(false);
   };
 
-  const handleViewDetails = (person: User) => {
+  const handleViewDetails = (person: Personnel) => {
     setSelectedPersonnel(person);
     setShowDetailCard(true);
   };
 
   const filteredPersonnel = personnel.filter(person =>
-    person.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    person.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     person.title?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -62,7 +61,7 @@ const Personnel = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-serif">Personel Yönetimi</h1>
-          <p className="text-muted-foreground mt-1">Personel ekleme, düzenleme ve yönetimi</p>
+          <p className="text-muted-foreground mt-1">Personel cari hesap ve komisyon takibi</p>
         </div>
         
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
@@ -73,7 +72,11 @@ const Personnel = () => {
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[550px]">
-            <CreatePersonnelForm onSuccess={handlePersonnelUpdate} />
+            {/* CreatePersonnelForm component will be updated to use new Personnel type */}
+            <div className="p-4">
+              <h3 className="text-lg font-medium">Yeni Personel Formu</h3>
+              <p className="text-sm text-muted-foreground">Form yakında eklenecek</p>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
@@ -102,7 +105,7 @@ const Personnel = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Aktif Personel</p>
-                <p className="text-2xl font-bold text-green-600">{personnel.length}</p>
+                <p className="text-2xl font-bold text-green-600">{personnel.filter(p => p.isActive).length}</p>
               </div>
             </div>
           </CardContent>
@@ -112,10 +115,10 @@ const Personnel = () => {
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-purple-500 rounded-lg">
-                <Filter className="h-4 w-4 text-white" />
+                <Search className="h-4 w-4 text-white" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Filtrelenen</p>
+                <p className="text-sm text-muted-foreground">Sonuç</p>
                 <p className="text-2xl font-bold text-purple-600">{filteredPersonnel.length}</p>
               </div>
             </div>
@@ -151,23 +154,11 @@ const Personnel = () => {
               <span className="ml-3">Yükleniyor...</span>
             </div>
           ) : (
-            <>
-              {/* Quick Filters */}
-              <div className="flex flex-wrap gap-2 mb-6">
-                <Badge variant="outline" className="cursor-pointer hover:bg-accent">
-                  Tümü ({personnel.length})
-                </Badge>
-                <Badge variant="outline" className="cursor-pointer hover:bg-accent text-blue-600">
-                  Aktif ({personnel.length})
-                </Badge>
-              </div>
-              
-              <PersonnelList 
-                personnel={filteredPersonnel} 
-                onUpdate={handlePersonnelUpdate}
-                onViewDetails={handleViewDetails}
-              />
-            </>
+            <PersonnelList 
+              personnel={filteredPersonnel} 
+              onUpdate={handlePersonnelUpdate}
+              onViewDetails={handleViewDetails}
+            />
           )}
         </CardContent>
       </Card>
@@ -176,7 +167,7 @@ const Personnel = () => {
       <Dialog open={showDetailCard} onOpenChange={setShowDetailCard}>
         <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           {selectedPersonnel && (
-            <PersonnelDetailCard 
+            <PersonnelAccountCard 
               personnel={selectedPersonnel} 
               onClose={() => setShowDetailCard(false)}
             />

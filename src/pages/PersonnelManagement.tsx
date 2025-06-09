@@ -1,23 +1,21 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import CreatePersonnelForm from "@/components/personnel/CreatePersonnelForm";
-import PersonnelList from "@/components/personnel/PersonnelList";
-import StaffPerformanceDetail from "@/components/personnel/StaffPerformanceDetail";
-import { getVisibleUsers, User } from "@/utils/storage/userManager";
-import { useState, useEffect } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { UserPlus, Users, TrendingUp, Award } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import PersonnelDetailCard from "@/components/personnel/PersonnelDetailCard";
+import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { getPersonnel, type Personnel } from "@/utils/storage/personnel";
+import PersonnelList from "@/components/personnel/PersonnelList";
+import PersonnelAccountCard from "@/components/personnel/PersonnelAccountCard";
 
 const PersonnelManagement = () => {
-  const [personnel, setPersonnel] = useState<User[]>([]);
-  const [selectedStaff, setSelectedStaff] = useState<User | null>(null);
+  const [personnel, setPersonnel] = useState<Personnel[]>([]);
+  const [selectedStaff, setSelectedStaff] = useState<Personnel | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [selectedPersonnel, setSelectedPersonnel] = useState<User | null>(null);
+  const [selectedPersonnel, setSelectedPersonnel] = useState<Personnel | null>(null);
   const [showDetailCard, setShowDetailCard] = useState(false);
   const queryClient = useQueryClient();
 
@@ -27,8 +25,8 @@ const PersonnelManagement = () => {
 
   const loadPersonnel = async () => {
     try {
-      const visibleUsers = await getVisibleUsers();
-      setPersonnel(visibleUsers);
+      const personnelData = await getPersonnel();
+      setPersonnel(personnelData);
     } catch (error) {
       console.error('Error loading personnel:', error);
     }
@@ -37,10 +35,10 @@ const PersonnelManagement = () => {
   const handlePersonnelUpdate = () => {
     loadPersonnel();
     setShowCreateDialog(false);
-    queryClient.invalidateQueries({ queryKey: ['staffPerformance'] });
+    queryClient.invalidateQueries({ queryKey: ['personnelRecords'] });
   };
 
-  const handleViewDetails = (person: User) => {
+  const handleViewDetails = (person: Personnel) => {
     setSelectedPersonnel(person);
     setShowDetailCard(true);
   };
@@ -62,7 +60,10 @@ const PersonnelManagement = () => {
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[550px]">
-            <CreatePersonnelForm onSuccess={handlePersonnelUpdate} />
+            <div className="p-4">
+              <h3 className="text-lg font-medium">Yeni Personel Formu</h3>
+              <p className="text-sm text-muted-foreground">Form yakında eklenecek</p>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
@@ -91,7 +92,7 @@ const PersonnelManagement = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Aktif Personel</p>
-                <p className="text-2xl font-bold text-green-600">{personnel.filter(p => p.role === 'user').length}</p>
+                <p className="text-2xl font-bold text-green-600">{personnel.filter(p => p.isActive).length}</p>
               </div>
             </div>
           </CardContent>
@@ -157,7 +158,7 @@ const PersonnelManagement = () => {
                             style={{ backgroundColor: staff.color }}
                           />
                           <div>
-                            <h3 className="font-medium">{staff.displayName}</h3>
+                            <h3 className="font-medium">{staff.name}</h3>
                             <p className="text-sm text-muted-foreground">{staff.title}</p>
                           </div>
                         </div>
@@ -171,7 +172,7 @@ const PersonnelManagement = () => {
               </div>
               
               {selectedStaff ? (
-                <StaffPerformanceDetail staff={selectedStaff} />
+                <PersonnelAccountCard personnel={selectedStaff} onClose={() => setSelectedStaff(null)} />
               ) : (
                 <Card className="p-8 text-center">
                   <div className="space-y-3">
@@ -190,7 +191,7 @@ const PersonnelManagement = () => {
       <Dialog open={showDetailCard} onOpenChange={setShowDetailCard}>
         <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           {selectedPersonnel && (
-            <PersonnelDetailCard 
+            <PersonnelAccountCard 
               personnel={selectedPersonnel} 
               onClose={() => setShowDetailCard(false)}
             />

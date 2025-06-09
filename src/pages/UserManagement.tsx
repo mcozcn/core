@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,25 +7,29 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import UserForm from '@/components/users/UserForm';
 import UserList from '@/components/users/UserList';
-import { getVisibleUsers, type User } from '@/utils/storage/userManager';
+import { getAllUsers, getCurrentUser, type User } from '@/utils/storage/userManager';
 import { useToast } from '@/hooks/use-toast';
 import { Users, UserPlus, Shield, Search, Settings } from 'lucide-react';
 
 const UserManagement = () => {
   const [users, setUsers] = useState<User[]>([]);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
-    loadUsers();
+    loadData();
   }, []);
 
-  const loadUsers = async () => {
+  const loadData = async () => {
     try {
       setLoading(true);
-      const visibleUsers = await getVisibleUsers();
-      setUsers(visibleUsers);
+      // Get all users including admin
+      const allUsers = await getAllUsers();
+      const current = await getCurrentUser();
+      setUsers(allUsers);
+      setCurrentUser(current);
     } catch (error) {
       console.error('Error loading users:', error);
       toast({
@@ -43,6 +48,8 @@ const UserManagement = () => {
     user.role?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const isAdmin = currentUser?.role === 'admin';
+
   return (
     <div className="container mx-auto p-6 animate-fadeIn space-y-6 max-w-7xl">
       {/* Header Section */}
@@ -52,8 +59,15 @@ const UserManagement = () => {
           <h1 className="text-3xl font-serif">Kullanıcı Yönetimi</h1>
         </div>
         <p className="text-muted-foreground max-w-2xl mx-auto">
-          Personel kullanıcılarını yönetin ve yetkilendirmeleri düzenleyin
+          Sistem kullanıcılarını yönetin ve yetkilendirmeleri düzenleyin
         </p>
+        {!isAdmin && (
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+            <p className="text-sm text-yellow-800 dark:text-yellow-200">
+              ⚠️ Kullanıcı düzenleme yetkiniz bulunmamaktadır. Sadece görüntüleme iznine sahipsiniz.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Stats Cards */}
@@ -93,8 +107,8 @@ const UserManagement = () => {
                 <Settings className="h-4 w-4 text-white" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Personel</p>
-                <p className="text-2xl font-bold text-orange-600">{users.filter(u => u.role === 'user').length}</p>
+                <p className="text-sm text-muted-foreground">Manager</p>
+                <p className="text-2xl font-bold text-orange-600">{users.filter(u => u.role === 'manager').length}</p>
               </div>
             </div>
           </CardContent>
@@ -107,8 +121,8 @@ const UserManagement = () => {
                 <Search className="h-4 w-4 text-white" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Filtrelenen</p>
-                <p className="text-2xl font-bold text-purple-600">{filteredUsers.length}</p>
+                <p className="text-sm text-muted-foreground">Personel</p>
+                <p className="text-2xl font-bold text-purple-600">{users.filter(u => u.role === 'user').length}</p>
               </div>
             </div>
           </CardContent>
@@ -130,10 +144,12 @@ const UserManagement = () => {
                 <Users className="h-4 w-4" />
                 Kullanıcılar ({filteredUsers.length})
               </TabsTrigger>
-              <TabsTrigger value="create" className="flex items-center gap-2">
-                <UserPlus className="h-4 w-4" />
-                Yeni Kullanıcı
-              </TabsTrigger>
+              {isAdmin && (
+                <TabsTrigger value="create" className="flex items-center gap-2">
+                  <UserPlus className="h-4 w-4" />
+                  Yeni Kullanıcı
+                </TabsTrigger>
+              )}
             </TabsList>
 
             <TabsContent value="users" className="space-y-6">
@@ -150,38 +166,32 @@ const UserManagement = () => {
                 </div>
               </div>
 
-              {/* Quick Filters */}
-              <div className="flex flex-wrap gap-2">
-                <Badge variant="outline" className="cursor-pointer hover:bg-accent">
-                  Tümü ({users.length})
-                </Badge>
-                <Badge variant="outline" className="cursor-pointer hover:bg-accent text-green-600">
-                  Admin ({users.filter(u => u.role === 'admin').length})
-                </Badge>
-                <Badge variant="outline" className="cursor-pointer hover:bg-accent text-blue-600">
-                  Personel ({users.filter(u => u.role === 'user').length})
-                </Badge>
-              </div>
-
               {loading ? (
                 <div className="flex items-center justify-center py-12">
                   <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
                   <span className="ml-3">Yükleniyor...</span>
                 </div>
               ) : (
-                <UserList users={filteredUsers} onUserUpdated={loadUsers} />
+                <UserList 
+                  users={filteredUsers} 
+                  onUserUpdated={loadData}
+                  currentUser={currentUser}
+                  canEdit={isAdmin}
+                />
               )}
             </TabsContent>
 
-            <TabsContent value="create" className="space-y-4">
-              <div className="bg-accent/20 p-6 rounded-lg">
-                <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
-                  <UserPlus className="h-5 w-5" />
-                  Yeni Kullanıcı Oluştur
-                </h3>
-                <UserForm onSuccess={loadUsers} />
-              </div>
-            </TabsContent>
+            {isAdmin && (
+              <TabsContent value="create" className="space-y-4">
+                <div className="bg-accent/20 p-6 rounded-lg">
+                  <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
+                    <UserPlus className="h-5 w-5" />
+                    Yeni Kullanıcı Oluştur
+                  </h3>
+                  <UserForm onSuccess={loadData} />
+                </div>
+              </TabsContent>
+            )}
           </Tabs>
         </CardContent>
       </Card>
