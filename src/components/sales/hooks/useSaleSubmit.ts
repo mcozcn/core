@@ -40,29 +40,32 @@ export const useSaleSubmit = (onSuccess: () => void) => {
       // Process each item in the sale
       for (const item of formData.items) {
         if (item.type === 'product') {
-          const product = stock.find(p => p.productId.toString() === item.itemId);
+          const product = stock.find(p => p.id.toString() === item.itemId || p.productId?.toString() === item.itemId);
           if (!product) throw new Error("Ürün bulunamadı");
-          if (product.quantity < (item.quantity || 0)) throw new Error(`${product.productName} için yetersiz stok`);
+          if (product.quantity < (item.quantity || 0)) throw new Error(`${product.name || product.productName} için yetersiz stok`);
 
           const totalPrice = (product.price * (item.quantity || 0)) - item.discount;
           const commissionRate = item.commissionRate || (product.commissionRate || 0);
           const commissionAmount = commissionRate > 0 ? (commissionRate / 100) * totalPrice : 0;
 
-          // Create product sale record
+          // Create product sale record with all required Sale properties
           const newSale = {
             id: Date.now() + Math.random(),
             customerId: Number(formData.customerId),
+            customerName: customer.name,
+            stockItemId: product.id,
+            stockItemName: product.name || product.productName || '',
+            quantity: item.quantity || 0,
+            unitPrice: product.price,
+            totalPrice,
+            saleDate: new Date(),
             date: new Date().toISOString(),
             total: totalPrice,
             paymentMethod: "Nakit", // Default
-            productId: product.productId,
-            productName: product.productName,
-            quantity: item.quantity || 0,
-            totalPrice,
+            productId: product.productId || product.id,
+            productName: product.productName || product.name,
             discount: item.discount,
-            customerName: customer.name,
             customerPhone: customer.phone,
-            saleDate: new Date(),
             staffId: item.staffId,
             staffName: item.staffName,
             commissionAmount: commissionAmount
@@ -70,7 +73,7 @@ export const useSaleSubmit = (onSuccess: () => void) => {
 
           // Update stock
           const updatedStock = stock.map(stockItem =>
-            stockItem.productId === product.productId
+            (stockItem.id === product.id || stockItem.productId === product.productId)
               ? { ...stockItem, quantity: stockItem.quantity - (item.quantity || 0), lastUpdated: new Date() }
               : stockItem
           );
@@ -86,12 +89,12 @@ export const useSaleSubmit = (onSuccess: () => void) => {
             customerId: Number(formData.customerId),
             customerName: customer.name,
             type: 'product' as const,
-            itemId: product.productId,
-            itemName: product.productName,
+            itemId: product.id,
+            itemName: product.name || product.productName || '',
             amount: totalPrice,
             date: new Date(),
             isPaid: false,
-            description: `Ürün satışı: ${product.productName} (${item.quantity} adet)`,
+            description: `Ürün satışı: ${product.name || product.productName} (${item.quantity} adet)`,
             recordType: 'debt' as const,
             discount: item.discount,
             quantity: item.quantity,
@@ -117,6 +120,7 @@ export const useSaleSubmit = (onSuccess: () => void) => {
             serviceId: service.id,
             serviceName: service.name,
             price: totalPrice,
+            customerId: Number(formData.customerId),
             customerName: customer.name,
             customerPhone: customer.phone,
             saleDate: new Date(),

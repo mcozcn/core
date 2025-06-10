@@ -23,7 +23,7 @@ const EditServiceForm = ({ service, showForm, setShowForm }: EditServiceFormProp
     name: service.name || '',
     price: service.price !== undefined ? service.price.toString() : '0',
     description: service.description || '',
-    duration: service.duration || '',
+    duration: service.duration !== undefined ? service.duration.toString() : '60',
     type: service.type || 'one-time',
     sessionCount: service.sessionCount !== undefined ? service.sessionCount.toString() : '1',
     commissionRate: service.commissionRate !== undefined ? service.commissionRate.toString() : '0',
@@ -42,7 +42,7 @@ const EditServiceForm = ({ service, showForm, setShowForm }: EditServiceFormProp
               name: formData.name,
               price: Number(formData.price),
               description: formData.description,
-              duration: formData.duration,
+              duration: Number(formData.duration),
               type: formData.type as 'recurring' | 'one-time',
               sessionCount: Number(formData.sessionCount),
               commissionRate: Number(formData.commissionRate),
@@ -98,9 +98,11 @@ const EditServiceForm = ({ service, showForm, setShowForm }: EditServiceFormProp
         <div>
           <Label>Süre (dk)</Label>
           <Input
+            type="number"
             value={formData.duration}
             onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
             placeholder="Hizmet süresini girin"
+            required
           />
         </div>
 

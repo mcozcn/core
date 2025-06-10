@@ -66,17 +66,20 @@ const SaleForm = ({ showForm, setShowForm, stock, sales }: SaleFormProps) => {
       const newSale: Sale = {
         id: Date.now(),
         customerId: customer.id,
+        customerName: customer.name,
+        stockItemId: product.id,
+        stockItemName: product.productName || product.name || '',
+        quantity,
+        unitPrice: product.price,
+        totalPrice,
+        saleDate: new Date(),
         date: new Date().toISOString(),
         total: totalPrice,
         paymentMethod: "Nakit", // Default
         productId: product.productId,
         productName: product.productName,
-        quantity,
-        totalPrice,
         discount,
-        customerName: customer.name,
         customerPhone: customer.phone,
-        saleDate: new Date(),
       };
 
       // Update stock
@@ -94,8 +97,8 @@ const SaleForm = ({ showForm, setShowForm, stock, sales }: SaleFormProps) => {
         id: Date.now(),
         customerId: Number(saleData.customerId),
         type: 'product',
-        itemId: product.productId,
-        itemName: product.productName,
+        itemId: product.productId || product.id,
+        itemName: product.productName || product.name || '',
         amount: totalPrice,
         date: new Date(),
         isPaid: false,

@@ -61,6 +61,7 @@ export interface Service {
   type?: 'one-time' | 'recurring';
   sessionCount?: number;
   commissionRate?: number;
+  createdAt?: Date;
 }
 
 export interface ServiceSale {
@@ -69,6 +70,7 @@ export interface ServiceSale {
   serviceName: string;
   price: number;
   saleDate: Date;
+  customerId?: number;
   customerName?: string;
   customerPhone?: string;
   staffId?: number;
@@ -90,6 +92,7 @@ export interface StockItem {
   productId?: number; // For backward compatibility
   commissionRate?: number;
   lastUpdated?: Date;
+  criticalLevel?: number;
 }
 
 export interface StockMovement {
@@ -100,6 +103,11 @@ export interface StockMovement {
   movementDate: Date;
   type: 'in' | 'out';
   reason?: string;
+  date?: Date; // For backward compatibility
+  productId?: number; // For backward compatibility
+  description?: string;
+  quantity?: number;
+  cost?: number;
 }
 
 export interface Sale {
@@ -112,7 +120,7 @@ export interface Sale {
   unitPrice: number;
   totalPrice: number;
   saleDate: Date;
-  date?: Date; // For backward compatibility
+  date?: string; // For backward compatibility
   productId?: number; // For backward compatibility
   productName?: string; // For backward compatibility
   customerPhone?: string;
@@ -181,6 +189,9 @@ export interface UserPerformance {
   date: Date;
   activityType: string;
   details: string;
+  appointmentCount?: number;
+  salesCount?: number;
+  totalSales?: number;
 }
 
 export interface UserActivity {
@@ -190,4 +201,6 @@ export interface UserActivity {
   timestamp: Date;
   activityType: string;
   details: string;
+  action?: string; // For backward compatibility
+  username?: string; // For backward compatibility
 }
