@@ -11,7 +11,7 @@ import { Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { getCustomerRecords, setCustomerRecords, type CustomerRecord } from '@/utils/storage';
 
 interface CustomerInstallmentFormProps {
@@ -28,8 +28,14 @@ const CustomerInstallmentForm = ({ customerId, onSuccess }: CustomerInstallmentF
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Use useQuery to get customer records
+  const { data: allRecords = [] } = useQuery({
+    queryKey: ['customerRecords'],
+    queryFn: getCustomerRecords,
+  });
+
   // Mevcut borç hesaplama
-  const existingRecords = getCustomerRecords().filter(record => record.customerId === customerId);
+  const existingRecords = allRecords.filter(record => record.customerId === customerId);
   const totalDebt = existingRecords.reduce((acc, record) => 
     record.type !== 'payment' ? acc + record.amount : acc, 0
   );
@@ -38,7 +44,7 @@ const CustomerInstallmentForm = ({ customerId, onSuccess }: CustomerInstallmentF
   );
   const currentDebt = Math.max(0, totalDebt - totalPayments);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (operationType === 'installment' && (!installmentAmount || Number(installmentAmount) > currentDebt)) {
@@ -53,7 +59,7 @@ const CustomerInstallmentForm = ({ customerId, onSuccess }: CustomerInstallmentF
     const newRecord: CustomerRecord = {
       id: Date.now(),
       customerId,
-      type: operationType === 'add_debt' ? 'service' : 'payment',
+      type: operationType === 'add_debt' ? 'debt' : 'payment',
       itemId: 0,
       itemName: operationType === 'add_debt' ? 'Borç Eklendi' : 'Vadeli Ödeme',
       amount: operationType === 'add_debt' ? Number(amount) : -Number(installmentAmount),
@@ -66,8 +72,8 @@ const CustomerInstallmentForm = ({ customerId, onSuccess }: CustomerInstallmentF
 
     console.log('Yeni vadeli ödeme kaydı:', newRecord);
 
-    const existingRecords = getCustomerRecords();
-    setCustomerRecords([...existingRecords, newRecord]);
+    const existingRecords = await getCustomerRecords();
+    await setCustomerRecords([...existingRecords, newRecord]);
     queryClient.invalidateQueries({ queryKey: ['customerRecords'] });
 
     toast({

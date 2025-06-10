@@ -1,23 +1,14 @@
-import { type DateRange } from 'react-day-picker';
-
-export type UserRole = 'admin' | 'power_user' | 'staff';
-
 export interface Appointment {
   id: number;
   customerId: number;
-  customerName?: string;  // Added for UI display
+  customerName: string;
   serviceId: number;
-  service: string;       // Changed from optional to required
-  staffId: number;
-  staffName?: string;     // Added for UI display
-  staffColor?: string;    // Added for UI display
-  date: string;
-  time: string;
+  serviceName: string;
+  date: Date;
+  startTime: string;
+  endTime: string;
+  price: number;
   notes?: string;
-  status?: 'pending' | 'confirmed' | 'cancelled';
-  cancellationNote?: string;
-  note?: string;
-  createdAt?: Date;
 }
 
 export interface Customer {
@@ -27,29 +18,21 @@ export interface Customer {
   email?: string;
   address?: string;
   notes?: string;
-  createdAt: Date;
-  updatedAt?: Date;
+  appointments?: Appointment[];
 }
 
 export interface CustomerRecord {
   id: number;
   customerId: number;
-  date: string | Date;   // Allow both string and Date
-  type: 'note' | 'appointment' | 'sale' | 'service' | 'product' | 'payment';
+  type: 'payment' | 'debt';
+  itemId: number;
+  itemName: string;
+  amount: number;
+  date: Date;
+  dueDate?: Date;
+  isPaid?: boolean;
   description?: string;
-  notes?: string;
-  itemName?: string;     // Added for UI display
-  amount?: number;       // Added for financial records
-  itemId?: number;       // Reference to the sold item
-  isPaid?: boolean;      // Payment status
-  paymentMethod?: string; // How payment was made
-  discount?: number;     // Any discount applied
-  dueDate?: Date;        // When payment is due
-  recordType?: 'debt' | 'payment'; // Type of financial record
-  quantity?: number;      // Quantity for products
-  staffId?: number;       // Staff who made the sale/service
-  staffName?: string;     // Staff name
-  commissionAmount?: number; // Commission for the staff
+  recordType?: 'debt' | 'payment' | 'installment';
 }
 
 export interface Service {
@@ -57,152 +40,100 @@ export interface Service {
   name: string;
   description?: string;
   price: number;
-  duration: string | number;  // Modified to accept both string and number
-  type?: 'recurring' | 'one-time';
-  sessionCount?: number;
-  commissionRate?: number;
-  createdAt?: Date;
+  duration: number;
 }
 
 export interface ServiceSale {
   id: number;
   serviceId: number;
-  serviceName?: string;
+  serviceName: string;
   price: number;
-  saleDate: string | Date;
-  customerName?: string;
-  customerPhone?: string;
-  customerId?: number;
-  staffId?: number;
-  staffName?: string;
-  commissionAmount?: number;
-  totalPrice?: number;
-  productName?: string;  // Added for compatibility with Product sales
+  saleDate: Date;
 }
 
 export interface StockItem {
   id: number;
-  productId: number;
-  productName: string;
-  quantity: number;
+  name: string;
+  description?: string;
   price: number;
-  cost: number;
+  quantity: number;
+  unit: string;
   category: string;
-  criticalLevel: number;
-  createdAt: Date;
-  lastUpdated: Date;
-  commissionRate?: number; // Added for commission calculation
+}
+
+export interface StockMovement {
+  id: number;
+  stockItemId: number;
+  stockItemName: string;
+  quantityChange: number;
+  movementDate: Date;
+  type: 'in' | 'out';
+  reason?: string;
 }
 
 export interface Sale {
   id: number;
   customerId: number;
-  date: string;
-  total: number;
-  paymentMethod: string;
-  notes?: string;
-  saleDate?: string | Date;
-  productId?: number;
-  productName?: string;
-  quantity?: number;
-  totalPrice?: number;
-  customerName?: string;
-  customerPhone?: string;
-  staffId?: number;
-  staffName?: string;
-  commissionAmount?: number;
-  discount?: number;     // Added for discount handling
-  serviceName?: string;  // Added for compatibility with Service sales
-  price?: number;        // Added for compatibility with Service sales
+  customerName: string;
+  stockItemId: number;
+  stockItemName: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  saleDate: Date;
 }
 
 export interface Cost {
   id: number;
-  date: string | Date;  // Allow both string and Date
+  name: string;
+  description?: string;
   amount: number;
-  description: string;
+  date: Date;
   category: string;
-  createdAt?: Date;
 }
 
 export interface Payment {
   id: number;
-  saleId: number;
-  date: string;
+  customerId: number;
+  customerName: string;
   amount: number;
-  paymentMethod: string;
-  notes?: string;
+  date: Date;
+  method: string;
 }
 
 export interface User {
   id: number;
   username: string;
-  password: string;
+  password?: string;
   displayName: string;
-  email: string;
-  role: UserRole;
-  title: string;
-  color: string;
-  allowedPages: string[];
-  canEdit: boolean;
-  canDelete: boolean;
-  createdAt: Date;
-  isVisible?: boolean; // Admin ve power user gizli olacak
+  role: 'admin' | 'manager' | 'user';
+  allowedPages?: string[];
 }
 
 export interface StaffPerformance {
   id: number;
-  name: string;
-  role: string;
-  servicesProvided: number;
-  totalRevenue: number;
-  appointmentsCount: number;
-  confirmedAppointments: number;
-  cancelledAppointments: number;
-  pendingAppointments: number;
-  productSales: number;
-  totalCommission: number;
-  avgRating?: number; // Made optional since we're removing rating system
-}
-
-export interface StaffCommission {
-  id: number;
   staffId: number;
   staffName: string;
-  date: string | Date;
-  serviceId?: number;
-  productId?: number;
-  itemName: string;
-  amount: number;
-  commissionRate: number;
-  commissionAmount: number;
-  isPaid: boolean;
-  paidDate?: string | Date;
-}
-
-export interface StockMovement {
-  id: number;
-  productId: number;
-  quantity: number;
-  type: 'in' | 'out';
-  date: string;
-  cost: number;
-  description?: string;
+  date: Date;
+  appointmentsCompleted: number;
+  salesAmount: number;
+  notes?: string;
 }
 
 export interface UserPerformance {
-  id: number; // Added the required id field
+  id: number;
   userId: number;
-  appointmentCount: number;
-  salesCount: number;
-  totalSales: number;
+  userName: string;
+  date: Date;
+  activityType: string;
+  details: string;
 }
 
 export interface UserActivity {
   id: number;
   userId: number;
-  username: string;
-  action: string;
+  userName: string;
+  timestamp: Date;
+  activityType: string;
   details: string;
-  timestamp: string;
 }
