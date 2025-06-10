@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { createUser, updateUser, type User } from '@/utils/storage/userManager';
 import { AVAILABLE_PAGES } from '@/types/user';
 import { UserPlus, Save } from 'lucide-react';
+import { hashPassword } from '@/utils/auth/security';
 
 interface UserFormProps {
   onSuccess: () => void;
@@ -107,13 +108,13 @@ const UserForm = ({ onSuccess, onCancel, editingUser }: UserFormProps) => {
         
         // Only include password if it was changed
         if (formData.password) {
-          updateData.password = formData.password;
+          updateData.passwordHash = await hashPassword(formData.password);
         }
         
         success = await updateUser(editingUser.id, updateData);
       } else {
         // Create new user
-        success = await createUser({
+        const newUser = await createUser({
           username: formData.username,
           password: formData.password,
           displayName: formData.displayName,
@@ -122,6 +123,8 @@ const UserForm = ({ onSuccess, onCancel, editingUser }: UserFormProps) => {
           canEdit: formData.canEdit,
           canDelete: formData.canDelete
         });
+        
+        success = !!newUser;
       }
 
       if (success) {
