@@ -312,7 +312,7 @@ export const addUserActivity = (activity: Omit<UserActivity, 'id' | 'timestamp'>
   const newActivity: UserActivity = {
     ...activity,
     id: Date.now(),
-    timestamp: new Date().toISOString()
+    timestamp: new Date() // Fix: Use Date object instead of string
   };
   setUserActivities([...activities, newActivity]);
   

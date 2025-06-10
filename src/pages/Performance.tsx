@@ -30,11 +30,26 @@ const Performance = () => {
   });
 
   // Calculate overall statistics
-  const totalRevenue = staffPerformance.reduce((sum, staff) => sum + staff.totalRevenue, 0);
-  const totalAppointments = staffPerformance.reduce((sum, staff) => sum + staff.appointmentsCount, 0);
-  const totalConfirmed = staffPerformance.reduce((sum, staff) => sum + staff.confirmedAppointments, 0);
-  const totalCommission = staffPerformance.reduce((sum, staff) => sum + staff.totalCommission, 0);
+  const totalRevenue = staffPerformance.reduce((sum, staff) => sum + (staff.totalRevenue || 0), 0);
+  const totalAppointments = staffPerformance.reduce((sum, staff) => sum + (staff.appointmentsCount || 0), 0);
+  const totalConfirmed = staffPerformance.reduce((sum, staff) => sum + (staff.confirmedAppointments || 0), 0);
+  const totalCommission = staffPerformance.reduce((sum, staff) => sum + (staff.totalCommission || 0), 0);
   const overallSuccessRate = totalAppointments > 0 ? Math.round((totalConfirmed / totalAppointments) * 100) : 0;
+
+  // Transform staff performance data to match expected interface
+  const transformedStaffData = staffPerformance.map(staff => ({
+    id: staff.id,
+    name: staff.name || staff.staffName || 'Unknown',
+    role: staff.role || 'Staff',
+    servicesProvided: staff.servicesProvided || 0,
+    totalRevenue: staff.totalRevenue || 0,
+    appointmentsCount: staff.appointmentsCount || 0,
+    confirmedAppointments: staff.confirmedAppointments || 0,
+    cancelledAppointments: staff.cancelledAppointments || 0,
+    pendingAppointments: staff.pendingAppointments || 0,
+    productSales: staff.productSales || 0,
+    totalCommission: staff.totalCommission || 0,
+  }));
 
   if (isLoading) {
     return (
@@ -138,7 +153,7 @@ const Performance = () => {
             </TabsList>
 
             <TabsContent value="cards" className="space-y-6">
-              {staffPerformance.length === 0 ? (
+              {transformedStaffData.length === 0 ? (
                 <div className="text-center py-12">
                   <Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                   <h3 className="text-lg font-medium mb-2">Henüz personel verisi yok</h3>
@@ -146,7 +161,7 @@ const Performance = () => {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {staffPerformance.map((staff) => (
+                  {transformedStaffData.map((staff) => (
                     <StaffPerformanceCard key={staff.id} staff={staff} />
                   ))}
                 </div>
@@ -154,14 +169,14 @@ const Performance = () => {
             </TabsContent>
 
             <TabsContent value="charts" className="space-y-6">
-              {staffPerformance.length === 0 ? (
+              {transformedStaffData.length === 0 ? (
                 <div className="text-center py-12">
                   <BarChart3 className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                   <h3 className="text-lg font-medium mb-2">Henüz grafik verisi yok</h3>
                   <p className="text-muted-foreground">Personel performans grafikleri görüntülenecek.</p>
                 </div>
               ) : (
-                <StaffPerformanceCharts data={staffPerformance} />
+                <StaffPerformanceCharts data={transformedStaffData} />
               )}
             </TabsContent>
           </Tabs>
