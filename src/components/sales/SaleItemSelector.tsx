@@ -170,14 +170,24 @@ const SaleItemSelector = ({ item, index, onUpdate, onRemove }: SaleItemSelectorP
             Personel
           </Label>
           <Select
-            value={item.staffId || ''}
-            onValueChange={(value) => onUpdate(index, { ...item, staffId: value, staffName: staffUsers.find(s => s.id.toString() === value)?.displayName || staffUsers.find(s => s.id.toString() === value)?.username })}
+            value={item.staffId || 'no-staff'}
+            onValueChange={(value) => {
+              if (value === 'no-staff') {
+                onUpdate(index, { ...item, staffId: undefined, staffName: undefined });
+              } else {
+                onUpdate(index, { 
+                  ...item, 
+                  staffId: value, 
+                  staffName: staffUsers.find(s => s.id.toString() === value)?.displayName || staffUsers.find(s => s.id.toString() === value)?.username 
+                });
+              }
+            }}
           >
             <SelectTrigger className="h-9">
               <SelectValue placeholder="Personel seçin" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Personel Yok</SelectItem>
+              <SelectItem value="no-staff">Personel Yok</SelectItem>
               {staffUsers.map((staff) => (
                 <SelectItem key={staff.id} value={staff.id.toString()}>
                   {staff.displayName || staff.username}
