@@ -126,7 +126,7 @@ const StockEntryForm = ({ showForm, setShowForm, stock }: StockEntryFormProps) =
             <SelectContent>
               {stock.map((item) => (
                 <SelectItem key={item.productId} value={item.productId.toString()}>
-                  {item.name} - Stok: {item.quantity}
+                  {item.productName} - Stok: {item.quantity}
                 </SelectItem>
               ))}
             </SelectContent>

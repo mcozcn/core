@@ -92,7 +92,7 @@ const SaleItemSelector = ({ item, index, onUpdate, onRemove }: SaleItemSelectorP
               {item.type === 'product' 
                 ? stock.map(product => (
                     <SelectItem key={product.productId} value={product.productId.toString()}>
-                      {product.name} - ₺{product.price}
+                      {product.productName} - ₺{product.price}
                     </SelectItem>
                   ))
                 : services.map(service => (
