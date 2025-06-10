@@ -10,6 +10,7 @@ import React from 'react';
 import Dashboard from '@/pages/Dashboard';
 import Appointments from '@/pages/Appointments';
 import Customers from '@/pages/Customers';
+import PaymentTracking from '@/pages/PaymentTracking';
 import Services from '@/pages/Services';
 import Stock from '@/pages/Stock';
 import Sales from '@/pages/Sales';
@@ -51,6 +52,7 @@ const AppContent = () => {
           <Route path="/" element={<Dashboard />} />
           <Route path="/appointments" element={<Appointments />} />
           <Route path="/customers" element={<Customers />} />
+          <Route path="/payment-tracking" element={<PaymentTracking />} />
           <Route path="/services" element={<Services />} />
           <Route path="/stock" element={<Stock />} />
           <Route path="/sales" element={<Sales />} />

@@ -1,6 +1,6 @@
 
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Calendar, Users, BarChart3, Package, DollarSign, CreditCard, ShoppingCart, Database, BarChart, Menu, User, LogOut } from "lucide-react";
+import { Calendar, Users, BarChart3, Package, DollarSign, CreditCard, ShoppingCart, Database, BarChart, Menu, User, LogOut, Clock } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from "./ui/button";
@@ -20,6 +20,7 @@ const Navigation = () => {
     { to: "/", label: "Panel", icon: BarChart3, permission: "dashboard" },
     { to: "/appointments", label: "Randevular", icon: Calendar, permission: "appointments" },
     { to: "/customers", label: "Müşteriler", icon: Users, permission: "customers" },
+    { to: "/payment-tracking", label: "Ödeme Takip", icon: Clock, permission: "payment_tracking" },
     { to: "/stock", label: "Stok ve Hizmet Yönetimi", icon: Package, permission: "stock" },
     { to: "/sales", label: "Satışlar", icon: ShoppingCart, permission: "sales" },
     { to: "/costs", label: "Masraflar", icon: DollarSign, permission: "costs" },

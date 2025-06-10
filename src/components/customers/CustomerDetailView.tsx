@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +7,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getCustomerRecords, getAppointments, type Customer, type Appointment } from '@/utils/storage';
 import CustomerRecordsList from './CustomerRecordsList';
 import CustomerAppointmentsList from './CustomerAppointmentsList';
-import CustomerDebtForm from './forms/CustomerDebtForm';
+import CustomerInstallmentForm from './forms/CustomerInstallmentForm';
 import CustomerPaymentForm from './forms/CustomerPaymentForm';
 import EditCustomerForm from './EditCustomerForm';
 import { Phone, Mail, MapPin, Calendar, Edit } from 'lucide-react';
@@ -134,7 +133,7 @@ const CustomerDetailView = ({ customer, onEdit }: CustomerDetailViewProps) => {
           <TabsTrigger value="genel">Genel Bakış</TabsTrigger>
           <TabsTrigger value="islemler">İşlem Geçmişi</TabsTrigger>
           <TabsTrigger value="randevular">Randevu Geçmişi</TabsTrigger>
-          <TabsTrigger value="borc">Borç Ekle</TabsTrigger>
+          <TabsTrigger value="vadeli">Vadeli Ödeme</TabsTrigger>
           <TabsTrigger value="odeme">Ödeme Al</TabsTrigger>
         </TabsList>
 
@@ -249,13 +248,13 @@ const CustomerDetailView = ({ customer, onEdit }: CustomerDetailViewProps) => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="borc">
+        <TabsContent value="vadeli">
           <Card>
             <CardHeader>
-              <CardTitle>Borç Ekle</CardTitle>
+              <CardTitle>Vadeli Ödeme</CardTitle>
             </CardHeader>
             <CardContent>
-              <CustomerDebtForm 
+              <CustomerInstallmentForm 
                 customerId={customer.id}
                 onSuccess={() => queryClient.invalidateQueries({ queryKey: ['customerRecords'] })}
               />
