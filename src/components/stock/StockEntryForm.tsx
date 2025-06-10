@@ -4,8 +4,9 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { addStockMovement, getStock, setStock, type StockItem, type StockMovement } from "@/utils/localStorage";
 import { format } from 'date-fns';
 
@@ -22,8 +23,9 @@ const StockEntryForm = ({ showForm, setShowForm, stock }: StockEntryFormProps) =
     productId: '',
     quantity: '',
     cost: '',
+    price: '',
     description: '',
-    type: 'in' as 'in' | 'out', // Explicit type cast to 'in' | 'out'
+    type: 'in' as 'in' | 'out',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -33,6 +35,7 @@ const StockEntryForm = ({ showForm, setShowForm, stock }: StockEntryFormProps) =
       const productId = parseInt(formData.productId);
       const quantity = parseInt(formData.quantity);
       const cost = parseFloat(formData.cost);
+      const price = parseFloat(formData.price);
 
       if (isNaN(productId) || isNaN(quantity) || isNaN(cost)) {
         toast({
@@ -49,7 +52,7 @@ const StockEntryForm = ({ showForm, setShowForm, stock }: StockEntryFormProps) =
         toast({
           variant: "destructive",
           title: "Hata!",
-          description: "Bu ürün ID'siyle eşleşen bir ürün bulunamadı.",
+          description: "Bu ürün bulunamadı.",
         });
         return;
       }
@@ -65,11 +68,18 @@ const StockEntryForm = ({ showForm, setShowForm, stock }: StockEntryFormProps) =
 
       await addStockMovement(newStockMovement);
 
-      // Update stock quantity
+      // Update stock quantity and price
       const updatedStock = stock.map(item => {
         if (item.productId === productId) {
           const newQuantity = formData.type === 'in' ? item.quantity + quantity : item.quantity - quantity;
-          return { ...item, quantity: newQuantity };
+          const updatedItem = { ...item, quantity: newQuantity };
+          
+          // Update price if provided
+          if (!isNaN(price) && price > 0) {
+            updatedItem.price = price;
+          }
+          
+          return updatedItem;
         }
         return item;
       });
@@ -87,6 +97,7 @@ const StockEntryForm = ({ showForm, setShowForm, stock }: StockEntryFormProps) =
         productId: '',
         quantity: '',
         cost: '',
+        price: '',
         description: '',
         type: 'in',
       });
@@ -107,13 +118,19 @@ const StockEntryForm = ({ showForm, setShowForm, stock }: StockEntryFormProps) =
     <Card className="p-6 mb-8">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <Label>Ürün ID</Label>
-          <Input
-            value={formData.productId}
-            onChange={(e) => setFormData({ ...formData, productId: e.target.value })}
-            placeholder="Ürün ID'sini girin"
-            required
-          />
+          <Label>Ürün Seçimi</Label>
+          <Select value={formData.productId} onValueChange={(value) => setFormData({ ...formData, productId: value })}>
+            <SelectTrigger>
+              <SelectValue placeholder="Ürün seçin" />
+            </SelectTrigger>
+            <SelectContent>
+              {stock.map((item) => (
+                <SelectItem key={item.productId} value={item.productId.toString()}>
+                  {item.name} - Stok: {item.quantity}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div>
@@ -131,10 +148,22 @@ const StockEntryForm = ({ showForm, setShowForm, stock }: StockEntryFormProps) =
           <Label>Birim Maliyet (₺)</Label>
           <Input
             type="number"
+            step="0.01"
             value={formData.cost}
             onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
             placeholder="Birim maliyeti girin"
             required
+          />
+        </div>
+
+        <div>
+          <Label>Yeni Fiyat (₺) - Opsiyonel</Label>
+          <Input
+            type="number"
+            step="0.01"
+            value={formData.price}
+            onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+            placeholder="Yeni satış fiyatı"
           />
         </div>
 
@@ -149,14 +178,15 @@ const StockEntryForm = ({ showForm, setShowForm, stock }: StockEntryFormProps) =
 
         <div>
           <Label>Hareket Tipi</Label>
-          <select
-            className="w-full border rounded-md py-2 px-3"
-            value={formData.type}
-            onChange={(e) => setFormData({ ...formData, type: e.target.value as 'in' | 'out' })}
-          >
-            <option value="in">Giriş</option>
-            <option value="out">Çıkış</option>
-          </select>
+          <Select value={formData.type} onValueChange={(value: 'in' | 'out') => setFormData({ ...formData, type: value })}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="in">Giriş</SelectItem>
+              <SelectItem value="out">Çıkış</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="flex gap-2">

@@ -34,63 +34,13 @@ export interface PersonnelRecord {
 const PERSONNEL_KEY = 'personnel_v1';
 const PERSONNEL_RECORDS_KEY = 'personnel_records_v1';
 
-// Default personnel data
-const getDefaultPersonnel = (): Personnel[] => [
-  {
-    id: 1,
-    name: 'Ayşe Yılmaz',
-    title: 'Kuaför',
-    phone: '0532 123 4567',
-    email: 'ayse@salon.com',
-    color: '#e11d48',
-    commissionRate: 30,
-    notes: 'Saç kesimi ve boyama konusunda uzman',
-    isActive: true,
-    createdAt: new Date('2024-01-15'),
-    updatedAt: new Date('2024-01-15')
-  },
-  {
-    id: 2,
-    name: 'Mehmet Demir',
-    title: 'Berber',
-    phone: '0533 234 5678',
-    email: 'mehmet@salon.com',
-    color: '#0ea5e9',
-    commissionRate: 25,
-    notes: 'Erkek saç kesimi uzmanı',
-    isActive: true,
-    createdAt: new Date('2024-01-20'),
-    updatedAt: new Date('2024-01-20')
-  },
-  {
-    id: 3,
-    name: 'Fatma Özkan',
-    title: 'Estetisyen',
-    phone: '0534 345 6789',
-    email: 'fatma@salon.com',
-    color: '#8b5cf6',
-    commissionRate: 35,
-    notes: 'Cilt bakımı ve makyaj uzmanı',
-    isActive: true,
-    createdAt: new Date('2024-02-01'),
-    updatedAt: new Date('2024-02-01')
-  }
-];
-
 export const getPersonnel = async (): Promise<Personnel[]> => {
   try {
     const personnel = await getFromStorage<Personnel>(PERSONNEL_KEY);
-    if (personnel.length === 0) {
-      const defaultPersonnel = getDefaultPersonnel();
-      await setToStorage(PERSONNEL_KEY, defaultPersonnel);
-      return defaultPersonnel;
-    }
     return personnel;
   } catch (error) {
     console.error('Error getting personnel:', error);
-    const defaultPersonnel = getDefaultPersonnel();
-    await setToStorage(PERSONNEL_KEY, defaultPersonnel);
-    return defaultPersonnel;
+    return [];
   }
 };
 

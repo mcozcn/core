@@ -1,11 +1,10 @@
-
 import { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { RotateCcw, Plus } from "lucide-react";
 import { DateRange } from "react-day-picker";
-import { addDays } from "date-fns";
+import { addDays, startOfDay, endOfDay } from "date-fns";
 import AddCostForm from "@/components/costs/AddCostForm";
 import CostsTable from "@/components/costs/CostsTable";
 import CostsDashboard from "@/components/costs/CostsDashboard";
@@ -34,11 +33,13 @@ const Costs = () => {
     });
   };
 
-  // Filter costs by date range
+  // Filter costs by date range - include today
   const filteredCosts = costs.filter(cost => {
     if (!dateRange.from || !dateRange.to) return true;
     const costDate = new Date(cost.date);
-    return costDate >= dateRange.from && costDate <= dateRange.to;
+    const fromDate = startOfDay(dateRange.from);
+    const toDate = endOfDay(dateRange.to);
+    return costDate >= fromDate && costDate <= toDate;
   });
 
   return (

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,7 +6,7 @@ import { getCustomerRecords, getPayments, getCosts } from "@/utils/localStorage"
 import CustomerRecordsList from "@/components/customers/CustomerRecordsList";
 import MonthlyFinancialSummary from "@/components/dashboard/MonthlyFinancialSummary";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
-import { addDays } from "date-fns";
+import { addDays, startOfDay, endOfDay } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { RotateCcw } from "lucide-react";
 import { DateRange } from "react-day-picker";
@@ -75,17 +74,21 @@ const Financial = () => {
     });
   };
 
-  // Tarih aralığına göre kayıtları filtreleme
+  // Tarih aralığına göre kayıtları filtreleme - bugünü dahil et
   const filteredRecords = customerRecords.filter(record => {
     if (!dateRange.from || !dateRange.to) return true;
     const recordDate = new Date(record.date);
-    return recordDate >= dateRange.from && recordDate <= dateRange.to;
+    const fromDate = startOfDay(dateRange.from);
+    const toDate = endOfDay(dateRange.to);
+    return recordDate >= fromDate && recordDate <= toDate;
   });
 
   const filteredCosts = costs.filter(cost => {
     if (!dateRange.from || !dateRange.to) return true;
     const costDate = new Date(cost.date);
-    return costDate >= dateRange.from && costDate <= dateRange.to;
+    const fromDate = startOfDay(dateRange.from);
+    const toDate = endOfDay(dateRange.to);
+    return costDate >= fromDate && costDate <= toDate;
   });
 
   console.log('Financial page data:', { 

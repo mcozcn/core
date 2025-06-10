@@ -1,7 +1,8 @@
+
 import { getFromStorage, setToStorage } from './core';
 import { STORAGE_KEYS } from './storageKeys';
 import type { StaffPerformance } from './types';
-import { getVisibleUsers } from './userManager';
+import { getPersonnel } from './personnel';
 import { getAppointments } from './appointments';
 import { getServiceSales } from './services';
 import { getSales } from './stock';
@@ -10,17 +11,17 @@ export const getStaffPerformance = async (
   startDate?: Date, 
   endDate?: Date
 ): Promise<StaffPerformance[]> => {
-  // Get visible users (personnel from personnel section)
-  const users = await getVisibleUsers();
+  // Get personnel from personnel section instead of users
+  const personnel = await getPersonnel();
   
   // Get real data
   const appointments = await getAppointments();
   const serviceSales = await getServiceSales();
   const productSales = await getSales();
   
-  const staffPerformance = await Promise.all(users.map(async (user) => {
-    // Filter appointments for this user
-    const userAppointments = appointments.filter(apt => apt.staffId === user.id);
+  const staffPerformance = await Promise.all(personnel.map(async (person) => {
+    // Filter appointments for this person
+    const userAppointments = appointments.filter(apt => apt.staffId === person.id);
     
     // Calculate appointment metrics
     const totalAppointments = userAppointments.length;
@@ -28,9 +29,9 @@ export const getStaffPerformance = async (
     const cancelledAppointments = userAppointments.filter(apt => apt.status === 'cancelled').length;
     const pendingAppointments = userAppointments.filter(apt => apt.status === 'pending').length;
     
-    // Filter sales for this user
-    const userServiceSales = serviceSales.filter(sale => sale.staffId === user.id);
-    const userProductSales = productSales.filter(sale => sale.staffId === user.id);
+    // Filter sales for this person
+    const userServiceSales = serviceSales.filter(sale => sale.staffId === person.id);
+    const userProductSales = productSales.filter(sale => sale.staffId === person.id);
     
     // Calculate revenue
     const serviceRevenue = userServiceSales.reduce((sum, sale) => sum + (sale.totalPrice || sale.price || 0), 0);
@@ -42,9 +43,9 @@ export const getStaffPerformance = async (
                            userProductSales.reduce((sum, sale) => sum + (sale.commissionAmount || 0), 0);
     
     return {
-      id: user.id,
-      name: user.displayName || user.username,
-      role: user.title || 'Personel',
+      id: person.id,
+      name: person.name,
+      role: person.title,
       servicesProvided: userServiceSales.length,
       totalRevenue,
       appointmentsCount: totalAppointments,
@@ -53,7 +54,7 @@ export const getStaffPerformance = async (
       pendingAppointments,
       productSales: userProductSales.length,
       totalCommission,
-      avgRating: 0 // Removed rating system
+      avgRating: 0
     };
   }));
   
