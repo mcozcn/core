@@ -10,12 +10,26 @@ import {
 } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
 import { getStockMovements, getStock } from "@/utils/localStorage";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
 import { tr } from "date-fns/locale";
 
 interface StockMovementsTableProps {
   searchTerm?: string;
 }
+
+// Helper function to safely format dates
+const safeFormatDate = (dateValue: any): string => {
+  if (!dateValue) return '-';
+  
+  const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
+  
+  if (!isValid(date)) {
+    console.warn('Invalid date value:', dateValue);
+    return '-';
+  }
+  
+  return format(date, 'dd MMMM yyyy HH:mm', { locale: tr });
+};
 
 const StockMovementsTable = ({ searchTerm = '' }: StockMovementsTableProps) => {
   const { data: movements = [] } = useQuery({
@@ -30,7 +44,11 @@ const StockMovementsTable = ({ searchTerm = '' }: StockMovementsTableProps) => {
 
   // Sort movements to show the most recent first
   const sortedMovements = movements ? 
-    [...movements].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) 
+    [...movements].sort((a, b) => {
+      const dateA = a.date ? new Date(a.date) : new Date(0);
+      const dateB = b.date ? new Date(b.date) : new Date(0);
+      return dateB.getTime() - dateA.getTime();
+    }) 
     : [];
 
   // Filter movements based on search term
@@ -56,6 +74,8 @@ const StockMovementsTable = ({ searchTerm = '' }: StockMovementsTableProps) => {
     const previousMovements = movements
       .filter(m => 
         m.productId === productId && 
+        m.date && 
+        isValid(new Date(m.date)) &&
         new Date(m.date) < currentDate
       )
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -89,12 +109,13 @@ const StockMovementsTable = ({ searchTerm = '' }: StockMovementsTableProps) => {
           ) : (
             filteredMovements.map((movement) => {
               const product = stock.find(item => item.productId === movement.productId);
-              const previousMovement = getProductPreviousMovement(movement.productId, new Date(movement.date));
+              const currentDate = movement.date ? new Date(movement.date) : new Date();
+              const previousMovement = getProductPreviousMovement(movement.productId, currentDate);
               
               return (
                 <TableRow key={movement.id}>
                   <TableCell>
-                    {format(new Date(movement.date), 'dd MMMM yyyy HH:mm', { locale: tr })}
+                    {safeFormatDate(movement.date)}
                   </TableCell>
                   <TableCell>{product?.productName || 'Silinmiş ürün'}</TableCell>
                   <TableCell>
@@ -107,16 +128,14 @@ const StockMovementsTable = ({ searchTerm = '' }: StockMovementsTableProps) => {
                     </span>
                   </TableCell>
                   <TableCell className="text-right">{movement.quantity}</TableCell>
-                  <TableCell className="text-right">₺{movement.cost.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</TableCell>
+                  <TableCell className="text-right">₺{movement.cost ? movement.cost.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) : '0.00'}</TableCell>
                   <TableCell className="text-right">
-                    {previousMovement 
+                    {previousMovement && previousMovement.cost
                       ? `₺${previousMovement.cost.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}` 
                       : '-'}
                   </TableCell>
                   <TableCell>
-                    {previousMovement 
-                      ? format(new Date(previousMovement.date), 'dd MMMM yyyy HH:mm', { locale: tr })
-                      : '-'}
+                    {previousMovement ? safeFormatDate(previousMovement.date) : '-'}
                   </TableCell>
                   <TableCell>{movement.description}</TableCell>
                 </TableRow>
