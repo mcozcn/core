@@ -1,141 +1,178 @@
 
 import React, { useState } from 'react';
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { getCosts, setCosts, type Cost } from "@/utils/localStorage";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { X } from "lucide-react";
 
 interface AddCostFormProps {
   showForm: boolean;
   setShowForm: (show: boolean) => void;
-  costs: Cost[];
 }
 
-const AddCostForm = ({ showForm, setShowForm, costs }: AddCostFormProps) => {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [formData, setFormData] = useState({
-    name: '',
+const AddCostForm = ({ showForm, setShowForm }: AddCostFormProps) => {
+  const [costData, setCostData] = useState({
     description: '',
     amount: '',
     category: '',
-    date: new Date().toISOString().split('T')[0],
+    notes: ''
   });
+  
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     try {
+      if (!costData.description || !costData.amount || !costData.category) {
+        throw new Error("Lütfen tüm zorunlu alanları doldurun");
+      }
+
+      const costs = getCosts();
       const newCost: Cost = {
         id: Date.now(),
-        name: formData.name,
-        description: formData.description,
-        amount: Number(formData.amount),
-        category: formData.category,
-        date: new Date(formData.date),
+        description: costData.description,
+        amount: parseFloat(costData.amount),
+        category: costData.category,
+        date: new Date(),
+        notes: costData.notes || undefined
       };
 
       const updatedCosts = [...costs, newCost];
       setCosts(updatedCosts);
       queryClient.setQueryData(['costs'], updatedCosts);
 
-      console.log('Cost item saved:', newCost);
-
       toast({
-        title: "Başarıyla kaydedildi",
-        description: `${newCost.name} maliyet listenize eklendi.`,
+        title: "Masraf eklendi",
+        description: `${costData.description} masrafı başarıyla eklendi.`,
       });
 
-      setFormData({
-        name: '',
+      // Reset form
+      setCostData({
         description: '',
         amount: '',
         category: '',
-        date: new Date().toISOString().split('T')[0],
+        notes: ''
       });
+      
       setShowForm(false);
     } catch (error) {
-      console.error('Error saving cost:', error);
+      console.error('Error adding cost:', error);
       toast({
         variant: "destructive",
         title: "Hata!",
-        description: "Kayıt sırasında bir hata oluştu. Lütfen tekrar deneyin.",
+        description: error instanceof Error ? error.message : "Masraf eklenirken bir hata oluştu.",
       });
     }
   };
 
-  if (!showForm) return null;
+  const handleCancel = () => {
+    setCostData({
+      description: '',
+      amount: '',
+      category: '',
+      notes: ''
+    });
+    setShowForm(false);
+  };
 
   return (
-    <Card className="p-6 mb-8">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <Label>Maliyet Adı</Label>
-          <Input
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            placeholder="Maliyet adını girin"
-            required
-          />
-        </div>
+    <Dialog open={showForm} onOpenChange={setShowForm}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center justify-between">
+            Yeni Masraf Ekle
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={handleCancel}
+              className="h-6 w-6 rounded-full"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </DialogTitle>
+        </DialogHeader>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label>Masraf Açıklaması *</Label>
+            <Input
+              value={costData.description}
+              onChange={(e) => setCostData({ ...costData, description: e.target.value })}
+              placeholder="Masraf açıklaması"
+              required
+            />
+          </div>
 
-        <div>
-          <Label>Açıklama</Label>
-          <Input
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            placeholder="Maliyet açıklamasını girin"
-          />
-        </div>
+          <div>
+            <Label>Tutar (₺) *</Label>
+            <Input
+              type="number"
+              min="0"
+              step="0.01"
+              value={costData.amount}
+              onChange={(e) => setCostData({ ...costData, amount: e.target.value })}
+              placeholder="0.00"
+              required
+            />
+          </div>
 
-        <div>
-          <Label>Tutar (₺)</Label>
-          <Input
-            type="number"
-            value={formData.amount}
-            onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-            placeholder="Maliyet tutarını girin"
-            required
-          />
-        </div>
+          <div>
+            <Label>Kategori *</Label>
+            <Select value={costData.category} onValueChange={(value) => setCostData({ ...costData, category: value })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Kategori seçin" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="kira">Kira</SelectItem>
+                <SelectItem value="elektrik">Elektrik</SelectItem>
+                <SelectItem value="su">Su</SelectItem>
+                <SelectItem value="internet">İnternet</SelectItem>
+                <SelectItem value="malzeme">Malzeme</SelectItem>
+                <SelectItem value="temizlik">Temizlik</SelectItem>
+                <SelectItem value="pazarlama">Pazarlama</SelectItem>
+                <SelectItem value="personel">Personel</SelectItem>
+                <SelectItem value="vergi">Vergi</SelectItem>
+                <SelectItem value="sigorta">Sigorta</SelectItem>
+                <SelectItem value="bakım">Bakım/Onarım</SelectItem>
+                <SelectItem value="diğer">Diğer</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-        <div>
-          <Label>Kategori</Label>
-          <Input
-            value={formData.category}
-            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-            placeholder="Maliyet kategorisini girin"
-            required
-          />
-        </div>
+          <div>
+            <Label>Notlar</Label>
+            <Textarea
+              value={costData.notes}
+              onChange={(e) => setCostData({ ...costData, notes: e.target.value })}
+              placeholder="Ek notlar (opsiyonel)"
+              rows={2}
+            />
+          </div>
 
-        <div>
-          <Label>Tarih</Label>
-          <Input
-            type="date"
-            value={formData.date}
-            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-            required
-          />
-        </div>
-
-        <div className="flex gap-2">
-          <Button type="submit" className="flex-1">
-            Kaydet
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setShowForm(false)}
-          >
-            İptal
-          </Button>
-        </div>
-      </form>
-    </Card>
+          <div className="flex gap-2 pt-4">
+            <Button type="submit" className="flex-1">
+              Masraf Ekle
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleCancel}
+            >
+              İptal
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 };
 

@@ -4,8 +4,7 @@ import { Card } from "@/components/ui/card";
 import { DateRange } from "react-day-picker";
 import { addDays } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
-import { getSales, getServiceSales } from "@/utils/storage";
-import { getAllUsers } from "@/utils/auth";
+import { getSales, getServiceSales, getUsers } from "@/utils/localStorage";
 import { CommissionFilters } from "./commission/CommissionFilters";
 import { CommissionSummary } from "./commission/CommissionSummary";
 import { CommissionStaffList } from "./commission/CommissionStaffList";
@@ -31,7 +30,7 @@ const CommissionReport = () => {
   
   const { data: users = [] } = useQuery({
     queryKey: ['users'],
-    queryFn: getAllUsers,
+    queryFn: getUsers,
   });
 
   // Get staff users for the filter
@@ -42,7 +41,7 @@ const CommissionReport = () => {
     staffCommissionData, 
     totalCommissionAmount, 
     isEmpty 
-  } = useCommissionData(sales, serviceSales, date, selectedStaffId);
+  } = useCommissionData(sales, serviceSales, date, selectedStaffId, users);
 
   return (
     <Card className="p-6">

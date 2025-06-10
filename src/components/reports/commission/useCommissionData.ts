@@ -2,7 +2,7 @@
 import { DateRange } from "react-day-picker";
 import { isWithinInterval, startOfDay, endOfDay } from "date-fns";
 
-export const useCommissionData = (sales: any[], serviceSales: any[], date: DateRange | undefined, selectedStaffId: string) => {
+export const useCommissionData = (sales: any[], serviceSales: any[], date: DateRange | undefined, selectedStaffId: string, users: any[] = []) => {
   // Filter by date range
   const filterByDate = (saleDate: Date | string) => {
     if (!date?.from || !date?.to) return true;
@@ -41,7 +41,9 @@ export const useCommissionData = (sales: any[], serviceSales: any[], date: DateR
   filteredSales.forEach(sale => {
     if (sale.staffId && sale.commissionAmount) {
       const staffId = sale.staffId;
-      const staffName = sale.staffName || `Personel #${staffId}`;
+      // Get staff name from users array
+      const staffUser = users.find(user => user.id.toString() === staffId.toString());
+      const staffName = staffUser ? (staffUser.displayName || staffUser.username) : (sale.staffName || `Personel #${staffId}`);
       
       if (!commissionsByStaff.has(staffId)) {
         commissionsByStaff.set(staffId, {
@@ -68,7 +70,9 @@ export const useCommissionData = (sales: any[], serviceSales: any[], date: DateR
   filteredServiceSales.forEach(sale => {
     if (sale.staffId && sale.commissionAmount) {
       const staffId = sale.staffId;
-      const staffName = sale.staffName || `Personel #${staffId}`;
+      // Get staff name from users array
+      const staffUser = users.find(user => user.id.toString() === staffId.toString());
+      const staffName = staffUser ? (staffUser.displayName || staffUser.username) : (sale.staffName || `Personel #${staffId}`);
       
       if (!commissionsByStaff.has(staffId)) {
         commissionsByStaff.set(staffId, {
