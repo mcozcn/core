@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,7 +7,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { addStockMovement, getStock, setStock, type StockItem, type StockMovement } from "@/utils/localStorage";
-import { format } from 'date-fns';
 
 interface StockEntryFormProps {
   showForm: boolean;
@@ -58,12 +56,12 @@ const StockEntryForm = ({ showForm, setShowForm, stock }: StockEntryFormProps) =
       }
 
       const newStockMovement: Omit<StockMovement, 'id'> = {
-        productId: productId,
-        quantity: quantity,
+        stockItemId: productId,
+        stockItemName: existingProduct.productName || existingProduct.name || '',
+        quantityChange: quantity,
         type: formData.type,
-        date: format(new Date(), 'yyyy-MM-dd HH:mm:ss'),
-        cost: cost,
-        description: formData.description,
+        movementDate: new Date(),
+        reason: formData.description,
       };
 
       await addStockMovement(newStockMovement);

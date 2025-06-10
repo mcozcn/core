@@ -29,7 +29,7 @@ export const addUserActivity = async (activity: Omit<UserActivity, 'id' | 'times
   const newActivity: UserActivity = {
     ...activity,
     id: Date.now(),
-    timestamp: new Date().toISOString()
+    timestamp: new Date()
   };
 
   await setUserActivities([...activities, newActivity]);

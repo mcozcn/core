@@ -93,6 +93,7 @@ export interface StockItem {
   commissionRate?: number;
   lastUpdated?: Date;
   criticalLevel?: number;
+  createdAt?: Date;
 }
 
 export interface StockMovement {
@@ -155,10 +156,15 @@ export interface User {
   username: string;
   password?: string;
   displayName: string;
-  role: 'admin' | 'manager' | 'user';
+  role: 'admin' | 'manager' | 'user' | 'power_user' | 'staff';
   allowedPages?: string[];
   color?: string;
   title?: string;
+  email?: string;
+  isVisible?: boolean;
+  canEdit?: boolean;
+  canDelete?: boolean;
+  createdAt?: Date;
 }
 
 export interface StaffPerformance {

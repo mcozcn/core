@@ -42,20 +42,27 @@ export const getStaffPerformance = async (
     const totalCommission = userServiceSales.reduce((sum, sale) => sum + (sale.commissionAmount || 0), 0) +
                            userProductSales.reduce((sum, sale) => sum + (sale.commissionAmount || 0), 0);
     
-    return {
+    const staffData: StaffPerformance = {
       id: person.id,
+      staffId: person.id,
+      staffName: person.name,
       name: person.name,
       role: person.title,
-      servicesProvided: userServiceSales.length,
-      totalRevenue,
+      date: new Date(),
+      appointmentsCompleted: confirmedAppointments,
       appointmentsCount: totalAppointments,
       confirmedAppointments,
       cancelledAppointments,
       pendingAppointments,
+      servicesProvided: userServiceSales.length,
       productSales: userProductSales.length,
+      salesAmount: totalRevenue,
+      totalRevenue,
       totalCommission,
       avgRating: 0
     };
+    
+    return staffData;
   }));
   
   return staffPerformance;
@@ -76,8 +83,8 @@ export const updateStaffServiceCount = async (
     if (staff.id === staffId) {
       return {
         ...staff,
-        servicesProvided: staff.servicesProvided + serviceCount,
-        totalRevenue: staff.totalRevenue + revenue
+        servicesProvided: (staff.servicesProvided || 0) + serviceCount,
+        totalRevenue: (staff.totalRevenue || 0) + revenue
       };
     }
     return staff;
@@ -96,7 +103,7 @@ export const updateStaffAppointmentCount = async (
     if (staff.id === staffId) {
       return {
         ...staff,
-        appointmentsCount: staff.appointmentsCount + appointmentCount
+        appointmentsCount: (staff.appointmentsCount || 0) + appointmentCount
       };
     }
     return staff;
