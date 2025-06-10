@@ -19,10 +19,11 @@ import { useState } from "react";
 interface PersonnelListProps {
   personnel: Personnel[];
   onUpdate: () => void;
-  onPersonnelClick: (person: Personnel) => void;
+  onPersonnelClick?: (person: Personnel) => void;
+  onViewDetails?: (person: Personnel) => void;
 }
 
-const PersonnelList = ({ personnel, onUpdate, onPersonnelClick }: PersonnelListProps) => {
+const PersonnelList = ({ personnel, onUpdate, onPersonnelClick, onViewDetails }: PersonnelListProps) => {
   const { toast } = useToast();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedPersonnel, setSelectedPersonnel] = useState<Personnel | null>(null);
@@ -56,7 +57,18 @@ const PersonnelList = ({ personnel, onUpdate, onPersonnelClick }: PersonnelListP
   };
 
   const handlePersonnelClick = (person: Personnel) => {
-    onPersonnelClick(person);
+    if (onPersonnelClick) {
+      onPersonnelClick(person);
+    } else if (onViewDetails) {
+      onViewDetails(person);
+    }
+  };
+
+  const handleViewDetailsClick = (person: Personnel, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onViewDetails) {
+      onViewDetails(person);
+    }
   };
 
   return (
@@ -85,6 +97,15 @@ const PersonnelList = ({ personnel, onUpdate, onPersonnelClick }: PersonnelListP
             </div>
             
             <div className="flex gap-2">
+              {onViewDetails && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={(e) => handleViewDetailsClick(person, e)}
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+              )}
               <Button
                 variant="destructive"
                 size="icon"

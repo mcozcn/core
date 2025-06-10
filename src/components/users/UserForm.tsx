@@ -1,20 +1,22 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { createUser } from '@/utils/storage/userManager';
+import { createUser, updateUser, type User } from '@/utils/storage/userManager';
 import { AVAILABLE_PAGES } from '@/types/user';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, Save } from 'lucide-react';
 
 interface UserFormProps {
   onSuccess: () => void;
+  onCancel?: () => void;
+  editingUser?: User;
 }
 
-const UserForm = ({ onSuccess }: UserFormProps) => {
+const UserForm = ({ onSuccess, onCancel, editingUser }: UserFormProps) => {
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -26,6 +28,20 @@ const UserForm = ({ onSuccess }: UserFormProps) => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (editingUser) {
+      setFormData({
+        username: editingUser.username,
+        password: '', // Don't populate password for security
+        displayName: editingUser.displayName,
+        title: editingUser.title || '',
+        allowedPages: editingUser.allowedPages,
+        canEdit: editingUser.canEdit,
+        canDelete: editingUser.canDelete
+      });
+    }
+  }, [editingUser]);
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({
@@ -46,11 +62,20 @@ const UserForm = ({ onSuccess }: UserFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.username || !formData.password || !formData.displayName) {
+    if (!formData.username || !formData.displayName) {
       toast({
         variant: 'destructive',
         title: 'Hata',
         description: 'Lütfen tüm zorunlu alanları doldurun.'
+      });
+      return;
+    }
+
+    if (!editingUser && !formData.password) {
+      toast({
+        variant: 'destructive',
+        title: 'Hata',
+        description: 'Yeni kullanıcı için şifre gereklidir.'
       });
       return;
     }
@@ -67,47 +92,71 @@ const UserForm = ({ onSuccess }: UserFormProps) => {
     setIsSubmitting(true);
 
     try {
-      const success = await createUser({
-        username: formData.username,
-        password: formData.password,
-        displayName: formData.displayName,
-        title: formData.title,
-        allowedPages: formData.allowedPages,
-        canEdit: formData.canEdit,
-        canDelete: formData.canDelete
-      });
+      let success = false;
+      
+      if (editingUser) {
+        // Update existing user
+        const updateData: Partial<User> = {
+          username: formData.username,
+          displayName: formData.displayName,
+          title: formData.title,
+          allowedPages: formData.allowedPages,
+          canEdit: formData.canEdit,
+          canDelete: formData.canDelete
+        };
+        
+        // Only include password if it was changed
+        if (formData.password) {
+          updateData.password = formData.password;
+        }
+        
+        success = await updateUser(editingUser.id, updateData);
+      } else {
+        // Create new user
+        success = await createUser({
+          username: formData.username,
+          password: formData.password,
+          displayName: formData.displayName,
+          title: formData.title,
+          allowedPages: formData.allowedPages,
+          canEdit: formData.canEdit,
+          canDelete: formData.canDelete
+        });
+      }
 
       if (success) {
         toast({
           title: 'Başarılı',
-          description: 'Kullanıcı başarıyla oluşturuldu.'
+          description: editingUser ? 'Kullanıcı başarıyla güncellendi.' : 'Kullanıcı başarıyla oluşturuldu.'
         });
         
-        // Reset form
-        setFormData({
-          username: '',
-          password: '',
-          displayName: '',
-          title: '',
-          allowedPages: [],
-          canEdit: false,
-          canDelete: false
-        });
+        if (!editingUser) {
+          // Reset form only for new users
+          setFormData({
+            username: '',
+            password: '',
+            displayName: '',
+            title: '',
+            allowedPages: [],
+            canEdit: false,
+            canDelete: false
+          });
+        }
         
         onSuccess();
       } else {
         toast({
           variant: 'destructive',
           title: 'Hata',
-          description: 'Kullanıcı oluşturulamadı. Bu kullanıcı adı zaten kullanılıyor olabilir.'
+          description: editingUser ? 'Kullanıcı güncellenemedi.' : 'Kullanıcı oluşturulamadı. Bu kullanıcı adı zaten kullanılıyor olabilir.'
         });
       }
     } catch (error) {
-      console.error('Error creating user:', error);
+      console.error('Error saving user:', error);
       toast({
         variant: 'destructive',
         title: 'Hata',
-        description: 'Kullanıcı oluşturulurken bir hata oluştu.'
+        description: 'Kullanıcı kaydedilirken bir hata oluştu.'
       });
     } finally {
       setIsSubmitting(false);
@@ -116,6 +165,17 @@ const UserForm = ({ onSuccess }: UserFormProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-medium">
+          {editingUser ? 'Kullanıcı Düzenle' : 'Yeni Kullanıcı Oluştur'}
+        </h3>
+        {onCancel && (
+          <Button type="button" variant="outline" onClick={onCancel}>
+            İptal
+          </Button>
+        )}
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="username">Kullanıcı Adı *</Label>
@@ -129,14 +189,16 @@ const UserForm = ({ onSuccess }: UserFormProps) => {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password">Şifre *</Label>
+          <Label htmlFor="password">
+            {editingUser ? 'Yeni Şifre (Boş bırakın değiştirmemek için)' : 'Şifre *'}
+          </Label>
           <Input
             id="password"
             type="password"
             value={formData.password}
             onChange={(e) => handleInputChange('password', e.target.value)}
-            placeholder="Şifre"
-            required
+            placeholder={editingUser ? 'Yeni şifre' : 'Şifre'}
+            required={!editingUser}
           />
         </div>
 
@@ -229,8 +291,8 @@ const UserForm = ({ onSuccess }: UserFormProps) => {
         disabled={isSubmitting}
         className="w-full"
       >
-        <UserPlus className="mr-2 h-4 w-4" />
-        {isSubmitting ? 'Oluşturuluyor...' : 'Kullanıcı Oluştur'}
+        {editingUser ? <Save className="mr-2 h-4 w-4" /> : <UserPlus className="mr-2 h-4 w-4" />}
+        {isSubmitting ? 'Kaydediliyor...' : (editingUser ? 'Güncelle' : 'Kullanıcı Oluştur')}
       </Button>
     </form>
   );
