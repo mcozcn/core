@@ -1,54 +1,46 @@
-
 import React, { useState } from 'react';
-import { Card } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/components/ui/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { getServices, setServices, type Service } from "@/utils/localStorage";
-import { X, Save, FileText } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 
 interface AddServiceFormModalProps {
-  showForm: boolean;
-  setShowForm: (show: boolean) => void;
-  services: Service[];
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-const AddServiceFormModal = ({ showForm, setShowForm, services }: AddServiceFormModalProps) => {
+const AddServiceFormModal = ({ open, onOpenChange }: AddServiceFormModalProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
     name: '',
-    price: '',
     description: '',
+    price: '',
     duration: '',
-    type: 'one-time' as 'recurring' | 'one-time',
-    sessionCount: '1',
-    commissionRate: '0',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
+      const services = await getServices();
       const newService: Service = {
-        id: services.length + 1,
+        id: Date.now(),
         name: formData.name,
-        price: Number(formData.price),
         description: formData.description,
-        duration: formData.duration, // Allow string for duration
-        type: formData.type,
-        sessionCount: Number(formData.sessionCount),
-        commissionRate: Number(formData.commissionRate),
-        createdAt: new Date(),
+        price: Number(formData.price),
+        duration: Number(formData.duration),
       };
 
       const updatedServices = [...services, newService];
-      setServices(updatedServices);
+      await setServices(updatedServices);
       queryClient.setQueryData(['services'], updatedServices);
+
+      console.log('Service saved:', newService);
 
       toast({
         title: "Başarıyla kaydedildi",
@@ -57,14 +49,11 @@ const AddServiceFormModal = ({ showForm, setShowForm, services }: AddServiceForm
 
       setFormData({
         name: '',
-        price: '',
         description: '',
+        price: '',
         duration: '',
-        type: 'one-time',
-        sessionCount: '1',
-        commissionRate: '0',
       });
-      setShowForm(false);
+      onOpenChange(false);
     } catch (error) {
       console.error('Error saving service:', error);
       toast({
@@ -75,128 +64,70 @@ const AddServiceFormModal = ({ showForm, setShowForm, services }: AddServiceForm
     }
   };
 
-  if (!showForm) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <Card className="w-full max-w-2xl bg-white shadow-lg max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 z-10 bg-white border-b p-4 flex justify-between items-center">
-          <h3 className="text-xl font-semibold flex items-center">
-            <FileText className="mr-2 h-5 w-5" />
-            Yeni Hizmet Ekle
-          </h3>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => setShowForm(false)}
-          >
-            <X className="h-5 w-5" />
-          </Button>
-        </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Yeni Hizmet Ekle</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label>Hizmet Adı</Label>
+            <Input
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              placeholder="Hizmet adını girin"
+              required
+            />
+          </div>
 
-        <div className="p-4">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label>İsim</Label>
-              <Input
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Hizmet adını girin"
-                required
-              />
-            </div>
+          <div>
+            <Label>Açıklama</Label>
+            <Textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Hizmet açıklamasını girin"
+              className="min-h-[100px]"
+            />
+          </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Fiyat (₺)</Label>
-                <Input
-                  type="number"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  placeholder="Fiyat girin"
-                  required
-                />
-              </div>
+          <div>
+            <Label>Fiyat (₺)</Label>
+            <Input
+              type="number"
+              value={formData.price}
+              onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+              placeholder="Hizmet fiyatını girin"
+              required
+            />
+          </div>
 
-              <div>
-                <Label>Süre (dk)</Label>
-                <Input
-                  value={formData.duration}
-                  onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                  placeholder="Hizmet süresini girin"
-                />
-              </div>
-            </div>
+          <div>
+            <Label>Süre (dakika)</Label>
+            <Input
+              type="number"
+              value={formData.duration}
+              onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+              placeholder="Hizmet süresini girin"
+              required
+            />
+          </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Seans Sayısı</Label>
-                <Input
-                  type="number"
-                  min="1"
-                  value={formData.sessionCount}
-                  onChange={(e) => setFormData({ ...formData, sessionCount: e.target.value })}
-                  placeholder="Seans sayısını girin"
-                  required
-                />
-              </div>
-
-              <div>
-                <Label>Komisyon Oranı (%)</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={formData.commissionRate}
-                  onChange={(e) => setFormData({ ...formData, commissionRate: e.target.value })}
-                  placeholder="Komisyon oranı girin"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label>Hizmet Tipi</Label>
-              <RadioGroup
-                value={formData.type}
-                onValueChange={(value) => setFormData({ ...formData, type: value as 'recurring' | 'one-time' })}
-                className="flex space-x-4 mt-2"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="recurring" id="recurring" />
-                  <Label htmlFor="recurring">Sürekli</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="one-time" id="one-time" />
-                  <Label htmlFor="one-time">Tek Seferlik</Label>
-                </div>
-              </RadioGroup>
-            </div>
-
-            <div>
-              <Label>Açıklama</Label>
-              <Textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Açıklama girin"
-              />
-            </div>
-
-            <div className="flex gap-2 pt-4">
-              <Button type="submit" className="flex-1">
-                <Save className="mr-2 h-4 w-4" /> Kaydet
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowForm(false)}
-              >
-                <X className="mr-2 h-4 w-4" /> İptal
-              </Button>
-            </div>
-          </form>
-        </div>
-      </Card>
-    </div>
+          <div className="flex gap-2">
+            <Button type="submit" className="flex-1">
+              Kaydet
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
+              İptal
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 };
 

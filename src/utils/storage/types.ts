@@ -28,11 +28,13 @@ export interface Customer {
   address?: string;
   notes?: string;
   appointments?: Appointment[];
+  createdAt?: Date;
 }
 
 export interface CustomerRecord {
   id: number;
   customerId: number;
+  customerName?: string;
   type: 'payment' | 'debt' | 'service' | 'product';
   itemId: number;
   itemName: string;
@@ -43,6 +45,11 @@ export interface CustomerRecord {
   description?: string;
   recordType?: 'debt' | 'payment' | 'installment' | 'service' | 'product';
   paymentMethod?: string;
+  discount?: number;
+  quantity?: number;
+  staffId?: number;
+  staffName?: string;
+  commissionAmount?: number;
 }
 
 export interface Service {
@@ -51,6 +58,9 @@ export interface Service {
   description?: string;
   price: number;
   duration: number;
+  type?: 'one-time' | 'recurring';
+  sessionCount?: number;
+  commissionRate?: number;
 }
 
 export interface ServiceSale {
@@ -59,6 +69,12 @@ export interface ServiceSale {
   serviceName: string;
   price: number;
   saleDate: Date;
+  customerName?: string;
+  customerPhone?: string;
+  staffId?: number;
+  staffName?: string;
+  commissionAmount?: number;
+  totalPrice?: number;
 }
 
 export interface StockItem {
@@ -72,6 +88,8 @@ export interface StockItem {
   category: string;
   cost?: number;
   productId?: number; // For backward compatibility
+  commissionRate?: number;
+  lastUpdated?: Date;
 }
 
 export interface StockMovement {
@@ -94,7 +112,16 @@ export interface Sale {
   unitPrice: number;
   totalPrice: number;
   saleDate: Date;
+  date?: Date; // For backward compatibility
   productId?: number; // For backward compatibility
+  productName?: string; // For backward compatibility
+  customerPhone?: string;
+  staffId?: number;
+  staffName?: string;
+  commissionAmount?: number;
+  discount?: number;
+  total?: number;
+  paymentMethod?: string;
 }
 
 export interface Cost {
@@ -130,9 +157,20 @@ export interface StaffPerformance {
   id: number;
   staffId: number;
   staffName: string;
+  name?: string; // For backward compatibility
+  role?: string;
   date: Date;
   appointmentsCompleted: number;
+  appointmentsCount?: number;
+  confirmedAppointments?: number;
+  cancelledAppointments?: number;
+  pendingAppointments?: number;
+  servicesProvided?: number;
+  productSales?: number;
   salesAmount: number;
+  totalRevenue?: number;
+  totalCommission?: number;
+  avgRating?: number;
   notes?: string;
 }
 

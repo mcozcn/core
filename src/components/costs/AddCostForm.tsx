@@ -18,6 +18,7 @@ const AddCostForm = ({ showForm, setShowForm, costs }: AddCostFormProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
+    name: '',
     description: '',
     amount: '',
     category: '',
@@ -30,6 +31,7 @@ const AddCostForm = ({ showForm, setShowForm, costs }: AddCostFormProps) => {
     try {
       const newCost: Cost = {
         id: Date.now(),
+        name: formData.name,
         description: formData.description,
         amount: Number(formData.amount),
         category: formData.category,
@@ -44,10 +46,11 @@ const AddCostForm = ({ showForm, setShowForm, costs }: AddCostFormProps) => {
 
       toast({
         title: "Başarıyla kaydedildi",
-        description: `${newCost.description} maliyet listenize eklendi.`,
+        description: `${newCost.name} maliyet listenize eklendi.`,
       });
 
       setFormData({
+        name: '',
         description: '',
         amount: '',
         category: '',
@@ -70,12 +73,21 @@ const AddCostForm = ({ showForm, setShowForm, costs }: AddCostFormProps) => {
     <Card className="p-6 mb-8">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
+          <Label>Maliyet Adı</Label>
+          <Input
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            placeholder="Maliyet adını girin"
+            required
+          />
+        </div>
+
+        <div>
           <Label>Açıklama</Label>
           <Input
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             placeholder="Maliyet açıklamasını girin"
-            required
           />
         </div>
 

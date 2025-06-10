@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -70,6 +69,7 @@ const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      
       <div className="space-y-2">
         <Label htmlFor="name">Müşteri Adı</Label>
         <Input
