@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { getCosts, setCosts, type Cost } from "@/utils/localStorage";
+import { getCosts, setCosts, type Cost } from "@/utils/storage";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -19,7 +19,7 @@ interface AddCostFormProps {
 
 const AddCostForm = ({ showForm, setShowForm }: AddCostFormProps) => {
   const [costData, setCostData] = useState({
-    description: '',
+    name: '',
     amount: '',
     category: '',
     notes: ''
@@ -32,14 +32,14 @@ const AddCostForm = ({ showForm, setShowForm }: AddCostFormProps) => {
     e.preventDefault();
     
     try {
-      if (!costData.description || !costData.amount || !costData.category) {
+      if (!costData.name || !costData.amount || !costData.category) {
         throw new Error("Lütfen tüm zorunlu alanları doldurun");
       }
 
-      const costs = getCosts();
+      const costs = await getCosts();
       const newCost: Cost = {
         id: Date.now(),
-        description: costData.description,
+        name: costData.name,
         amount: parseFloat(costData.amount),
         category: costData.category,
         date: new Date(),
@@ -47,17 +47,17 @@ const AddCostForm = ({ showForm, setShowForm }: AddCostFormProps) => {
       };
 
       const updatedCosts = [...costs, newCost];
-      setCosts(updatedCosts);
+      await setCosts(updatedCosts);
       queryClient.setQueryData(['costs'], updatedCosts);
 
       toast({
         title: "Masraf eklendi",
-        description: `${costData.description} masrafı başarıyla eklendi.`,
+        description: `${costData.name} masrafı başarıyla eklendi.`,
       });
 
       // Reset form
       setCostData({
-        description: '',
+        name: '',
         amount: '',
         category: '',
         notes: ''
@@ -76,7 +76,7 @@ const AddCostForm = ({ showForm, setShowForm }: AddCostFormProps) => {
 
   const handleCancel = () => {
     setCostData({
-      description: '',
+      name: '',
       amount: '',
       category: '',
       notes: ''
@@ -105,8 +105,8 @@ const AddCostForm = ({ showForm, setShowForm }: AddCostFormProps) => {
           <div>
             <Label>Masraf Açıklaması *</Label>
             <Input
-              value={costData.description}
-              onChange={(e) => setCostData({ ...costData, description: e.target.value })}
+              value={costData.name}
+              onChange={(e) => setCostData({ ...costData, name: e.target.value })}
               placeholder="Masraf açıklaması"
               required
             />
