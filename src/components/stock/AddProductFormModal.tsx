@@ -24,6 +24,7 @@ const AddProductFormModal = ({ showForm, setShowForm, stock }: AddProductFormMod
     price: '',
     cost: '',
     category: '',
+    unit: 'adet',
     criticalLevel: '5', // Varsayılan kritik stok seviyesi
   });
 
@@ -34,11 +35,13 @@ const AddProductFormModal = ({ showForm, setShowForm, stock }: AddProductFormMod
       const newStockItem: StockItem = {
         id: Date.now(),
         productId: Date.now(),
+        name: formData.productName,
         productName: formData.productName,
         quantity: Number(formData.quantity),
         price: Number(formData.price),
         cost: Number(formData.cost),
         category: formData.category,
+        unit: formData.unit,
         criticalLevel: Number(formData.criticalLevel),
         createdAt: new Date(),
         lastUpdated: new Date(),
@@ -69,6 +72,7 @@ const AddProductFormModal = ({ showForm, setShowForm, stock }: AddProductFormMod
         price: '',
         cost: '',
         category: '',
+        unit: 'adet',
         criticalLevel: '5',
       });
       setShowForm(false);
@@ -126,15 +130,25 @@ const AddProductFormModal = ({ showForm, setShowForm, stock }: AddProductFormMod
               </div>
 
               <div>
-                <Label>Kritik Stok Seviyesi</Label>
+                <Label>Birim</Label>
                 <Input
-                  type="number"
-                  value={formData.criticalLevel}
-                  onChange={(e) => setFormData({ ...formData, criticalLevel: e.target.value })}
-                  placeholder="Kritik stok seviyesini girin"
+                  value={formData.unit}
+                  onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+                  placeholder="Birim (adet, kg, litre, vb.)"
                   required
                 />
               </div>
+            </div>
+
+            <div>
+              <Label>Kritik Stok Seviyesi</Label>
+              <Input
+                type="number"
+                value={formData.criticalLevel}
+                onChange={(e) => setFormData({ ...formData, criticalLevel: e.target.value })}
+                placeholder="Kritik stok seviyesini girin"
+                required
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-4">

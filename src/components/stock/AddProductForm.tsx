@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,7 @@ const AddProductForm = ({ showForm, setShowForm, stock }: AddProductFormProps) =
     price: '',
     cost: '',
     category: '',
+    unit: 'adet',
     criticalLevel: '5', // Varsayılan kritik stok seviyesi
   });
 
@@ -32,11 +34,13 @@ const AddProductForm = ({ showForm, setShowForm, stock }: AddProductFormProps) =
       const newStockItem: StockItem = {
         id: Date.now(),
         productId: Date.now(),
+        name: formData.productName,
         productName: formData.productName,
         quantity: Number(formData.quantity),
         price: Number(formData.price),
         cost: Number(formData.cost),
         category: formData.category,
+        unit: formData.unit,
         criticalLevel: Number(formData.criticalLevel),
         createdAt: new Date(),
         lastUpdated: new Date(),
@@ -67,6 +71,7 @@ const AddProductForm = ({ showForm, setShowForm, stock }: AddProductFormProps) =
         price: '',
         cost: '',
         category: '',
+        unit: 'adet',
         criticalLevel: '5',
       });
       setShowForm(false);
@@ -102,6 +107,16 @@ const AddProductForm = ({ showForm, setShowForm, stock }: AddProductFormProps) =
             value={formData.quantity}
             onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
             placeholder="Stok miktarını girin"
+            required
+          />
+        </div>
+
+        <div>
+          <Label>Birim</Label>
+          <Input
+            value={formData.unit}
+            onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+            placeholder="Birim (adet, kg, litre, vb.)"
             required
           />
         </div>
