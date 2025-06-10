@@ -140,6 +140,7 @@ export interface Cost {
   amount: number;
   date: Date;
   category: string;
+  notes?: string;
 }
 
 export interface Payment {

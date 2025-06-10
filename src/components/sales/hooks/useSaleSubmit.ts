@@ -66,7 +66,7 @@ export const useSaleSubmit = (onSuccess: () => void) => {
             productName: product.productName || product.name,
             discount: item.discount,
             customerPhone: customer.phone,
-            staffId: item.staffId,
+            staffId: item.staffId ? Number(item.staffId) : undefined,
             staffName: item.staffName,
             commissionAmount: commissionAmount
           };
@@ -98,7 +98,7 @@ export const useSaleSubmit = (onSuccess: () => void) => {
             recordType: 'debt' as const,
             discount: item.discount,
             quantity: item.quantity,
-            staffId: item.staffId,
+            staffId: item.staffId ? Number(item.staffId) : undefined,
             staffName: item.staffName,
             commissionAmount: commissionAmount
           };
@@ -124,7 +124,7 @@ export const useSaleSubmit = (onSuccess: () => void) => {
             customerName: customer.name,
             customerPhone: customer.phone,
             saleDate: new Date(),
-            staffId: item.staffId,
+            staffId: item.staffId ? Number(item.staffId) : undefined,
             staffName: item.staffName,
             commissionAmount: commissionAmount,
             totalPrice: totalPrice
@@ -147,7 +147,7 @@ export const useSaleSubmit = (onSuccess: () => void) => {
             description: `Hizmet satışı: ${service.name}`,
             recordType: 'debt' as const,
             discount: item.discount,
-            staffId: item.staffId,
+            staffId: item.staffId ? Number(item.staffId) : undefined,
             staffName: item.staffName,
             commissionAmount: commissionAmount
           };
