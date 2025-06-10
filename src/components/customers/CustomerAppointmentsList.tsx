@@ -34,8 +34,10 @@ const CustomerAppointmentsList = ({ appointments, customerPhone }: CustomerAppoi
   const queryClient = useQueryClient();
 
   const sortedAppointments = [...appointments].sort((a, b) => {
-    const dateA = new Date(`${a.date}T${a.time}`);
-    const dateB = new Date(`${b.date}T${b.time}`);
+    const timeA = a.time || a.startTime;
+    const timeB = b.time || b.startTime;
+    const dateA = new Date(`${a.date}T${timeA}`);
+    const dateB = new Date(`${b.date}T${timeB}`);
     return dateB.getTime() - dateA.getTime();
   });
 
@@ -75,11 +77,11 @@ const CustomerAppointmentsList = ({ appointments, customerPhone }: CustomerAppoi
     const whatsappLink = createAppointmentWhatsAppLink(
       customerPhone,
       {
-        service: appointment.service,
+        service: appointment.serviceName || appointment.service,
         date: appointment.date,
-        time: appointment.time,
+        time: appointment.time || appointment.startTime,
         staffName: appointment.staffName,
-        status: appointment.status
+        status: appointment.status || 'pending'
       }
     );
 
@@ -133,17 +135,17 @@ const CustomerAppointmentsList = ({ appointments, customerPhone }: CustomerAppoi
                 <TableCell>
                   {format(new Date(appointment.date), 'PPP', { locale: tr })}
                 </TableCell>
-                <TableCell>{appointment.time}</TableCell>
-                <TableCell>{appointment.service}</TableCell>
-                <TableCell>{getStatusBadge(appointment.status)}</TableCell>
+                <TableCell>{appointment.time || appointment.startTime}</TableCell>
+                <TableCell>{appointment.serviceName || appointment.service}</TableCell>
+                <TableCell>{getStatusBadge(appointment.status || 'pending')}</TableCell>
                 <TableCell>
                   {appointment.status === 'cancelled' 
                     ? `İptal Nedeni: ${appointment.cancellationNote || 'Belirtilmedi'}`
-                    : appointment.note || '-'}
+                    : appointment.notes || '-'}
                 </TableCell>
                 <TableCell>
                   <div className="flex space-x-2">
-                    {appointment.status === 'pending' && (
+                    {appointment.status !== 'cancelled' && (
                       <Dialog open={showCancellationDialog} onOpenChange={setShowCancellationDialog}>
                         <DialogTrigger asChild>
                           <Button 

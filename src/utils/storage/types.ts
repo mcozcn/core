@@ -1,14 +1,23 @@
+
 export interface Appointment {
   id: number;
   customerId: number;
   customerName: string;
   serviceId: number;
   serviceName: string;
-  date: Date;
+  service?: string; // For backward compatibility
+  date: string; // Changed from Date to string for consistency
   startTime: string;
   endTime: string;
+  time?: string; // Additional time property used in many components
   price: number;
   notes?: string;
+  status?: 'pending' | 'confirmed' | 'cancelled';
+  staffId?: number;
+  staffName?: string;
+  staffColor?: string;
+  cancellationNote?: string;
+  createdAt?: Date;
 }
 
 export interface Customer {
@@ -24,7 +33,7 @@ export interface Customer {
 export interface CustomerRecord {
   id: number;
   customerId: number;
-  type: 'payment' | 'debt';
+  type: 'payment' | 'debt' | 'service' | 'product';
   itemId: number;
   itemName: string;
   amount: number;
@@ -32,7 +41,8 @@ export interface CustomerRecord {
   dueDate?: Date;
   isPaid?: boolean;
   description?: string;
-  recordType?: 'debt' | 'payment' | 'installment';
+  recordType?: 'debt' | 'payment' | 'installment' | 'service' | 'product';
+  paymentMethod?: string;
 }
 
 export interface Service {
@@ -54,11 +64,14 @@ export interface ServiceSale {
 export interface StockItem {
   id: number;
   name: string;
+  productName?: string; // For backward compatibility
   description?: string;
   price: number;
   quantity: number;
   unit: string;
   category: string;
+  cost?: number;
+  productId?: number; // For backward compatibility
 }
 
 export interface StockMovement {
@@ -81,6 +94,7 @@ export interface Sale {
   unitPrice: number;
   totalPrice: number;
   saleDate: Date;
+  productId?: number; // For backward compatibility
 }
 
 export interface Cost {
@@ -108,6 +122,8 @@ export interface User {
   displayName: string;
   role: 'admin' | 'manager' | 'user';
   allowedPages?: string[];
+  color?: string;
+  title?: string;
 }
 
 export interface StaffPerformance {

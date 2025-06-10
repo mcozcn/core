@@ -33,7 +33,8 @@ const CalendarGrid = ({ weekDays, workingHours, appointments }: CalendarGridProp
             const formattedDay = format(day, 'yyyy-MM-dd');
             
             const dayAppointments = appointments.filter(apt => {
-              const aptHour = apt.time.split(':')[0];
+              const aptTime = apt.time || apt.startTime;
+              const aptHour = aptTime.split(':')[0];
               const currentHour = format(hour, 'HH');
               return apt.date === formattedDay && aptHour === currentHour;
             });

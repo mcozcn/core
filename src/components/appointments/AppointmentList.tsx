@@ -114,7 +114,7 @@ const AppointmentList = ({ searchTerm = '' }: AppointmentListProps) => {
     const customer = customers.find(c => c.id === appointment.customerId);
     const customerName = customer?.name || '';
     return customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           appointment.service.toLowerCase().includes(searchTerm.toLowerCase());
+           (appointment.serviceName || appointment.service || '').toLowerCase().includes(searchTerm.toLowerCase());
   });
 
   return (
@@ -145,13 +145,13 @@ const AppointmentList = ({ searchTerm = '' }: AppointmentListProps) => {
                 return (
                   <TableRow key={appointment.id} className={appointment.status === 'cancelled' ? 'opacity-60' : ''}>
                     <TableCell>{customer?.name || 'Müşteri bulunamadı'}</TableCell>
-                    <TableCell>{appointment.service}</TableCell>
+                    <TableCell>{appointment.serviceName || appointment.service}</TableCell>
                     <TableCell>{new Date(appointment.date).toLocaleDateString('tr-TR')}</TableCell>
-                    <TableCell>{appointment.time}</TableCell>
+                    <TableCell>{appointment.time || appointment.startTime}</TableCell>
                     <TableCell>
                       {appointment.cancellationNote ? 
                         `İptal Nedeni: ${appointment.cancellationNote}` : 
-                        appointment.note || '-'}
+                        appointment.notes || '-'}
                     </TableCell>
                     <TableCell>
                       {appointment.status === 'cancelled' ? 

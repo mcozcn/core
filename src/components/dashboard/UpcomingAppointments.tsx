@@ -93,11 +93,11 @@ const UpcomingAppointments = ({ appointments }: UpcomingAppointmentsProps) => {
     const whatsappLink = createAppointmentWhatsAppLink(
       customer.phone,
       {
-        service: appointment.service,
+        service: appointment.serviceName || appointment.service || '',
         date: appointment.date,
-        time: appointment.time,
-        staffName: appointment.staffName,
-        status: appointment.status
+        time: appointment.time || appointment.startTime,
+        staffName: appointment.staffName || '',
+        status: appointment.status || 'pending'
       }
     );
 
@@ -113,8 +113,15 @@ const UpcomingAppointments = ({ appointments }: UpcomingAppointmentsProps) => {
   };
 
   const upcomingAppointments = appointments
-    .filter(apt => new Date(`${apt.date}T${apt.time}`) > new Date())
-    .sort((a, b) => new Date(`${a.date}T${a.time}`).getTime() - new Date(`${b.date}T${b.time}`).getTime())
+    .filter(apt => {
+      const aptTime = apt.time || apt.startTime;
+      return new Date(`${apt.date}T${aptTime}`) > new Date();
+    })
+    .sort((a, b) => {
+      const timeA = a.time || a.startTime;
+      const timeB = b.time || b.startTime;
+      return new Date(`${a.date}T${timeA}`).getTime() - new Date(`${b.date}T${timeB}`).getTime();
+    })
     .slice(0, 5);
 
   return (
@@ -127,9 +134,9 @@ const UpcomingAppointments = ({ appointments }: UpcomingAppointmentsProps) => {
               <div>
                 <div className="font-medium">{appointment.customerName}</div>
                 <div className="text-sm text-gray-500">
-                  {appointment.date} - {appointment.time}
+                  {appointment.date} - {appointment.time || appointment.startTime}
                 </div>
-                <div className="text-sm text-primary">{appointment.service}</div>
+                <div className="text-sm text-primary">{appointment.serviceName || appointment.service}</div>
                 {appointment.cancellationNote && (
                   <div className="text-sm text-red-500">
                     İptal Nedeni: {appointment.cancellationNote}
@@ -147,7 +154,7 @@ const UpcomingAppointments = ({ appointments }: UpcomingAppointmentsProps) => {
                    'Beklemede'}
                 </Badge>
                 <div className="flex space-x-2">
-                  {appointment.status === 'pending' && (
+                  {appointment.status !== 'cancelled' && (
                     <>
                       <Button
                         size="sm"

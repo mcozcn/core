@@ -16,7 +16,7 @@ const AppointmentCell = ({ appointments }: AppointmentCellProps) => {
             backgroundColor: apt.staffColor || '#gray',
             color: 'white'
           }}
-          title={`${apt.service} - ${apt.time}${apt.status === 'cancelled' ? ` (İptal Nedeni: ${apt.cancellationNote || 'Belirtilmedi'})` : ''}`}
+          title={`${apt.serviceName || apt.service} - ${apt.time || apt.startTime}${apt.status === 'cancelled' ? ` (İptal Nedeni: ${apt.cancellationNote || 'Belirtilmedi'})` : ''}`}
         >
           {apt.customerName} ({apt.staffName})
           {apt.status === 'cancelled' && ' (İptal)'}
