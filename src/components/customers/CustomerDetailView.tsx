@@ -47,6 +47,12 @@ const CustomerDetailView = ({ customer, onEdit }: CustomerDetailViewProps) => {
     ? records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
     : null;
 
+  // Hesaplamalar
+  const totalDebt = records.reduce((acc, record) => record.type !== 'payment' ? acc + record.amount : acc, 0);
+  const totalPayments = records.reduce((acc, record) => record.type === 'payment' ? acc + Math.abs(record.amount) : acc, 0);
+  const installmentTotal = records.reduce((acc, record) => record.recordType === 'installment' ? acc + record.amount : acc, 0);
+  const remainingDebt = Math.max(0, totalDebt - totalPayments);
+
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -143,32 +149,25 @@ const CustomerDetailView = ({ customer, onEdit }: CustomerDetailViewProps) => {
               <CardTitle>Genel Bakış</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <Card className="bg-orange-50 dark:bg-orange-900/20 border-none">
                   <CardHeader className="p-4 pb-2">
                     <h3 className="text-sm font-medium text-muted-foreground">Toplam Harcama</h3>
                   </CardHeader>
                   <CardContent className="p-4 pt-0">
                     <p className="text-2xl font-semibold text-orange-600 dark:text-orange-400">
-                      {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(
-                        records.reduce((acc, record) => record.type !== 'payment' ? acc + record.amount : acc, 0)
-                      )}
+                      {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(totalDebt)}
                     </p>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-red-50 dark:bg-red-900/20 border-none">
+                <Card className="bg-purple-50 dark:bg-purple-900/20 border-none">
                   <CardHeader className="p-4 pb-2">
-                    <h3 className="text-sm font-medium text-muted-foreground">Kalan Borç</h3>
+                    <h3 className="text-sm font-medium text-muted-foreground">Vadelenen Tutar</h3>
                   </CardHeader>
                   <CardContent className="p-4 pt-0">
-                    <p className="text-2xl font-semibold text-red-600 dark:text-red-400">
-                      {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(
-                        Math.max(0, 
-                          records.reduce((acc, record) => record.type !== 'payment' ? acc + record.amount : acc, 0) - 
-                          records.reduce((acc, record) => record.type === 'payment' ? acc + Math.abs(record.amount) : acc, 0)
-                        )
-                      )}
+                    <p className="text-2xl font-semibold text-purple-600 dark:text-purple-400">
+                      {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(installmentTotal)}
                     </p>
                   </CardContent>
                 </Card>
@@ -179,9 +178,18 @@ const CustomerDetailView = ({ customer, onEdit }: CustomerDetailViewProps) => {
                   </CardHeader>
                   <CardContent className="p-4 pt-0">
                     <p className="text-2xl font-semibold text-green-600 dark:text-green-400">
-                      {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(
-                        records.reduce((acc, record) => record.type === 'payment' ? acc + Math.abs(record.amount) : acc, 0)
-                      )}
+                      {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(totalPayments)}
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-red-50 dark:bg-red-900/20 border-none">
+                  <CardHeader className="p-4 pb-2">
+                    <h3 className="text-sm font-medium text-muted-foreground">Kalan Borç</h3>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0">
+                    <p className="text-2xl font-semibold text-red-600 dark:text-red-400">
+                      {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(remainingDebt)}
                     </p>
                   </CardContent>
                 </Card>

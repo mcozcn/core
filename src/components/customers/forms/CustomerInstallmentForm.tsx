@@ -59,10 +59,10 @@ const CustomerInstallmentForm = ({ customerId, onSuccess }: CustomerInstallmentF
     const newRecord: CustomerRecord = {
       id: Date.now(),
       customerId,
-      type: operationType === 'add_debt' ? 'debt' : 'payment',
+      type: operationType === 'add_debt' ? 'debt' : 'debt',
       itemId: 0,
       itemName: operationType === 'add_debt' ? 'Borç Eklendi' : 'Vadeli Ödeme',
-      amount: operationType === 'add_debt' ? Number(amount) : -Number(installmentAmount),
+      amount: operationType === 'add_debt' ? Number(amount) : Number(installmentAmount),
       date: new Date(),
       dueDate,
       isPaid: false,
