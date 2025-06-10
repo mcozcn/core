@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { X, Package, Scissors, Percent, Users } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { getStock, getServices, getUsers } from "@/utils/localStorage";
+import { getStock, getServices } from "@/utils/localStorage";
+import { getPersonnel } from "@/utils/storage/personnel";
 import { UnifiedSaleFormData } from './types';
 
 interface SaleItemSelectorProps {
@@ -28,19 +29,19 @@ const SaleItemSelector = ({ item, index, onUpdate, onRemove }: SaleItemSelectorP
     queryFn: getServices,
   });
 
-  const { data: users = [] } = useQuery({
-    queryKey: ['users'],
-    queryFn: getUsers,
+  const { data: personnel = [] } = useQuery({
+    queryKey: ['personnel'],
+    queryFn: getPersonnel,
   });
 
-  // Filter staff users
-  const staffUsers = users.filter(user => user.role === 'staff');
+  // Filter active personnel
+  const activePersonnel = personnel.filter(person => person.isActive);
 
   const selectedItem = item.type === 'product' 
     ? stock.find(p => p.id.toString() === item.itemId || p.productId?.toString() === item.itemId)
     : services.find(s => s.id.toString() === item.itemId);
 
-  const selectedStaff = staffUsers.find(staff => staff.id.toString() === item.staffId);
+  const selectedPersonnel = activePersonnel.find(person => person.id.toString() === item.staffId);
 
   const calculateTotal = () => {
     if (!selectedItem) return 0;
@@ -163,7 +164,7 @@ const SaleItemSelector = ({ item, index, onUpdate, onRemove }: SaleItemSelectorP
           />
         </div>
 
-        {/* Staff Selection */}
+        {/* Personnel Selection */}
         <div>
           <Label className="text-xs font-medium flex items-center gap-1">
             <Users className="h-3 w-3" />
@@ -173,12 +174,14 @@ const SaleItemSelector = ({ item, index, onUpdate, onRemove }: SaleItemSelectorP
             value={item.staffId || 'no-staff'}
             onValueChange={(value) => {
               if (value === 'no-staff') {
-                onUpdate(index, { ...item, staffId: undefined, staffName: undefined });
+                onUpdate(index, { ...item, staffId: undefined, staffName: undefined, commissionRate: 0 });
               } else {
+                const selectedPerson = activePersonnel.find(p => p.id.toString() === value);
                 onUpdate(index, { 
                   ...item, 
                   staffId: value, 
-                  staffName: staffUsers.find(s => s.id.toString() === value)?.displayName || staffUsers.find(s => s.id.toString() === value)?.username 
+                  staffName: selectedPerson?.name,
+                  commissionRate: selectedPerson?.commissionRate || 0
                 });
               }
             }}
@@ -188,9 +191,9 @@ const SaleItemSelector = ({ item, index, onUpdate, onRemove }: SaleItemSelectorP
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="no-staff">Personel Yok</SelectItem>
-              {staffUsers.map((staff) => (
-                <SelectItem key={staff.id} value={staff.id.toString()}>
-                  {staff.displayName || staff.username}
+              {activePersonnel.map((person) => (
+                <SelectItem key={person.id} value={person.id.toString()}>
+                  {person.name} - {person.title} ({person.commissionRate}% prim)
                 </SelectItem>
               ))}
             </SelectContent>
@@ -228,10 +231,10 @@ const SaleItemSelector = ({ item, index, onUpdate, onRemove }: SaleItemSelectorP
               <span className="text-muted-foreground">Toplam:</span>
               <p className="font-medium">₺{calculateTotal().toFixed(2)}</p>
             </div>
-            {selectedStaff && (
+            {selectedPersonnel && (
               <div>
                 <span className="text-muted-foreground">Personel:</span>
-                <p className="font-medium">{selectedStaff.displayName || selectedStaff.username}</p>
+                <p className="font-medium">{selectedPersonnel.name}</p>
               </div>
             )}
             {item.commissionRate && (

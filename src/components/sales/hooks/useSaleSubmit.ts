@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { UnifiedSaleFormData } from '../types';
 import {
@@ -14,6 +14,7 @@ import {
   setCustomerRecords,
   getCustomers
 } from '@/utils/storage';
+import { addPersonnelRecord } from '@/utils/storage/personnel';
 
 export const useSaleSubmit = (onSuccess: () => void) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -44,11 +45,11 @@ export const useSaleSubmit = (onSuccess: () => void) => {
           if (!product) throw new Error("Ürün bulunamadı");
           if (product.quantity < (item.quantity || 0)) throw new Error(`${product.name || product.productName} için yetersiz stok`);
 
-          const totalPrice = (product.price * (item.quantity || 0)) - item.discount;
-          const commissionRate = item.commissionRate || (product.commissionRate || 0);
+          const totalPrice = (product.price * (item.quantity || 0)) - (item.discount || 0);
+          const commissionRate = item.commissionRate || 0;
           const commissionAmount = commissionRate > 0 ? (commissionRate / 100) * totalPrice : 0;
 
-          // Create product sale record with all required Sale properties
+          // Create product sale record
           const newSale = {
             id: Date.now() + Math.random(),
             customerId: Number(formData.customerId),
@@ -61,10 +62,10 @@ export const useSaleSubmit = (onSuccess: () => void) => {
             saleDate: new Date(),
             date: new Date().toISOString(),
             total: totalPrice,
-            paymentMethod: "Nakit", // Default
+            paymentMethod: "Nakit",
             productId: product.productId || product.id,
             productName: product.productName || product.name,
-            discount: item.discount,
+            discount: item.discount || 0,
             customerPhone: customer.phone,
             staffId: item.staffId ? Number(item.staffId) : undefined,
             staffName: item.staffName,
@@ -83,7 +84,7 @@ export const useSaleSubmit = (onSuccess: () => void) => {
           queryClient.setQueryData(['stock'], updatedStock);
           queryClient.setQueryData(['sales'], [...sales, newSale]);
 
-          // Add to customer records with detailed information
+          // Add to customer records
           const newRecord = {
             id: Date.now() + Math.random(),
             customerId: Number(formData.customerId),
@@ -96,7 +97,7 @@ export const useSaleSubmit = (onSuccess: () => void) => {
             isPaid: false,
             description: `Ürün satışı: ${product.name || product.productName} (${item.quantity} adet)`,
             recordType: 'debt' as const,
-            discount: item.discount,
+            discount: item.discount || 0,
             quantity: item.quantity,
             staffId: item.staffId ? Number(item.staffId) : undefined,
             staffName: item.staffName,
@@ -105,13 +106,29 @@ export const useSaleSubmit = (onSuccess: () => void) => {
 
           newRecords.push(newRecord);
 
+          // Add personnel commission record if there's a staff member and commission
+          if (item.staffId && commissionAmount > 0) {
+            await addPersonnelRecord({
+              personnelId: Number(item.staffId),
+              type: 'commission',
+              amount: commissionAmount,
+              description: `Ürün satış primi: ${product.name || product.productName}`,
+              date: new Date(),
+              customerId: Number(formData.customerId),
+              customerName: customer.name,
+              productId: product.id,
+              productName: product.name || product.productName
+            });
+            console.log(`Personnel commission added: ₺${commissionAmount} for staff ${item.staffName}`);
+          }
+
         } else {
           const services = await getServices();
           const service = services.find(s => s.id.toString() === item.itemId);
           if (!service) throw new Error("Hizmet bulunamadı");
 
-          const totalPrice = service.price - item.discount;
-          const commissionRate = item.commissionRate || (service.commissionRate || 0);
+          const totalPrice = service.price - (item.discount || 0);
+          const commissionRate = item.commissionRate || 0;
           const commissionAmount = commissionRate > 0 ? (commissionRate / 100) * totalPrice : 0;
 
           // Create service sale record
@@ -133,7 +150,7 @@ export const useSaleSubmit = (onSuccess: () => void) => {
           await setServiceSales([...serviceSales, newServiceSale]);
           queryClient.setQueryData(['serviceSales'], [...serviceSales, newServiceSale]);
 
-          // Add to customer records with detailed information
+          // Add to customer records
           const newRecord = {
             id: Date.now() + Math.random(),
             customerId: Number(formData.customerId),
@@ -146,25 +163,42 @@ export const useSaleSubmit = (onSuccess: () => void) => {
             isPaid: false,
             description: `Hizmet satışı: ${service.name}`,
             recordType: 'debt' as const,
-            discount: item.discount,
+            discount: item.discount || 0,
             staffId: item.staffId ? Number(item.staffId) : undefined,
             staffName: item.staffName,
             commissionAmount: commissionAmount
           };
 
           newRecords.push(newRecord);
+
+          // Add personnel commission record if there's a staff member and commission
+          if (item.staffId && commissionAmount > 0) {
+            await addPersonnelRecord({
+              personnelId: Number(item.staffId),
+              type: 'commission',
+              amount: commissionAmount,
+              description: `Hizmet satış primi: ${service.name}`,
+              date: new Date(),
+              customerId: Number(formData.customerId),
+              customerName: customer.name,
+              serviceId: service.id,
+              serviceName: service.name
+            });
+            console.log(`Personnel commission added: ₺${commissionAmount} for staff ${item.staffName}`);
+          }
         }
       }
 
-      // Add all records at once
+      // Add all customer records at once
       await setCustomerRecords([...existingRecords, ...newRecords]);
       queryClient.invalidateQueries({ queryKey: ['customerRecords'] });
+      queryClient.invalidateQueries({ queryKey: ['personnel'] });
 
-      console.log('New records added:', newRecords);
+      console.log('New customer records added:', newRecords);
 
       toast({
         title: "Satış başarılı",
-        description: "Tüm satışlar başarıyla kaydedildi.",
+        description: "Tüm satışlar başarıyla kaydedildi ve personel primleri hesaplandı.",
       });
 
       onSuccess();
@@ -187,7 +221,7 @@ export const useSaleSubmit = (onSuccess: () => void) => {
   };
 };
 
-// Helper function to get services (defined here to avoid circular dependency)
+// Helper function to get services
 const getServices = async () => {
   try {
     return await import('@/utils/storage').then(m => m.getServices());
