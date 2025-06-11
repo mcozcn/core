@@ -106,35 +106,33 @@ const Navigation = () => {
     <nav className={`fixed top-0 left-0 h-full ${isCollapsed ? 'w-16' : 'w-56'} bg-background/95 backdrop-blur border-r border-border shadow-lg transition-all duration-300 z-50 flex flex-col`}>
       {/* Header */}
       <div className="p-4 border-b border-border">
-        <div className="flex items-center justify-between">
-          {!isCollapsed && (
-            <div className="flex items-center space-x-2">
-              <img 
-                src="/lovable-uploads/18599c6d-da00-4149-814e-e1ce55f990d5.png" 
-                alt="Beautiq" 
-                className="w-8 h-8"
-              />
-              <div>
-                <h1 className="text-lg font-bold">Beautiq</h1>
-                <p className="text-xs text-muted-foreground">Salon Yönetimi</p>
-              </div>
-            </div>
-          )}
-          {isCollapsed && (
+        <div className="flex flex-col items-center space-y-3">
+          {/* Logo */}
+          <div className="flex items-center justify-center">
             <img 
               src="/lovable-uploads/18599c6d-da00-4149-814e-e1ce55f990d5.png" 
               alt="Beautiq" 
-              className="w-8 h-8 mx-auto"
+              className={`${isCollapsed ? 'w-8 h-8' : 'w-12 h-12'} object-contain transition-all duration-300`}
             />
-          )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="h-8 w-8 p-0"
-          >
-            {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-          </Button>
+          </div>
+          
+          {/* Text and Collapse Button */}
+          <div className="flex items-center justify-between w-full">
+            {!isCollapsed && (
+              <div className="text-center flex-1">
+                <h1 className="text-lg font-bold">Beautiq</h1>
+                <p className="text-xs text-muted-foreground">Salon Yönetimi</p>
+              </div>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="h-8 w-8 p-0 shrink-0"
+            >
+              {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+            </Button>
+          </div>
         </div>
       </div>
       
