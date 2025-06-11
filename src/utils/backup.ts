@@ -39,10 +39,60 @@ export interface BackupData {
   };
 }
 
+// Eski veri formatlarını yeni formata dönüştürme fonksiyonları
+const migrateCustomerRecords = (records: any[]): any[] => {
+  return records.map(record => ({
+    ...record,
+    recordType: record.recordType || (record.type === 'payment' ? 'payment' : 'debt'),
+    date: record.date instanceof Date ? record.date : new Date(record.date),
+    dueDate: record.dueDate ? (record.dueDate instanceof Date ? record.dueDate : new Date(record.dueDate)) : undefined,
+    isPaid: record.isPaid !== undefined ? record.isPaid : false
+  }));
+};
+
+const migrateAppointments = (appointments: any[]): any[] => {
+  return appointments.map(appointment => ({
+    ...appointment,
+    date: typeof appointment.date === 'string' ? appointment.date : appointment.date?.toISOString?.() || new Date().toISOString(),
+    createdAt: appointment.createdAt instanceof Date ? appointment.createdAt : new Date(appointment.createdAt || Date.now())
+  }));
+};
+
+const migrateStockItems = (items: any[]): any[] => {
+  return items.map(item => ({
+    ...item,
+    name: item.name || item.productName || 'Ürün',
+    productName: item.productName || item.name || 'Ürün',
+    id: item.id || item.productId || Date.now(),
+    productId: item.productId || item.id || Date.now(),
+    lastUpdated: item.lastUpdated instanceof Date ? item.lastUpdated : new Date(item.lastUpdated || Date.now()),
+    createdAt: item.createdAt instanceof Date ? item.createdAt : new Date(item.createdAt || Date.now())
+  }));
+};
+
+const migrateSales = (sales: any[]): any[] => {
+  return sales.map(sale => ({
+    ...sale,
+    saleDate: sale.saleDate instanceof Date ? sale.saleDate : new Date(sale.saleDate || sale.date || Date.now()),
+    totalPrice: sale.totalPrice || sale.total || (sale.unitPrice * sale.quantity),
+    total: sale.total || sale.totalPrice || (sale.unitPrice * sale.quantity)
+  }));
+};
+
+const migratePersonnel = (personnel: any[]): any[] => {
+  return personnel.map(person => ({
+    ...person,
+    isActive: person.isActive !== undefined ? person.isActive : true,
+    commissionRate: person.commissionRate || 0,
+    createdAt: person.createdAt instanceof Date ? person.createdAt : new Date(person.createdAt || Date.now()),
+    updatedAt: person.updatedAt instanceof Date ? person.updatedAt : new Date(person.updatedAt || Date.now())
+  }));
+};
+
 export const exportBackup = async (): Promise<string> => {
   try {
     const backupData: BackupData = {
-      version: '1.0',
+      version: '2.0',
       timestamp: new Date().toISOString(),
       data: {
         customers: await getCustomers(),
@@ -86,28 +136,39 @@ export const importBackup = async (file: File): Promise<void> => {
     const text = await file.text();
     const backupData: BackupData = JSON.parse(text);
 
-    if (!backupData.version || !backupData.data) {
+    if (!backupData.data) {
       throw new Error('Geçersiz yedekleme dosyası');
     }
 
-    // Import all data
+    console.log('Importing backup version:', backupData.version);
+
+    // Veri migrasyon işlemleri
+    const migratedCustomerRecords = migrateCustomerRecords(backupData.data.customerRecords || []);
+    const migratedAppointments = migrateAppointments(backupData.data.appointments || []);
+    const migratedStockItems = migrateStockItems(backupData.data.stockItems || []);
+    const migratedSales = migrateSales(backupData.data.sales || []);
+    const migratedPersonnel = migratePersonnel(backupData.data.personnel || []);
+
+    // Import all data with migration
     await setCustomers(backupData.data.customers || []);
-    await setCustomerRecords(backupData.data.customerRecords || []);
-    await setAppointments(backupData.data.appointments || []);
+    await setCustomerRecords(migratedCustomerRecords);
+    await setAppointments(migratedAppointments);
     await setServices(backupData.data.services || []);
     await setServiceSales(backupData.data.serviceSales || []);
-    await setStockItems(backupData.data.stockItems || []);
-    await setSales(backupData.data.sales || []);
+    await setStockItems(migratedStockItems);
+    await setSales(migratedSales);
     await setCosts(backupData.data.costs || []);
     await setPayments(backupData.data.payments || []);
     await setUsers(backupData.data.users || []);
-    await setPersonnel(backupData.data.personnel || []);
+    await setPersonnel(migratedPersonnel);
     await setPersonnelRecords(backupData.data.personnelRecords || []);
     await setStockMovements(backupData.data.stockMovements || []);
 
+    console.log('Backup imported successfully with migrations');
+
   } catch (error) {
     console.error('Import backup error:', error);
-    throw new Error('Geri yükleme sırasında hata oluştu');
+    throw new Error('Geri yükleme sırasında hata oluştu: ' + (error instanceof Error ? error.message : 'Bilinmeyen hata'));
   }
 };
 

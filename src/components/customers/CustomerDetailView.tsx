@@ -47,10 +47,17 @@ const CustomerDetailView = ({ customer, onEdit }: CustomerDetailViewProps) => {
     ? records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
     : null;
 
-  // Hesaplamalar
-  const totalDebt = records.reduce((acc, record) => record.type !== 'payment' ? acc + record.amount : acc, 0);
-  const totalPayments = records.reduce((acc, record) => record.type === 'payment' ? acc + Math.abs(record.amount) : acc, 0);
-  const installmentTotal = records.reduce((acc, record) => record.recordType === 'installment' ? acc + record.amount : acc, 0);
+  // Hesaplamalar - Düzeltilmiş versiyon
+  const totalDebt = records.reduce((acc, record) => 
+    (record.type === 'debt' || record.type === 'service' || record.type === 'product') && record.recordType !== 'installment'
+      ? acc + record.amount : acc, 0
+  );
+  const totalPayments = records.reduce((acc, record) => 
+    record.type === 'payment' ? acc + Math.abs(record.amount) : acc, 0
+  );
+  const installmentedAmount = records.reduce((acc, record) => 
+    record.recordType === 'installment' ? acc + record.amount : acc, 0
+  );
   const remainingDebt = Math.max(0, totalDebt - totalPayments);
 
   const getInitials = (name: string) => {
@@ -167,7 +174,7 @@ const CustomerDetailView = ({ customer, onEdit }: CustomerDetailViewProps) => {
                   </CardHeader>
                   <CardContent className="p-4 pt-0">
                     <p className="text-2xl font-semibold text-purple-600 dark:text-purple-400">
-                      {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(installmentTotal)}
+                      {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(installmentedAmount)}
                     </p>
                   </CardContent>
                 </Card>

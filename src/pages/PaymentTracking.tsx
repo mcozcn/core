@@ -32,6 +32,7 @@ const PaymentTracking = () => {
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentNote, setPaymentNote] = useState('');
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -52,7 +53,7 @@ const PaymentTracking = () => {
     });
   };
 
-  // Vadeli ödemeleri filtrele
+  // Vadeli ödemeleri filtrele - sadece ödenmemiş olanlar
   const installmentRecords = records.filter(record => 
     record.recordType === 'installment' && 
     record.dueDate &&
@@ -94,36 +95,48 @@ const PaymentTracking = () => {
   const handlePayment = async () => {
     if (!selectedRecord || !paymentAmount) return;
 
+    const paymentAmountNum = Number(paymentAmount);
+    const installmentAmount = selectedRecord.amount;
+
+    // Ödeme kaydı oluştur
     const paymentRecord = {
       id: Date.now(),
       customerId: selectedRecord.customerId,
+      customerName: selectedRecord.customerName,
       type: 'payment' as const,
       itemId: selectedRecord.id,
-      itemName: `Vadeli Ödeme - ${selectedRecord.itemName}`,
-      amount: Number(paymentAmount),
+      itemName: `Vadeli Ödeme Tahsilatı - ${selectedRecord.itemName}`,
+      amount: -paymentAmountNum, // Negatif değer çünkü ödeme
       date: new Date(),
-      description: paymentNote,
-      recordType: 'payment' as const
+      description: paymentNote || 'Vadeli ödeme tahsilatı',
+      recordType: 'installment_payment' as const
     };
 
-    // Vadeli ödeme kaydını güncelleyerek ödendi olarak işaretle
-    const updatedRecords = records.map(record => 
-      record.id === selectedRecord.id 
-        ? { ...record, isPaid: true }
-        : record
-    );
+    // Vadeli ödeme kaydını güncelle
+    const updatedRecords = records.map(record => {
+      if (record.id === selectedRecord.id) {
+        return {
+          ...record,
+          isPaid: paymentAmountNum >= installmentAmount,
+          // Kısmi ödeme durumunda tutarı güncelle
+          amount: paymentAmountNum >= installmentAmount ? installmentAmount : installmentAmount - paymentAmountNum
+        };
+      }
+      return record;
+    });
 
     await setCustomerRecords([...updatedRecords, paymentRecord]);
     queryClient.invalidateQueries({ queryKey: ['customerRecords'] });
 
     toast({
-      title: "Ödeme alındı",
-      description: `${paymentAmount} ₺ tutarında ödeme alındı.`,
+      title: "Vadeli ödeme tahsilatı yapıldı",
+      description: `${paymentAmountNum} ₺ tutarında vadeli ödeme tahsilatı alındı.`,
     });
 
     setSelectedRecord(null);
     setPaymentAmount('');
     setPaymentNote('');
+    setShowPaymentDialog(false);
   };
 
   const getStatusBadge = (dueDate: Date) => {
@@ -155,7 +168,7 @@ const PaymentTracking = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-serif">Ödeme Takip</h1>
-          <p className="text-muted-foreground mt-1">Vadeli ödemeleri takip edin ve hatırlatmalar yapın</p>
+          <p className="text-muted-foreground mt-1">Vadeli ödemeleri takip edin ve tahsilatları yapın</p>
         </div>
       </div>
 
@@ -279,45 +292,16 @@ const PaymentTracking = () => {
                       </TableCell>
                       <TableCell>{record.description || '-'}</TableCell>
                       <TableCell>
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button 
-                              size="sm" 
-                              onClick={() => {
-                                setSelectedRecord(record);
-                                setPaymentAmount(Math.abs(record.amount).toString());
-                              }}
-                            >
-                              Ödeme Al
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Ödeme Al - {record.customerName}</DialogTitle>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              <div>
-                                <Label>Ödeme Tutarı (₺)</Label>
-                                <Input
-                                  type="number"
-                                  value={paymentAmount}
-                                  onChange={(e) => setPaymentAmount(e.target.value)}
-                                />
-                              </div>
-                              <div>
-                                <Label>Not</Label>
-                                <Textarea
-                                  value={paymentNote}
-                                  onChange={(e) => setPaymentNote(e.target.value)}
-                                  placeholder="Ödeme notu..."
-                                />
-                              </div>
-                              <Button onClick={handlePayment} className="w-full">
-                                Ödemeyi Onayla
-                              </Button>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
+                        <Button 
+                          size="sm" 
+                          onClick={() => {
+                            setSelectedRecord(record);
+                            setPaymentAmount(Math.abs(record.amount).toString());
+                            setShowPaymentDialog(true);
+                          }}
+                        >
+                          Tahsilat Yap
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))
@@ -327,6 +311,40 @@ const PaymentTracking = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Payment Dialog */}
+      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Vadeli Ödeme Tahsilatı - {selectedRecord?.customerName}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Tahsilat Tutarı (₺)</Label>
+              <Input
+                type="number"
+                value={paymentAmount}
+                onChange={(e) => setPaymentAmount(e.target.value)}
+                max={selectedRecord?.amount || 0}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Maksimum: ₺{selectedRecord?.amount?.toLocaleString() || 0}
+              </p>
+            </div>
+            <div>
+              <Label>Not</Label>
+              <Textarea
+                value={paymentNote}
+                onChange={(e) => setPaymentNote(e.target.value)}
+                placeholder="Tahsilat notu..."
+              />
+            </div>
+            <Button onClick={handlePayment} className="w-full">
+              Tahsilatı Onayla
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

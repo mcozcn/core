@@ -21,10 +21,8 @@ interface CustomerInstallmentFormProps {
 
 const CustomerInstallmentForm = ({ customerId, onSuccess }: CustomerInstallmentFormProps) => {
   const [amount, setAmount] = useState('');
-  const [installmentAmount, setInstallmentAmount] = useState('');
   const [dueDate, setDueDate] = useState<Date | undefined>();
   const [description, setDescription] = useState('');
-  const [operationType, setOperationType] = useState<'add_debt' | 'installment'>('add_debt');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -37,12 +35,13 @@ const CustomerInstallmentForm = ({ customerId, onSuccess }: CustomerInstallmentF
   // Mevcut borç hesaplama
   const existingRecords = allRecords.filter(record => record.customerId === customerId);
   const totalDebt = existingRecords.reduce((acc, record) => 
-    record.type !== 'payment' && record.recordType !== 'installment' ? acc + record.amount : acc, 0
+    (record.type === 'debt' || record.type === 'service' || record.type === 'product') && record.recordType !== 'installment' 
+      ? acc + record.amount : acc, 0
   );
   const totalPayments = existingRecords.reduce((acc, record) => 
     record.type === 'payment' ? acc + Math.abs(record.amount) : acc, 0
   );
-  const totalInstallments = existingRecords.reduce((acc, record) => 
+  const installmentedAmount = existingRecords.reduce((acc, record) => 
     record.recordType === 'installment' ? acc + record.amount : acc, 0
   );
   const currentDebt = Math.max(0, totalDebt - totalPayments);
@@ -50,73 +49,52 @@ const CustomerInstallmentForm = ({ customerId, onSuccess }: CustomerInstallmentF
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (operationType === 'installment' && (!installmentAmount || Number(installmentAmount) > totalInstallments)) {
+    if (!amount || !dueDate) {
       toast({
         variant: "destructive",
         title: "Hata",
-        description: "Ödeme tutarı vadelendirilen tutardan fazla olamaz.",
+        description: "Vadeli ödeme tutarı ve vade tarihini girin.",
       });
       return;
     }
 
-    if (operationType === 'add_debt' && !amount) {
+    const installmentAmount = Number(amount);
+    
+    if (installmentAmount > currentDebt) {
       toast({
         variant: "destructive",
         title: "Hata",
-        description: "Borç tutarını girin.",
+        description: "Vadeli ödeme tutarı mevcut borçtan fazla olamaz.",
       });
       return;
     }
 
-    if (operationType === 'installment') {
-      // Vadeli ödeme kaydı - vadelenen tutardan düş
-      const paymentRecord: CustomerRecord = {
-        id: Date.now(),
-        customerId,
-        type: 'payment',
-        itemId: 0,
-        itemName: 'Vadeli Ödeme',
-        amount: -Number(installmentAmount),
-        date: new Date(),
-        dueDate,
-        isPaid: true,
-        description: description || 'Vadeli ödeme',
-        recordType: 'installment_payment'
-      };
+    // Vadeli ödeme kaydı oluştur
+    const installmentRecord: CustomerRecord = {
+      id: Date.now(),
+      customerId,
+      type: 'debt',
+      itemId: 0,
+      itemName: 'Vadeli Ödeme',
+      amount: installmentAmount,
+      date: new Date(),
+      dueDate,
+      isPaid: false,
+      description: description || 'Vadeli ödeme planlaması',
+      recordType: 'installment'
+    };
 
-      const existingRecords = await getCustomerRecords();
-      await setCustomerRecords([...existingRecords, paymentRecord]);
-    } else {
-      // Borç ekleme
-      const newRecord: CustomerRecord = {
-        id: Date.now(),
-        customerId,
-        type: 'debt',
-        itemId: 0,
-        itemName: 'Borç Eklendi',
-        amount: Number(amount),
-        date: new Date(),
-        dueDate,
-        isPaid: false,
-        description,
-        recordType: 'debt'
-      };
-
-      const existingRecords = await getCustomerRecords();
-      await setCustomerRecords([...existingRecords, newRecord]);
-    }
+    const existingRecords = await getCustomerRecords();
+    await setCustomerRecords([...existingRecords, installmentRecord]);
 
     queryClient.invalidateQueries({ queryKey: ['customerRecords'] });
 
     toast({
-      title: operationType === 'add_debt' ? "Borç eklendi" : "Vadeli ödeme yapıldı",
-      description: operationType === 'add_debt' 
-        ? `${amount} ₺ tutarında borç eklendi.`
-        : `${installmentAmount} ₺ tutarında vadeli ödeme yapıldı.`,
+      title: "Vadeli ödeme oluşturuldu",
+      description: `${installmentAmount} ₺ tutarında vadeli ödeme ${format(dueDate, 'dd/MM/yyyy')} tarihine planlandı.`,
     });
 
     setAmount('');
-    setInstallmentAmount('');
     setDescription('');
     setDueDate(undefined);
 
@@ -128,62 +106,37 @@ const CustomerInstallmentForm = ({ customerId, onSuccess }: CustomerInstallmentF
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <Label className="text-base font-medium">İşlem Türü</Label>
-        <RadioGroup value={operationType} onValueChange={(value: 'add_debt' | 'installment') => setOperationType(value)} className="mt-2">
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="add_debt" id="add_debt" />
-            <Label htmlFor="add_debt">Borç Ekleme</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="installment" id="installment" />
-            <Label htmlFor="installment">Vadeli Ödeme Yap</Label>
-          </div>
-        </RadioGroup>
-        
         {currentDebt > 0 && (
-          <div className="mt-2 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+          <div className="mb-4 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
             <p className="text-sm text-orange-700 dark:text-orange-300">
               Mevcut Borç: <span className="font-medium">₺{currentDebt.toLocaleString()}</span>
             </p>
           </div>
         )}
 
-        {totalInstallments > 0 && (
-          <div className="mt-2 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+        {installmentedAmount > 0 && (
+          <div className="mb-4 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
             <p className="text-sm text-purple-700 dark:text-purple-300">
-              Vadelenen Tutar: <span className="font-medium">₺{totalInstallments.toLocaleString()}</span>
+              Vadelenen Tutar: <span className="font-medium">₺{installmentedAmount.toLocaleString()}</span>
             </p>
           </div>
         )}
       </div>
 
-      {operationType === 'add_debt' ? (
-        <div>
-          <Label>Borç Tutarı (₺)</Label>
-          <Input
-            type="number"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder="Tutarı girin"
-            required
-          />
-        </div>
-      ) : (
-        <div>
-          <Label>Ödeme Tutarı (₺)</Label>
-          <p className="text-xs text-muted-foreground mb-1">
-            Maksimum: ₺{totalInstallments.toLocaleString()}
-          </p>
-          <Input
-            type="number"
-            max={totalInstallments}
-            value={installmentAmount}
-            onChange={(e) => setInstallmentAmount(e.target.value)}
-            placeholder="Ödeme tutarını girin"
-            required
-          />
-        </div>
-      )}
+      <div>
+        <Label>Vadeli Ödeme Tutarı (₺)</Label>
+        <p className="text-xs text-muted-foreground mb-1">
+          Maksimum: ₺{currentDebt.toLocaleString()}
+        </p>
+        <Input
+          type="number"
+          max={currentDebt}
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          placeholder="Vadeli ödeme tutarını girin"
+          required
+        />
+      </div>
 
       <div>
         <Label>Vade Tarihi</Label>
@@ -216,13 +169,13 @@ const CustomerInstallmentForm = ({ customerId, onSuccess }: CustomerInstallmentF
         <Textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Açıklama ekleyin"
+          placeholder="Vadeli ödeme açıklaması"
           className="min-h-[100px]"
         />
       </div>
 
       <Button type="submit" className="w-full">
-        {operationType === 'add_debt' ? 'Borç Ekle' : 'Vadeli Ödeme Yap'}
+        Vadeli Ödeme Planla
       </Button>
     </form>
   );
