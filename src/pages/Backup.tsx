@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 import { 
   Download, 
   Upload, 
@@ -13,19 +14,21 @@ import {
   CheckCircle,
   AlertTriangle,
   FileText,
-  HardDrive
+  HardDrive,
+  RefreshCw
 } from 'lucide-react';
+import { exportBackup, importBackup, refreshApplication } from '@/utils/backup';
 
 const Backup = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const handleExport = async () => {
     setIsExporting(true);
     try {
-      // Simulate export process
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await exportBackup();
       
       toast({
         title: "Yedekleme Başarılı",
@@ -48,12 +51,14 @@ const Backup = () => {
 
     setIsImporting(true);
     try {
-      // Simulate import process
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await importBackup(file);
+      
+      // Clear all queries to force refetch
+      queryClient.clear();
       
       toast({
         title: "Geri Yükleme Başarılı",
-        description: "Verileriniz başarıyla geri yüklendi.",
+        description: "Verileriniz başarıyla geri yüklendi. Sayfayı yenilemek için yenile butonuna tıklayın.",
       });
     } catch (error) {
       toast({
@@ -63,7 +68,13 @@ const Backup = () => {
       });
     } finally {
       setIsImporting(false);
+      // Reset file input
+      event.target.value = '';
     }
+  };
+
+  const handleRefresh = () => {
+    refreshApplication();
   };
 
   return (
@@ -88,8 +99,8 @@ const Backup = () => {
                 <Database className="h-4 w-4 text-white" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Veri Boyutu</p>
-                <p className="text-2xl font-bold text-blue-600">2.4 MB</p>
+                <p className="text-sm text-muted-foreground">Sistem Durumu</p>
+                <p className="text-2xl font-bold text-blue-600">Hazır</p>
               </div>
             </div>
           </CardContent>
@@ -127,10 +138,10 @@ const Backup = () => {
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-purple-500 rounded-lg">
-                <HardDrive className="h-4 w-4 text-white" />
+                <RefreshCw className="h-4 w-4 text-white" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Otomatik Yedek</p>
+                <p className="text-sm text-muted-foreground">Sistem</p>
                 <p className="text-2xl font-bold text-purple-600">Aktif</p>
               </div>
             </div>
@@ -163,20 +174,28 @@ const Backup = () => {
             
             <div className="space-y-3">
               <div className="flex items-center justify-between text-sm">
-                <span>Müşteriler:</span>
-                <Badge variant="outline">125 kayıt</Badge>
+                <span>Müşteriler & Cari Hesap:</span>
+                <Badge variant="outline">Dahil</Badge>
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span>Randevular:</span>
-                <Badge variant="outline">342 kayıt</Badge>
+                <Badge variant="outline">Dahil</Badge>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span>Satışlar:</span>
-                <Badge variant="outline">156 kayıt</Badge>
+                <span>Satışlar & Hizmetler:</span>
+                <Badge variant="outline">Dahil</Badge>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span>Stok:</span>
-                <Badge variant="outline">89 kayıt</Badge>
+                <span>Stok & Hareketler:</span>
+                <Badge variant="outline">Dahil</Badge>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span>Personel & Cari:</span>
+                <Badge variant="outline">Dahil</Badge>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span>Masraflar:</span>
+                <Badge variant="outline">Dahil</Badge>
               </div>
             </div>
 
@@ -194,7 +213,7 @@ const Backup = () => {
               ) : (
                 <>
                   <Download className="h-4 w-4 mr-2" />
-                  Verileri Dışa Aktar
+                  Tam Yedekleme Al
                 </>
               )}
             </Button>
@@ -227,7 +246,7 @@ const Backup = () => {
                 Desteklenen format: JSON (.json)
               </p>
               <p className="text-sm text-muted-foreground">
-                Maksimum dosya boyutu: 10 MB
+                Maksimum dosya boyutu: 50 MB
               </p>
             </div>
 
@@ -250,37 +269,46 @@ const Backup = () => {
                 </p>
               </label>
             </div>
+
+            <Button 
+              onClick={handleRefresh}
+              variant="outline"
+              className="w-full"
+              size="lg"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Sistemi Yenile
+            </Button>
           </CardContent>
         </Card>
       </div>
 
-      {/* Backup History */}
+      {/* Info Section */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Clock className="h-5 w-5" />
-            Yedekleme Geçmişi
+            Yedekleme Bilgileri
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {[
-              { date: '9 Haziran 2025, 14:30', size: '2.4 MB', status: 'Başarılı' },
-              { date: '8 Haziran 2025, 14:30', size: '2.3 MB', status: 'Başarılı' },
-              { date: '7 Haziran 2025, 14:30', size: '2.2 MB', status: 'Başarılı' },
-              { date: '6 Haziran 2025, 14:30', size: '2.1 MB', status: 'Başarılı' },
-            ].map((backup, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-accent/20 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  <div>
-                    <p className="font-medium">{backup.date}</p>
-                    <p className="text-sm text-muted-foreground">Boyut: {backup.size}</p>
-                  </div>
-                </div>
-                <Badge variant="secondary">{backup.status}</Badge>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 bg-accent/20 rounded-lg">
+                <h4 className="font-medium mb-2">Otomatik Yedekleme</h4>
+                <p className="text-sm text-muted-foreground">
+                  Verileriniz tarayıcı depolama alanında otomatik olarak korunur. 
+                  Düzenli olarak manuel yedekleme almayı unutmayın.
+                </p>
               </div>
-            ))}
+              <div className="p-4 bg-accent/20 rounded-lg">
+                <h4 className="font-medium mb-2">Geri Yükleme Sonrası</h4>
+                <p className="text-sm text-muted-foreground">
+                  Veri geri yüklendikten sonra "Sistemi Yenile" butonuna tıklayarak 
+                  tüm verilerin görüntülenmesini sağlayın.
+                </p>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>

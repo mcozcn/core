@@ -21,6 +21,7 @@ const Costs = () => {
     from: new Date(),
     to: addDays(new Date(), 7)
   });
+  const [showAddForm, setShowAddForm] = useState(false);
 
   const { data: costs = [] } = useQuery({
     queryKey: ['costs'],
@@ -47,7 +48,7 @@ const Costs = () => {
     <div className="p-8 pl-72 animate-fadeIn">
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-4xl font-serif">Masraf Yönetimi</h1>
-        <Dialog>
+        <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
@@ -56,8 +57,8 @@ const Costs = () => {
           </DialogTrigger>
           <DialogContent className="sm:max-w-[550px]">
             <AddCostForm 
-              showForm={true} 
-              setShowForm={() => {}} 
+              showForm={showAddForm} 
+              setShowForm={setShowAddForm} 
             />
           </DialogContent>
         </Dialog>

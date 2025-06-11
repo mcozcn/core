@@ -44,6 +44,10 @@ export const getPersonnel = async (): Promise<Personnel[]> => {
   }
 };
 
+export const setPersonnel = async (personnel: Personnel[]): Promise<void> => {
+  await setToStorage(PERSONNEL_KEY, personnel);
+};
+
 export const addPersonnel = async (personnelData: Omit<Personnel, 'id' | 'createdAt' | 'updatedAt'>): Promise<Personnel> => {
   const personnel = await getPersonnel();
   const newPersonnel: Personnel = {
@@ -54,7 +58,7 @@ export const addPersonnel = async (personnelData: Omit<Personnel, 'id' | 'create
   };
   
   const updatedPersonnel = [...personnel, newPersonnel];
-  await setToStorage(PERSONNEL_KEY, updatedPersonnel);
+  await setPersonnel(updatedPersonnel);
   return newPersonnel;
 };
 
@@ -71,7 +75,7 @@ export const updatePersonnel = async (id: number, updates: Partial<Personnel>): 
       updatedAt: new Date()
     };
     
-    await setToStorage(PERSONNEL_KEY, personnel);
+    await setPersonnel(personnel);
     return true;
   } catch (error) {
     console.error('Error updating personnel:', error);
@@ -83,7 +87,7 @@ export const deletePersonnel = async (id: number): Promise<boolean> => {
   try {
     const personnel = await getPersonnel();
     const filteredPersonnel = personnel.filter(p => p.id !== id);
-    await setToStorage(PERSONNEL_KEY, filteredPersonnel);
+    await setPersonnel(filteredPersonnel);
     return true;
   } catch (error) {
     console.error('Error deleting personnel:', error);
@@ -104,6 +108,10 @@ export const getPersonnelRecords = async (personnelId?: number): Promise<Personn
   }
 };
 
+export const setPersonnelRecords = async (records: PersonnelRecord[]): Promise<void> => {
+  await setToStorage(PERSONNEL_RECORDS_KEY, records);
+};
+
 export const addPersonnelRecord = async (record: Omit<PersonnelRecord, 'id' | 'createdAt'>): Promise<PersonnelRecord> => {
   const records = await getPersonnelRecords();
   const newRecord: PersonnelRecord = {
@@ -113,6 +121,6 @@ export const addPersonnelRecord = async (record: Omit<PersonnelRecord, 'id' | 'c
   };
   
   const updatedRecords = [...records, newRecord];
-  await setToStorage(PERSONNEL_RECORDS_KEY, updatedRecords);
+  await setPersonnelRecords(updatedRecords);
   return newRecord;
 };

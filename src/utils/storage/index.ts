@@ -6,6 +6,9 @@ export { type Appointment, type Customer, type CustomerRecord, type Service,
 // Export these types explicitly 
 export type { StockMovement, UserPerformance, UserActivity } from './types';
 
+// Export personnel types
+export type { Personnel, PersonnelRecord } from './personnel';
+
 export * from './appointments';
 export * from './customers';
 export * from './services';
@@ -16,4 +19,5 @@ export * from './users';
 export * from './staff';
 export * from './stockMovements';
 export * from './userPerformance';
+export * from './personnel';
 export * from '../whatsapp';
