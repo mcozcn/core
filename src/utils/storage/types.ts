@@ -1,4 +1,3 @@
-
 export interface Appointment {
   id: number;
   customerId: number;
@@ -43,7 +42,7 @@ export interface CustomerRecord {
   dueDate?: Date;
   isPaid?: boolean;
   description?: string;
-  recordType?: 'debt' | 'payment' | 'installment' | 'service' | 'product';
+  recordType?: 'debt' | 'payment' | 'installment' | 'service' | 'product' | 'installment_payment';
   paymentMethod?: string;
   discount?: number;
   quantity?: number;
