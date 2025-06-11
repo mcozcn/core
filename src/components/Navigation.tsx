@@ -106,13 +106,13 @@ const Navigation = () => {
     <nav className={`fixed top-0 left-0 h-full ${isCollapsed ? 'w-16' : 'w-56'} bg-background/95 backdrop-blur border-r border-border shadow-lg transition-all duration-300 z-50 flex flex-col`}>
       {/* Header */}
       <div className="p-4 border-b border-border">
-        <div className="flex flex-col items-center space-y-3">
+        <div className="flex flex-col items-center space-y-4">
           {/* Logo */}
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center w-full px-2">
             <img 
-              src="/lovable-uploads/18599c6d-da00-4149-814e-e1ce55f990d5.png" 
+              src="/lovable-uploads/91cb1ad9-255c-44ce-9796-4e318446526e.png" 
               alt="Beautiq" 
-              className={`${isCollapsed ? 'w-8 h-8' : 'w-12 h-12'} object-contain transition-all duration-300`}
+              className={`${isCollapsed ? 'w-10 h-6' : 'w-44 h-24'} object-contain transition-all duration-300`}
             />
           </div>
           
@@ -120,7 +120,6 @@ const Navigation = () => {
           <div className="flex items-center justify-between w-full">
             {!isCollapsed && (
               <div className="text-center flex-1">
-                <h1 className="text-lg font-bold">Beautiq</h1>
                 <p className="text-xs text-muted-foreground">Salon Yönetimi</p>
               </div>
             )}
