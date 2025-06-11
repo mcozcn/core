@@ -9,6 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { getCustomerRecords, setCustomerRecords, type CustomerRecord } from '@/utils/storage';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { CreditCard, Banknote, Landmark, FileText, Clock, DollarSign } from "lucide-react";
 
 interface CustomerPaymentFormProps {
   customerId: number;
@@ -172,144 +175,219 @@ const CustomerPaymentForm = ({ customerId, onSuccess }: CustomerPaymentFormProps
     }
   };
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Payment Type Selection */}
-      <div>
-        <Label className="text-base font-medium">Ödeme Türü</Label>
-        <Select value={paymentType} onValueChange={(value: 'regular' | 'installment') => setPaymentType(value)}>
-          <SelectTrigger className="mt-2">
-            <SelectValue placeholder="Ödeme türünü seçin" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="regular">Normal Ödeme</SelectItem>
-            <SelectItem value="installment">Vadeli Ödeme Tahsilatı</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+  const paymentMethodIcons = {
+    'Nakit': Banknote,
+    'Kredi Kartı': CreditCard,
+    'Banka Havalesi': Landmark,
+    'Çek': FileText
+  };
 
-      {/* Current Status Cards */}
+  return (
+    <div className="space-y-6">
+      {/* Payment Type Selection */}
+      <Card className="border-2">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <DollarSign className="h-5 w-5" />
+            Ödeme Türü Seçimi
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <Button
+              type="button"
+              variant={paymentType === 'regular' ? 'default' : 'outline'}
+              className="h-auto p-4 flex flex-col gap-2"
+              onClick={() => setPaymentType('regular')}
+            >
+              <DollarSign className="h-6 w-6" />
+              <span className="font-medium">Normal Ödeme</span>
+              <span className="text-xs opacity-70">Mevcut borçtan düşülür</span>
+            </Button>
+            
+            <Button
+              type="button"
+              variant={paymentType === 'installment' ? 'default' : 'outline'}
+              className="h-auto p-4 flex flex-col gap-2"
+              onClick={() => setPaymentType('installment')}
+              disabled={unpaidInstallments.length === 0}
+            >
+              <Clock className="h-6 w-6" />
+              <span className="font-medium">Vadeli Ödeme Tahsilatı</span>
+              <span className="text-xs opacity-70">
+                {unpaidInstallments.length > 0 ? `${unpaidInstallments.length} adet mevcut` : 'Vadeli ödeme yok'}
+              </span>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Current Status */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {paymentType === 'regular' && (
-          <Card className="bg-red-50 dark:bg-red-900/20 border-red-200">
-            <CardHeader className="p-4 pb-2">
-              <CardTitle className="text-sm text-red-700 dark:text-red-300">Mevcut Borç</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-              <p className="text-lg font-semibold text-red-600 dark:text-red-400">
-                ₺{currentDebt.toLocaleString()}
-              </p>
+          <Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 border-red-200">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-red-500 rounded-lg">
+                  <DollarSign className="h-4 w-4 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Mevcut Borç</p>
+                  <p className="text-xl font-bold text-red-600">₺{currentDebt.toLocaleString()}</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         )}
         
         {paymentType === 'installment' && unpaidInstallments.length > 0 && (
-          <Card className="bg-purple-50 dark:bg-purple-900/20 border-purple-200">
-            <CardHeader className="p-4 pb-2">
-              <CardTitle className="text-sm text-purple-700 dark:text-purple-300">Vadeli Ödemeler</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-              <p className="text-lg font-semibold text-purple-600 dark:text-purple-400">
-                {unpaidInstallments.length} adet
-              </p>
+          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border-purple-200">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-purple-500 rounded-lg">
+                  <Clock className="h-4 w-4 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Vadeli Ödemeler</p>
+                  <p className="text-xl font-bold text-purple-600">{unpaidInstallments.length} adet</p>
+                  <p className="text-sm text-purple-500">
+                    Toplam: ₺{unpaidInstallments.reduce((sum, inst) => sum + inst.amount, 0).toLocaleString()}
+                  </p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         )}
       </div>
 
-      {/* Installment Selection */}
-      {paymentType === 'installment' && (
-        <div>
-          <Label>Vadeli Ödeme Seçin</Label>
-          {unpaidInstallments.length > 0 ? (
-            <Select value={selectedInstallment} onValueChange={setSelectedInstallment}>
-              <SelectTrigger>
-                <SelectValue placeholder="Tahsil edilecek vadeli ödemeyi seçin" />
-              </SelectTrigger>
-              <SelectContent>
-                {unpaidInstallments.map((installment) => (
-                  <SelectItem key={installment.id} value={installment.id.toString()}>
-                    {installment.itemName} - ₺{installment.amount.toLocaleString()} 
-                    {installment.dueDate && ` (Vade: ${new Date(installment.dueDate).toLocaleDateString('tr-TR')})`}
-                  </SelectItem>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Installment Selection */}
+        {paymentType === 'installment' && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Vadeli Ödeme Seçimi</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {unpaidInstallments.length > 0 ? (
+                <div className="space-y-3">
+                  {unpaidInstallments.map((installment) => (
+                    <div
+                      key={installment.id}
+                      className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                        selectedInstallment === installment.id.toString()
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                      onClick={() => setSelectedInstallment(installment.id.toString())}
+                    >
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-medium">{installment.itemName}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Vade: {installment.dueDate ? new Date(installment.dueDate).toLocaleDateString('tr-TR') : 'Tarih yok'}
+                          </p>
+                        </div>
+                        <Badge variant="secondary" className="font-medium">
+                          ₺{installment.amount.toLocaleString()}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Clock className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>Bu müşterinin ödenmemiş vadeli ödemesi bulunmamaktadır.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Payment Details */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Ödeme Detayları</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Amount Input */}
+            <div>
+              <Label className="text-sm font-medium">Ödeme Tutarı (₺)</Label>
+              {paymentType === 'regular' && (
+                <p className="text-xs text-muted-foreground mb-2">
+                  Maksimum: ₺{currentDebt.toLocaleString()}
+                </p>
+              )}
+              {paymentType === 'installment' && selectedInstallment && (
+                <p className="text-xs text-muted-foreground mb-2">
+                  Maksimum: ₺{unpaidInstallments.find(r => r.id.toString() === selectedInstallment)?.amount.toLocaleString() || 0}
+                </p>
+              )}
+              <Input
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="0,00"
+                className="text-lg"
+                required
+                max={
+                  paymentType === 'regular' 
+                    ? currentDebt 
+                    : selectedInstallment 
+                      ? unpaidInstallments.find(r => r.id.toString() === selectedInstallment)?.amount || 0
+                      : 0
+                }
+              />
+            </div>
+
+            <Separator />
+
+            {/* Payment Method */}
+            <div>
+              <Label className="text-sm font-medium mb-3 block">Ödeme Yöntemi</Label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                {Object.entries(paymentMethodIcons).map(([method, Icon]) => (
+                  <Button
+                    key={method}
+                    type="button"
+                    variant={paymentMethod === method ? 'default' : 'outline'}
+                    className="h-auto p-3 flex flex-col gap-1"
+                    onClick={() => setPaymentMethod(method)}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span className="text-xs">{method}</span>
+                  </Button>
                 ))}
-              </SelectContent>
-            </Select>
-          ) : (
-            <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
-              Bu müşterinin ödenmemiş vadeli ödemesi bulunmamaktadır.
-            </p>
-          )}
-        </div>
-      )}
+              </div>
+            </div>
 
-      {/* Amount Input */}
-      <div>
-        <Label>Ödeme Tutarı (₺)</Label>
-        {paymentType === 'regular' && (
-          <p className="text-xs text-muted-foreground mb-1">
-            Maksimum: ₺{currentDebt.toLocaleString()}
-          </p>
-        )}
-        {paymentType === 'installment' && selectedInstallment && (
-          <p className="text-xs text-muted-foreground mb-1">
-            Maksimum: ₺{unpaidInstallments.find(r => r.id.toString() === selectedInstallment)?.amount.toLocaleString() || 0}
-          </p>
-        )}
-        <Input
-          type="number"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          placeholder="Ödeme tutarını girin"
-          required
-          max={
-            paymentType === 'regular' 
-              ? currentDebt 
-              : selectedInstallment 
-                ? unpaidInstallments.find(r => r.id.toString() === selectedInstallment)?.amount || 0
-                : 0
+            {/* Description */}
+            <div>
+              <Label className="text-sm font-medium">Açıklama (Opsiyonel)</Label>
+              <Textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Ödeme ile ilgili not ekleyin..."
+                className="mt-1 resize-none"
+                rows={3}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Submit Button */}
+        <Button 
+          type="submit" 
+          className="w-full h-12 text-lg font-medium"
+          disabled={
+            (paymentType === 'regular' && currentDebt <= 0) ||
+            (paymentType === 'installment' && unpaidInstallments.length === 0)
           }
-        />
-      </div>
-
-      {/* Payment Method */}
-      <div>
-        <Label>Ödeme Yöntemi</Label>
-        <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Nakit">Nakit</SelectItem>
-            <SelectItem value="Kredi Kartı">Kredi Kartı</SelectItem>
-            <SelectItem value="Banka Havalesi">Banka Havalesi</SelectItem>
-            <SelectItem value="Çek">Çek</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Description */}
-      <div>
-        <Label>Açıklama</Label>
-        <Textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Ödeme açıklaması"
-          className="min-h-[100px]"
-        />
-      </div>
-
-      <Button 
-        type="submit" 
-        className="w-full"
-        disabled={
-          (paymentType === 'regular' && currentDebt <= 0) ||
-          (paymentType === 'installment' && unpaidInstallments.length === 0)
-        }
-      >
-        {paymentType === 'regular' ? 'Ödeme Al' : 'Vadeli Ödeme Tahsilatı Yap'}
-      </Button>
-    </form>
+        >
+          {paymentType === 'regular' ? 'Ödeme Al' : 'Vadeli Ödeme Tahsilatı Yap'}
+        </Button>
+      </form>
+    </div>
   );
 };
 
