@@ -31,16 +31,31 @@ export interface PersonnelRecord {
   createdAt: Date;
 }
 
-const PERSONNEL_KEY = 'personnel_v1';
-const PERSONNEL_RECORDS_KEY = 'personnel_records_v1';
+const PERSONNEL_KEY = 'personnel_v2'; // Version updated to clear demo data
+const PERSONNEL_RECORDS_KEY = 'personnel_records_v2'; // Version updated
+
+// Temizlik fonksiyonu - eski demo verileri sil
+const clearOldPersonnelData = async (): Promise<void> => {
+  try {
+    localStorage.removeItem('personnel_v1');
+    localStorage.removeItem('personnel_records_v1');
+    localStorage.removeItem('personnel');
+    localStorage.removeItem('personnel_records');
+  } catch (error) {
+    console.log('Error clearing old personnel data:', error);
+  }
+};
 
 export const getPersonnel = async (): Promise<Personnel[]> => {
   try {
+    // İlk çalıştırmada eski verileri temizle
+    await clearOldPersonnelData();
+    
     const personnel = await getFromStorage<Personnel>(PERSONNEL_KEY);
-    return personnel;
+    return personnel; // Boş liste döndür, demo veri yok
   } catch (error) {
     console.error('Error getting personnel:', error);
-    return [];
+    return []; // Hata durumunda boş liste döndür
   }
 };
 
