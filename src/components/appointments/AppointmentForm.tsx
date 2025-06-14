@@ -9,8 +9,9 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { getAppointments, setAppointments, type Appointment, getCustomers, getServices } from "@/utils/localStorage";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import CustomerSelectionDialog from '../common/CustomerSelectionDialog';
+import DateSelectionDialog from '../common/DateSelectionDialog';
 import { format } from 'date-fns';
-import { getAllUsers } from '@/utils/auth';
+import { getUsers } from '@/utils/storage';
 
 interface AppointmentFormProps {
   selectedDate: Date;
@@ -21,6 +22,7 @@ interface AppointmentFormProps {
 const AppointmentForm = ({ selectedDate, onSuccess, onCancel }: AppointmentFormProps) => {
   const [customerId, setCustomerId] = useState('');
   const [customerSearch, setCustomerSearch] = useState('');
+  const [appointmentDate, setAppointmentDate] = useState<Date>(selectedDate);
   const [appointmentTime, setAppointmentTime] = useState('');
   const [serviceId, setServiceId] = useState('');
   const [staffId, setStaffId] = useState('');
@@ -38,9 +40,14 @@ const AppointmentForm = ({ selectedDate, onSuccess, onCancel }: AppointmentFormP
     queryFn: getCustomers,
   });
 
-  const staff = getAllUsers();
+  const { data: users = [] } = useQuery({
+    queryKey: ['users'],
+    queryFn: getUsers,
+  });
+
+  // Personel rolündeki kullanıcıları filtrele
+  const staffUsers = users.filter(user => user.role === 'staff');
   const selectedCustomer = customers.find(c => c.id.toString() === customerId);
-  const selectedStaff = staff.find(s => s.id.toString() === staffId);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,7 +57,7 @@ const AppointmentForm = ({ selectedDate, onSuccess, onCancel }: AppointmentFormP
       const appointments = getAppointments();
       const customer = customers.find(c => c.id === Number(customerId));
       const service = services.find(s => s.id === Number(serviceId));
-      const staff = getAllUsers().find(s => s.id === Number(staffId));
+      const staff = staffUsers.find(s => s.id === Number(staffId));
 
       if (!customer) {
         throw new Error("Müşteri bulunamadı");
@@ -64,9 +71,7 @@ const AppointmentForm = ({ selectedDate, onSuccess, onCancel }: AppointmentFormP
         throw new Error("Personel bulunamadı");
       }
 
-      const formattedDate = format(selectedDate, 'yyyy-MM-dd');
-      console.log('Selected date:', selectedDate);
-      console.log('Formatted date for appointment:', formattedDate);
+      const formattedDate = format(appointmentDate, 'yyyy-MM-dd');
 
       const newAppointment: Appointment = {
         id: Date.now(),
@@ -90,8 +95,6 @@ const AppointmentForm = ({ selectedDate, onSuccess, onCancel }: AppointmentFormP
       const updatedAppointments = [...appointments, newAppointment];
       setAppointments(updatedAppointments);
       queryClient.setQueryData(['appointments'], updatedAppointments);
-      
-      console.log('New appointment saved:', newAppointment);
       
       toast({
         title: "Randevu başarıyla kaydedildi",
@@ -126,13 +129,21 @@ const AppointmentForm = ({ selectedDate, onSuccess, onCancel }: AppointmentFormP
         </div>
 
         <div>
+          <Label>Randevu Tarihi</Label>
+          <DateSelectionDialog
+            selectedDate={appointmentDate}
+            onDateSelect={setAppointmentDate}
+          />
+        </div>
+
+        <div>
           <Label>Personel</Label>
           <Select value={staffId} onValueChange={setStaffId}>
             <SelectTrigger>
               <SelectValue placeholder="Personel seçin" />
             </SelectTrigger>
             <SelectContent>
-              {staff.map((person) => (
+              {staffUsers.map((person) => (
                 <SelectItem 
                   key={person.id} 
                   value={person.id.toString()}

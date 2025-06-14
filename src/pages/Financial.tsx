@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import CostsTable from "@/components/costs/CostsTable";
 import FinancialDashboard from "@/components/financial/FinancialDashboard";
 import RevenueExpenseChart from "@/components/financial/RevenueExpenseChart";
-import CashFlowChart from "@/components/financial/CashFlowChart";
+import MonthlyPaymentsExpensesChart from "@/components/financial/MonthlyPaymentsExpensesChart";
 import RevenueSourceChart from "@/components/financial/RevenueSourceChart";
 import {
   Table,
@@ -168,7 +168,7 @@ const Financial = () => {
         {/* Charts Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <RevenueExpenseChart />
-          <CashFlowChart />
+          <MonthlyPaymentsExpensesChart />
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

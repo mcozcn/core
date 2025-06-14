@@ -1,13 +1,12 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getCustomers, getCustomerRecords, getAppointments } from '@/utils/storage';
+import { getCustomers, getCustomerRecords, getAppointments, setCustomers } from '@/utils/storage';
 import SearchInput from '@/components/common/SearchInput';
 import CustomerDetailView from '@/components/customers/CustomerDetailView';
-import { Edit, Plus, User, Users, Calendar, DollarSign, TrendingUp } from "lucide-react";
+import { Edit, Plus, User, Users, Calendar, DollarSign, TrendingUp, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import AddCustomerForm from '@/components/customers/AddCustomerForm';
 import EditCustomerForm from '@/components/customers/EditCustomerForm';
@@ -19,6 +18,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Customers = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -26,6 +38,11 @@ const Customers = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const { user } = useAuth();
+
+  // Admin kontrolü
+  const isAdmin = user?.role === 'admin';
 
   const { data: customers = [], isLoading: isLoadingCustomers } = useQuery({
     queryKey: ['customers'],
@@ -58,6 +75,30 @@ const Customers = () => {
   const handleEditSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ['customers'] });
     setShowEditDialog(false);
+  };
+
+  const handleDeleteCustomer = async (customerId: number) => {
+    try {
+      const updatedCustomers = customers.filter(c => c.id !== customerId);
+      await setCustomers(updatedCustomers);
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+      
+      // Eğer silinen müşteri seçili ise, seçimi temizle
+      if (selectedCustomerId === customerId) {
+        setSelectedCustomerId(null);
+      }
+
+      toast({
+        title: "Müşteri silindi",
+        description: "Müşteri başarıyla silindi.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Müşteri silinirken bir hata oluştu.",
+      });
+    }
   };
 
   // Calculate stats
@@ -173,6 +214,33 @@ const Customers = () => {
             >
               ← Müşteri Listesi
             </Button>
+            {isAdmin && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm" className="gap-2">
+                    <Trash2 className="h-4 w-4" />
+                    Müşteriyi Sil
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Müşteriyi Sil</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Bu işlem geri alınamaz. "{selectedCustomer.name}" adlı müşteriyi kalıcı olarak silmek istediğinizden emin misiniz?
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>İptal</AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={() => handleDeleteCustomer(selectedCustomer.id)}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Sil
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </div>
           <CustomerDetailView 
             customer={selectedCustomer}
@@ -304,6 +372,37 @@ const Customers = () => {
                               >
                                 <Edit className="h-4 w-4" />
                               </Button>
+                              {isAdmin && (
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm"
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="text-destructive hover:text-destructive"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Müşteriyi Sil</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Bu işlem geri alınamaz. "{customer.name}" adlı müşteriyi kalıcı olarak silmek istediğinizden emin misiniz?
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>İptal</AlertDialogCancel>
+                                      <AlertDialogAction 
+                                        onClick={() => handleDeleteCustomer(customer.id)}
+                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                      >
+                                        Sil
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              )}
                             </div>
                           </TableCell>
                         </TableRow>

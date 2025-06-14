@@ -3,9 +3,9 @@ import { DateRange } from "react-day-picker";
 import { isWithinInterval, startOfDay, endOfDay } from "date-fns";
 
 export const useCommissionData = (sales: any[], serviceSales: any[], date: DateRange | undefined, selectedStaffId: string, users: any[] = []) => {
-  // Filter by date range
+  // Filter by date range - include current day
   const filterByDate = (saleDate: Date | string) => {
-    if (!date?.from || !date?.to) return true;
+    if (!date?.from) return true;
     
     const saleDateObj = typeof saleDate === 'string' ? new Date(saleDate) : saleDate;
     
