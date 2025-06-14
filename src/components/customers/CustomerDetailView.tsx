@@ -111,7 +111,7 @@ const CustomerDetailView = ({ customer, onCustomerUpdated, onCustomerDeleted }: 
     onCustomerUpdated();
   };
 
-  // Calculate financial summary
+  // Calculate financial summary with improved installment handling
   const totalSpent = customerRecords
     .filter(record => record.type !== 'payment')
     .reduce((sum, record) => sum + record.amount, 0);
@@ -120,6 +120,16 @@ const CustomerDetailView = ({ customer, onCustomerUpdated, onCustomerDeleted }: 
     .filter(record => record.type === 'payment')
     .reduce((sum, record) => sum + Math.abs(record.amount), 0);
 
+  // Calculate installment amounts more accurately
+  const installmentRecords = customerRecords.filter(record => record.type === 'installment');
+  const totalInstallmentAmount = installmentRecords.reduce((sum, record) => sum + record.amount, 0);
+
+  // Calculate installment payments
+  const installmentPayments = customerRecords
+    .filter(record => record.type === 'installment_payment')
+    .reduce((sum, record) => sum + Math.abs(record.amount), 0);
+
+  const remainingInstallmentAmount = Math.max(0, totalInstallmentAmount - installmentPayments);
   const remainingDebt = Math.max(0, totalSpent - totalPayments);
 
   return (
@@ -275,9 +285,9 @@ const CustomerDetailView = ({ customer, onCustomerUpdated, onCustomerDeleted }: 
               </div>
             </div>
             <div className="text-center">
-              <div className="text-sm text-muted-foreground mb-1">Vadeden Tutar</div>
+              <div className="text-sm text-muted-foreground mb-1">Vadeli Tutar</div>
               <div className="text-2xl font-bold text-blue-600">
-                {formatCurrency(0)}
+                {formatCurrency(remainingInstallmentAmount)}
               </div>
             </div>
             <div className="text-center">
@@ -303,7 +313,7 @@ const CustomerDetailView = ({ customer, onCustomerUpdated, onCustomerDeleted }: 
           <TabsTrigger value="appointments">Randevu Geçmişi</TabsTrigger>
           <TabsTrigger value="installment">Vadeli Ödeme</TabsTrigger>
           <TabsTrigger value="payment">Ödeme Al</TabsTrigger>
-          <TabsTrigger value="debt">Ödeme Al</TabsTrigger>
+          <TabsTrigger value="debt">Borç Ver</TabsTrigger>
         </TabsList>
 
         <TabsContent value="records">

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { getAppointments, setAppointments, type Appointment, getCustomers, getServices } from "@/utils/localStorage";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -180,13 +180,13 @@ const AppointmentForm = ({ selectedDate: initialDate, onSuccess, onCancel }: App
                 {appointmentDate ? format(appointmentDate, "dd/MM/yyyy") : "Tarih seçin"}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
+            <PopoverContent className="w-auto p-0 z-50" align="start">
               <Calendar
                 mode="single"
                 selected={appointmentDate}
                 onSelect={setAppointmentDate}
                 initialFocus
-                className="pointer-events-auto"
+                className="rounded-md border pointer-events-auto"
               />
             </PopoverContent>
           </Popover>
@@ -198,7 +198,7 @@ const AppointmentForm = ({ selectedDate: initialDate, onSuccess, onCancel }: App
             <SelectTrigger>
               <SelectValue placeholder="Personel seçin" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="z-50">
               {allStaff.map((person) => (
                 <SelectItem 
                   key={person.id} 
@@ -234,7 +234,7 @@ const AppointmentForm = ({ selectedDate: initialDate, onSuccess, onCancel }: App
             <SelectTrigger>
               <SelectValue placeholder="Hizmet seçin" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="z-50">
               {services.map((service) => (
                 <SelectItem key={service.id} value={service.id.toString()}>
                   {service.name} - {service.price} ₺
