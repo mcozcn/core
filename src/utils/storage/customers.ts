@@ -18,5 +18,17 @@ export const getCustomerRecords = async (): Promise<CustomerRecord[]> => {
 };
 
 export const setCustomerRecords = async (records: CustomerRecord[]): Promise<void> => {
-  await setToStorage(STORAGE_KEYS.CUSTOMER_RECORDS, records);
+  // Vadeli ödeme tahsilatı işleminde kayıtları düzgün güncelle
+  const processedRecords = records.map(record => {
+    // Vadeli ödeme tahsilatı sonrası vadeli ödeme kaydını güncelle
+    if (record.recordType === 'installment' && record.isPaid) {
+      return {
+        ...record,
+        isPaid: true
+      };
+    }
+    return record;
+  });
+  
+  await setToStorage(STORAGE_KEYS.CUSTOMER_RECORDS, processedRecords);
 };

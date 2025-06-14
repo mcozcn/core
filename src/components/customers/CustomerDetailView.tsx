@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -55,9 +56,12 @@ const CustomerDetailView = ({ customer, onEdit }: CustomerDetailViewProps) => {
   const totalPayments = records.reduce((acc, record) => 
     record.type === 'payment' ? acc + Math.abs(record.amount) : acc, 0
   );
+  
+  // Vadeli ödeme hesaplaması - sadece ödenmemiş vadeli ödemeler
   const installmentedAmount = records.reduce((acc, record) => 
-    record.recordType === 'installment' ? acc + record.amount : acc, 0
+    record.recordType === 'installment' && !record.isPaid ? acc + record.amount : acc, 0
   );
+  
   const remainingDebt = Math.max(0, totalDebt - totalPayments);
 
   const getInitials = (name: string) => {
