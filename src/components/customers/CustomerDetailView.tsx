@@ -120,13 +120,13 @@ const CustomerDetailView = ({ customer, onCustomerUpdated, onCustomerDeleted }: 
     .filter(record => record.type === 'payment')
     .reduce((sum, record) => sum + Math.abs(record.amount), 0);
 
-  // Calculate installment amounts more accurately
-  const installmentRecords = customerRecords.filter(record => record.type === 'installment');
+  // Calculate installment amounts using recordType field
+  const installmentRecords = customerRecords.filter(record => record.recordType === 'installment');
   const totalInstallmentAmount = installmentRecords.reduce((sum, record) => sum + record.amount, 0);
 
-  // Calculate installment payments
+  // Calculate installment payments using recordType field
   const installmentPayments = customerRecords
-    .filter(record => record.type === 'installment_payment')
+    .filter(record => record.recordType === 'installment_payment')
     .reduce((sum, record) => sum + Math.abs(record.amount), 0);
 
   const remainingInstallmentAmount = Math.max(0, totalInstallmentAmount - installmentPayments);
@@ -241,8 +241,42 @@ const CustomerDetailView = ({ customer, onCustomerUpdated, onCustomerDeleted }: 
           </Card>
         </div>
 
-        {/* Right Column - Last Transaction & Summary */}
+        {/* Right Column - Financial Summary */}
         <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Genel Bakış</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Toplam Harcama</span>
+                  <span className="font-semibold text-orange-600">
+                    {formatCurrency(totalSpent)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Vadeli Tutar</span>
+                  <span className="font-semibold text-blue-600">
+                    {formatCurrency(remainingInstallmentAmount)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Toplam Ödeme</span>
+                  <span className="font-semibold text-green-600">
+                    {formatCurrency(totalPayments)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Kalan Borç</span>
+                  <span className="font-semibold text-red-600">
+                    {formatCurrency(remainingDebt)}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card className="p-4">
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -256,7 +290,7 @@ const CustomerDetailView = ({ customer, onCustomerUpdated, onCustomerDeleted }: 
                       {format(new Date(customer.lastVisit), 'dd.MM.yyyy', { locale: tr })}
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      (Vadeli Ödeme Tahsilatı - Vadeli Ödeme)
+                      Son ziyaret tarihi
                     </div>
                   </>
                 ) : (
@@ -270,41 +304,6 @@ const CustomerDetailView = ({ customer, onCustomerUpdated, onCustomerDeleted }: 
           </Card>
         </div>
       </div>
-
-      {/* Financial Summary Cards */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Genel Bakış</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div className="text-center">
-              <div className="text-sm text-muted-foreground mb-1">Toplam Harcama</div>
-              <div className="text-2xl font-bold text-orange-600">
-                {formatCurrency(totalSpent)}
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-sm text-muted-foreground mb-1">Vadeli Tutar</div>
-              <div className="text-2xl font-bold text-blue-600">
-                {formatCurrency(remainingInstallmentAmount)}
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-sm text-muted-foreground mb-1">Toplam Ödeme</div>
-              <div className="text-2xl font-bold text-green-600">
-                {formatCurrency(totalPayments)}
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-sm text-muted-foreground mb-1">Kalan Borç</div>
-              <div className="text-2xl font-bold text-red-600">
-                {formatCurrency(remainingDebt)}
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Tabs Section */}
       <Tabs defaultValue="records" className="space-y-4">
@@ -320,7 +319,7 @@ const CustomerDetailView = ({ customer, onCustomerUpdated, onCustomerDeleted }: 
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>Son 5 İşlem</CardTitle>
+                <CardTitle>İşlem Geçmişi</CardTitle>
                 <Dialog open={showAddRecordDialog} onOpenChange={setShowAddRecordDialog}>
                   <DialogTrigger asChild>
                     <Button size="sm">
@@ -349,7 +348,7 @@ const CustomerDetailView = ({ customer, onCustomerUpdated, onCustomerDeleted }: 
         <TabsContent value="appointments">
           <Card>
             <CardHeader>
-              <CardTitle>Yaklaşan Randevular</CardTitle>
+              <CardTitle>Randevu Geçmişi</CardTitle>
             </CardHeader>
             <CardContent>
               <CustomerAppointmentsList 
