@@ -27,6 +27,7 @@ export const getStaffPerformance = async (
   
   // Get personnel from personnel section instead of users
   const personnel = await getPersonnel();
+  console.log('Personnel data loaded:', personnel);
   
   // Eğer personel yoksa boş liste döndür
   if (!personnel || personnel.length === 0) {
@@ -39,9 +40,20 @@ export const getStaffPerformance = async (
   const serviceSales = await getServiceSales();
   const productSales = await getSales();
   
+  console.log('Appointments data:', appointments);
+  console.log('Service sales data:', serviceSales);
+  console.log('Product sales data:', productSales);
+  
   const staffPerformance = await Promise.all(personnel.map(async (person) => {
+    console.log(`Processing staff: ${person.name} (ID: ${person.id})`);
+    
     // Filter appointments for this person
-    const userAppointments = appointments.filter(apt => apt.staffId === person.id);
+    const userAppointments = appointments.filter(apt => {
+      console.log(`Checking appointment staffId: ${apt.staffId} vs person.id: ${person.id}`);
+      return apt.staffId === person.id;
+    });
+    
+    console.log(`Found ${userAppointments.length} appointments for ${person.name}`);
     
     // Calculate appointment metrics
     const totalAppointments = userAppointments.length;
@@ -50,8 +62,17 @@ export const getStaffPerformance = async (
     const pendingAppointments = userAppointments.filter(apt => apt.status === 'pending').length;
     
     // Filter sales for this person
-    const userServiceSales = serviceSales.filter(sale => sale.staffId === person.id);
-    const userProductSales = productSales.filter(sale => sale.staffId === person.id);
+    const userServiceSales = serviceSales.filter(sale => {
+      console.log(`Checking service sale staffId: ${sale.staffId} vs person.id: ${person.id}`);
+      return sale.staffId === person.id;
+    });
+    
+    const userProductSales = productSales.filter(sale => {
+      console.log(`Checking product sale staffId: ${sale.staffId} vs person.id: ${person.id}`);
+      return sale.staffId === person.id;
+    });
+    
+    console.log(`Found ${userServiceSales.length} service sales and ${userProductSales.length} product sales for ${person.name}`);
     
     // Calculate revenue
     const serviceRevenue = userServiceSales.reduce((sum, sale) => sum + (sale.totalPrice || sale.price || 0), 0);
@@ -82,10 +103,11 @@ export const getStaffPerformance = async (
       avgRating: 0
     };
     
+    console.log(`Staff data for ${person.name}:`, staffData);
     return staffData;
   }));
   
-  console.log('Staff performance calculated:', staffPerformance);
+  console.log('Final staff performance calculated:', staffPerformance);
   return staffPerformance;
 };
 
