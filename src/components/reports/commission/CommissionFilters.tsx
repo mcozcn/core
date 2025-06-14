@@ -7,7 +7,7 @@ interface CommissionFiltersProps {
   selectedStaffId: string;
   setSelectedStaffId: (id: string) => void;
   staffUsers: any[];
-  personnel?: any[]; // Personnel tablosundan gelen personeller
+  personnel?: any[];
   date: DateRange | undefined;
   setDate: (date: DateRange | undefined) => void;
 }
@@ -20,17 +20,20 @@ export const CommissionFilters = ({
   date,
   setDate
 }: CommissionFiltersProps) => {
-  // Hem users hem de personnel'i birleştir
+  // Show personnel from personnel section primarily
   const allStaffOptions = [
-    ...staffUsers.map(user => ({
-      id: user.id.toString(),
-      name: user.displayName || user.username,
-      type: 'user'
-    })),
     ...personnel.map(person => ({
       id: person.id.toString(),
       name: person.name,
+      title: person.title,
       type: 'personnel'
+    })),
+    // Add users as fallback if no personnel exist
+    ...staffUsers.map(user => ({
+      id: user.id.toString(),
+      name: user.displayName || user.username,
+      title: 'Kullanıcı',
+      type: 'user'
     }))
   ];
 
@@ -44,7 +47,7 @@ export const CommissionFilters = ({
           <SelectItem value="all">Tüm Personeller</SelectItem>
           {allStaffOptions.map((staff) => (
             <SelectItem key={`${staff.type}-${staff.id}`} value={staff.id}>
-              {staff.name} {staff.type === 'personnel' && '(Personel)'}
+              {staff.name} {staff.title && `(${staff.title})`}
             </SelectItem>
           ))}
         </SelectContent>

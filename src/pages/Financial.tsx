@@ -16,8 +16,8 @@ import { useToast } from "@/hooks/use-toast";
 import CostsTable from "@/components/costs/CostsTable";
 import FinancialDashboard from "@/components/financial/FinancialDashboard";
 import RevenueExpenseChart from "@/components/financial/RevenueExpenseChart";
-import CashFlowChart from "@/components/financial/CashFlowChart";
 import RevenueSourceChart from "@/components/financial/RevenueSourceChart";
+import MonthlyPaymentsExpensesChart from "@/components/financial/MonthlyPaymentsExpensesChart";
 import {
   Table,
   TableBody,
@@ -30,8 +30,8 @@ import { Badge } from "@/components/ui/badge";
 
 const Financial = () => {
   const [dateRange, setDateRange] = useState<DateRange>({
-    from: new Date(),
-    to: addDays(new Date(), 7)
+    from: startOfDay(new Date()),
+    to: endOfDay(addDays(new Date(), 7))
   });
   const { toast } = useToast();
 
@@ -84,15 +84,15 @@ const Financial = () => {
 
   const resetDateFilter = () => {
     setDateRange({
-      from: new Date(),
-      to: addDays(new Date(), 7)
+      from: startOfDay(new Date()),
+      to: endOfDay(addDays(new Date(), 7))
     });
   };
 
   // Tarih aralığına göre kayıtları filtreleme - bugünü dahil et
   const filteredRecords = customerRecords.filter(record => {
     if (!dateRange.from || !dateRange.to) return true;
-    const recordDate = new Date(record.date);
+    const recordDate = startOfDay(new Date(record.date));
     const fromDate = startOfDay(dateRange.from);
     const toDate = endOfDay(dateRange.to);
     return recordDate >= fromDate && recordDate <= toDate;
@@ -100,7 +100,7 @@ const Financial = () => {
 
   const filteredCosts = costs.filter(cost => {
     if (!dateRange.from || !dateRange.to) return true;
-    const costDate = new Date(cost.date);
+    const costDate = startOfDay(new Date(cost.date));
     const fromDate = startOfDay(dateRange.from);
     const toDate = endOfDay(dateRange.to);
     return costDate >= fromDate && costDate <= toDate;
@@ -168,7 +168,7 @@ const Financial = () => {
         {/* Charts Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <RevenueExpenseChart />
-          <CashFlowChart />
+          <MonthlyPaymentsExpensesChart />
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
