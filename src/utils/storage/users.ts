@@ -6,6 +6,9 @@ import type { User } from './types';
 // Re-export the User type from types.ts
 export type { User } from './types';
 
+// Storage key'i güncelleyelim
+const USERS_STORAGE_KEY = 'users_v3';
+
 // Sadece admin kullanıcısı
 const getDefaultUsers = (): User[] => [
   {
@@ -28,11 +31,11 @@ const getDefaultUsers = (): User[] => [
 // Get all users from storage
 export const getUsers = async (): Promise<User[]> => {
   try {
-    const users = await getFromStorage<User>(STORAGE_KEYS.USERS);
+    const users = await getFromStorage<User>(USERS_STORAGE_KEY);
     
     if (users.length === 0) {
       const defaultUsers = getDefaultUsers();
-      await setToStorage(STORAGE_KEYS.USERS, defaultUsers);
+      await setToStorage(USERS_STORAGE_KEY, defaultUsers);
       return defaultUsers;
     }
     
@@ -41,7 +44,7 @@ export const getUsers = async (): Promise<User[]> => {
     console.error('Error getting users:', error);
     // Hata durumunda default kullanıcıları döndür
     const defaultUsers = getDefaultUsers();
-    await setToStorage(STORAGE_KEYS.USERS, defaultUsers);
+    await setToStorage(USERS_STORAGE_KEY, defaultUsers);
     return defaultUsers;
   }
 };

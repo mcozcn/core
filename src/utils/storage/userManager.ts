@@ -6,8 +6,8 @@ import { getFromStorage, setToStorage } from './core';
 // Export the User type so it can be imported from this module
 export type { User } from '@/types/user';
 
-const USERS_KEY = 'users_v2';
-const CURRENT_USER_KEY = 'current_user_v2';
+const USERS_KEY = 'users_v3'; // Version changed to force database refresh
+const CURRENT_USER_KEY = 'current_user_v3'; // Version changed to force database refresh
 
 // Sadece admin kullanıcısı
 const getDefaultUsers = async (): Promise<User[]> => [
@@ -29,8 +29,32 @@ const getDefaultUsers = async (): Promise<User[]> => [
   }
 ];
 
+// Veritabanını temizlemek için helper fonksiyon
+const clearOldUserData = async (): Promise<void> => {
+  try {
+    // Eski versiyonları temizle
+    localStorage.removeItem('users_v2');
+    localStorage.removeItem('current_user_v2');
+    localStorage.removeItem('users');
+    localStorage.removeItem('currentUser');
+    
+    // IndexedDB'de eski verileri temizle
+    if (typeof window !== 'undefined' && window.indexedDB) {
+      const deleteOldDB = indexedDB.deleteDatabase('salon-storage');
+      deleteOldDB.onsuccess = () => {
+        console.log('Old database cleared successfully');
+      };
+    }
+  } catch (error) {
+    console.log('Error clearing old data:', error);
+  }
+};
+
 export const getAllUsers = async (): Promise<User[]> => {
   try {
+    // İlk çalıştırmada eski verileri temizle
+    await clearOldUserData();
+    
     const users = await getFromStorage<User>(USERS_KEY);
     if (users.length === 0) {
       const defaultUsers = await getDefaultUsers();
