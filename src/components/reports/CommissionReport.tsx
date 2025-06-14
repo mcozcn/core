@@ -4,7 +4,8 @@ import { Card } from "@/components/ui/card";
 import { DateRange } from "react-day-picker";
 import { addDays } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
-import { getSales, getServiceSales, getUsers } from "@/utils/localStorage";
+import { getSales, getServiceSales } from "@/utils/localStorage";
+import { getPersonnel } from "@/utils/storage/personnel";
 import { CommissionFilters } from "./commission/CommissionFilters";
 import { CommissionSummary } from "./commission/CommissionSummary";
 import { CommissionStaffList } from "./commission/CommissionStaffList";
@@ -28,9 +29,9 @@ const CommissionReport = () => {
     queryFn: () => getServiceSales(),
   });
   
-  const { data: users = [] } = useQuery({
-    queryKey: ['users'],
-    queryFn: getUsers,
+  const { data: personnel = [] } = useQuery({
+    queryKey: ['personnel'],
+    queryFn: getPersonnel,
   });
 
   // Use our custom hook to get the processed commission data
@@ -38,7 +39,7 @@ const CommissionReport = () => {
     staffCommissionData, 
     totalCommissionAmount, 
     isEmpty 
-  } = useCommissionData(sales, serviceSales, date, selectedStaffId, users);
+  } = useCommissionData(sales, serviceSales, date, selectedStaffId, personnel);
 
   return (
     <Card className="p-6">

@@ -2,7 +2,7 @@
 import { DateRange } from "react-day-picker";
 import { isWithinInterval, startOfDay, endOfDay } from "date-fns";
 
-export const useCommissionData = (sales: any[], serviceSales: any[], date: DateRange | undefined, selectedStaffId: string, users: any[] = []) => {
+export const useCommissionData = (sales: any[], serviceSales: any[], date: DateRange | undefined, selectedStaffId: string, personnel: any[] = []) => {
   // Filter by date range - include current day
   const filterByDate = (saleDate: Date | string) => {
     if (!date?.from) return true;
@@ -41,9 +41,9 @@ export const useCommissionData = (sales: any[], serviceSales: any[], date: DateR
   filteredSales.forEach(sale => {
     if (sale.staffId && sale.commissionAmount) {
       const staffId = sale.staffId;
-      // Get staff name from users array
-      const staffUser = users.find(user => user.id.toString() === staffId.toString());
-      const staffName = staffUser ? (staffUser.displayName || staffUser.username) : (sale.staffName || `Personel #${staffId}`);
+      // Get staff name from personnel array
+      const staffPerson = personnel.find(person => person.id.toString() === staffId.toString());
+      const staffName = staffPerson ? staffPerson.name : (sale.staffName || `Personel #${staffId}`);
       
       if (!commissionsByStaff.has(staffId)) {
         commissionsByStaff.set(staffId, {
@@ -70,9 +70,9 @@ export const useCommissionData = (sales: any[], serviceSales: any[], date: DateR
   filteredServiceSales.forEach(sale => {
     if (sale.staffId && sale.commissionAmount) {
       const staffId = sale.staffId;
-      // Get staff name from users array
-      const staffUser = users.find(user => user.id.toString() === staffId.toString());
-      const staffName = staffUser ? (staffUser.displayName || staffUser.username) : (sale.staffName || `Personel #${staffId}`);
+      // Get staff name from personnel array
+      const staffPerson = personnel.find(person => person.id.toString() === staffId.toString());
+      const staffName = staffPerson ? staffPerson.name : (sale.staffName || `Personel #${staffId}`);
       
       if (!commissionsByStaff.has(staffId)) {
         commissionsByStaff.set(staffId, {
