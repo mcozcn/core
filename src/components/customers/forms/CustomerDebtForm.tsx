@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -5,13 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DialogFooter } from "@/components/ui/dialog";
 import { addCustomerRecord, type CustomerRecord } from '@/utils/storage';
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getCustomers } from '@/utils/storage';
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
-import { format } from "date-fns"
-import { CalendarIcon } from "lucide-react"
+import { useQueryClient } from "@tanstack/react-query";
 
 interface CustomerDebtFormProps {
   customerId: number;
@@ -19,61 +14,56 @@ interface CustomerDebtFormProps {
 }
 
 const CustomerDebtForm = ({ customerId, onSuccess }: CustomerDebtFormProps) => {
+  const [itemName, setItemName] = useState('');
   const [amount, setAmount] = useState('');
+  const [dueDate, setDueDate] = useState('');
   const [description, setDescription] = useState('');
-  const [date, setDate] = useState<Date | undefined>(new Date());
-  const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-
-  const { data: customers = [] } = useQuery({
-    queryKey: ['customers'],
-    queryFn: getCustomers,
-  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      const record: CustomerRecord = {
-        id: Date.now(),
+      const record: Omit<CustomerRecord, 'id' | 'createdAt'> = {
         customerId,
-        type: 'payment',
+        type: 'debt',
         itemId: Date.now(),
-        itemName: description,
+        itemName,
         amount: parseFloat(amount),
-        date: new Date(date),
+        date: new Date(),
         dueDate: dueDate ? new Date(dueDate) : undefined,
         isPaid: false,
         description,
         recordType: 'debt',
-        createdAt: new Date(),
       };
 
       await addCustomerRecord(record);
       
+      queryClient.invalidateQueries({ queryKey: ['customerRecords'] });
+      
       toast({
-        title: "Borç kaydı eklendi",
-        description: "Müşteri borç kaydı başarıyla eklendi.",
+        title: "Borç eklendi",
+        description: "Müşteri borcu başarıyla eklendi.",
       });
 
       // Reset form
+      setItemName('');
       setAmount('');
-      setDescription('');
-      setDate('');
       setDueDate('');
+      setDescription('');
 
       if (onSuccess) {
         onSuccess();
       }
     } catch (error) {
-      console.error("Borç kaydı eklenirken hata:", error);
+      console.error("Borç eklenirken hata:", error);
       toast({
         variant: "destructive",
         title: "Hata",
-        description: "Borç kaydı eklenirken bir hata oluştu.",
+        description: "Borç eklenirken bir hata oluştu.",
       });
     } finally {
       setIsSubmitting(false);
@@ -83,14 +73,36 @@ const CustomerDebtForm = ({ customerId, onSuccess }: CustomerDebtFormProps) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="amount">Miktar</Label>
+        <Label htmlFor="itemName">Ürün/Hizmet Adı</Label>
+        <Input
+          id="itemName"
+          type="text"
+          value={itemName}
+          onChange={(e) => setItemName(e.target.value)}
+          placeholder="Ürün veya hizmet adını girin"
+          required
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="amount">Tutar</Label>
         <Input
           id="amount"
           type="number"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          placeholder="Miktarı girin"
+          placeholder="Tutar girin"
           required
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="dueDate">Vade Tarihi</Label>
+        <Input
+          id="dueDate"
+          type="date"
+          value={dueDate}
+          onChange={(e) => setDueDate(e.target.value)}
         />
       </div>
 
@@ -101,72 +113,13 @@ const CustomerDebtForm = ({ customerId, onSuccess }: CustomerDebtFormProps) => {
           type="text"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Açıklama girin"
-          required
+          placeholder="Açıklama"
         />
-      </div>
-
-      <div className="space-y-2">
-        <Label>Oluşturulma Tarihi</Label>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant={"outline"}
-              className={cn(
-                "w-[240px] justify-start text-left font-normal",
-                !date && "text-muted-foreground"
-              )}
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {date ? format(date, "PPP") : <span>Tarih Seç</span>}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={setDate}
-              disabled={(date) =>
-                date > new Date()
-              }
-              initialFocus
-            />
-          </PopoverContent>
-        </Popover>
-      </div>
-
-      <div className="space-y-2">
-        <Label>Vade Tarihi</Label>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant={"outline"}
-              className={cn(
-                "w-[240px] justify-start text-left font-normal",
-                !dueDate && "text-muted-foreground"
-              )}
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {dueDate ? format(dueDate, "PPP") : <span>Vade Tarihi Seç</span>}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={dueDate}
-              onSelect={setDueDate}
-              disabled={(date) =>
-                date < new Date()
-              }
-              initialFocus
-            />
-          </PopoverContent>
-        </Popover>
       </div>
 
       <DialogFooter className="pt-4">
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Kaydediliyor...' : 'Kaydet'}
+          {isSubmitting ? 'Ekleniyor...' : 'Borç Ekle'}
         </Button>
       </DialogFooter>
     </form>
