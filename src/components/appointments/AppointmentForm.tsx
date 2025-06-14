@@ -12,9 +12,7 @@ import { getAppointments, setAppointments, type Appointment, getCustomers, getSe
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import CustomerSelectionDialog from '../common/CustomerSelectionDialog';
 import { format } from 'date-fns';
-import { getAllUsers } from '@/utils/auth';
 import { getPersonnel, type Personnel } from '@/utils/storage/personnel';
-import { type User } from '@/utils/storage/types';
 import { CalendarIcon } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
@@ -59,8 +57,7 @@ const AppointmentForm = ({ selectedDate: initialDate, onSuccess, onCancel }: App
     queryFn: getPersonnel,
   });
 
-  // Combine personnel and auth users into a unified staff list
-  const authUsers = getAllUsers();
+  // Combine personnel into a unified staff list
   const allStaff: StaffMember[] = [
     ...personnel.map((person: Personnel) => ({
       id: person.id,
@@ -68,13 +65,6 @@ const AppointmentForm = ({ selectedDate: initialDate, onSuccess, onCancel }: App
       title: person.title,
       color: person.color || '#3B82F6',
       type: 'personnel' as const
-    })),
-    ...authUsers.map((user: User) => ({
-      id: user.id,
-      name: user.displayName || user.username,
-      title: user.title || 'Personel',
-      color: user.color || '#3B82F6',
-      type: 'user' as const
     }))
   ];
   
