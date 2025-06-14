@@ -7,14 +7,28 @@ import { getAppointments } from './appointments';
 import { getServiceSales } from './services';
 import { getSales } from './stock';
 
-// Eski demo verilerini temizle
+// Tüm eski staff verilerini temizle
 const clearOldStaffData = async (): Promise<void> => {
   try {
-    localStorage.removeItem('staff_v1');
-    localStorage.removeItem('staff');
-    localStorage.removeItem('staffPerformance');
-    localStorage.removeItem('staffPerformance_v1');
-    localStorage.removeItem('staffPerformance_v2');
+    // LocalStorage temizliği
+    const keysToRemove = [
+      'staff_v1', 'staff', 'staffPerformance', 'staffPerformance_v1', 
+      'staffPerformance_v2', 'staffPerformance_v3'
+    ];
+    
+    keysToRemove.forEach(key => {
+      localStorage.removeItem(key);
+    });
+
+    // IndexedDB temizliği
+    if (typeof window !== 'undefined' && window.indexedDB) {
+      try {
+        const deleteRequest = indexedDB.deleteDatabase('salon-storage');
+        deleteRequest.onsuccess = () => console.log('Old IndexedDB cleared');
+      } catch (error) {
+        console.log('IndexedDB cleanup error:', error);
+      }
+    }
   } catch (error) {
     console.log('Error clearing old staff data:', error);
   }
@@ -24,102 +38,151 @@ export const getStaffPerformance = async (
   startDate?: Date, 
   endDate?: Date
 ): Promise<StaffPerformance[]> => {
-  // İlk çalıştırmada eski verileri temizle
-  await clearOldStaffData();
-  
-  // Get personnel from personnel section
-  const personnel = await getPersonnel();
-  console.log('Personnel data loaded:', personnel);
-  
-  // Eğer personel yoksa boş liste döndür
-  if (!personnel || personnel.length === 0) {
-    console.log('No personnel found, returning empty staff performance');
+  try {
+    console.log('=== Starting getStaffPerformance ===');
+    
+    // İlk çalıştırmada eski verileri temizle
+    await clearOldStaffData();
+    
+    // Get personnel data with error handling
+    let personnel;
+    try {
+      personnel = await getPersonnel();
+      console.log('✅ Personnel loaded successfully:', personnel);
+    } catch (error) {
+      console.error('❌ Error loading personnel:', error);
+      // Fallback: return empty array if personnel can't be loaded
+      return [];
+    }
+    
+    // Eğer personel yoksa boş liste döndür
+    if (!personnel || personnel.length === 0) {
+      console.log('⚠️ No personnel found, returning empty performance data');
+      return [];
+    }
+    
+    // Get other data with error handling
+    let appointments = [];
+    let serviceSales = [];
+    let productSales = [];
+    
+    try {
+      [appointments, serviceSales, productSales] = await Promise.all([
+        getAppointments().catch(() => []),
+        getServiceSales().catch(() => []),
+        getSales().catch(() => [])
+      ]);
+      
+      console.log('📊 Data loaded:', {
+        personnelCount: personnel.length,
+        appointmentsCount: appointments.length,
+        serviceSalesCount: serviceSales.length,
+        productSalesCount: productSales.length
+      });
+    } catch (error) {
+      console.error('❌ Error loading performance data:', error);
+    }
+    
+    // Calculate performance for each personnel
+    const staffPerformance = personnel.map((person) => {
+      console.log(`🔄 Processing: ${person.name} (ID: ${person.id})`);
+      
+      // Filter appointments for this person
+      const userAppointments = appointments.filter(apt => {
+        const match = apt.staffId === person.id || 
+                     apt.staffName === person.name ||
+                     apt.staffId === person.id.toString();
+        if (match) {
+          console.log(`✅ Appointment match for ${person.name}: ${apt.id}`);
+        }
+        return match;
+      });
+      
+      // Filter service sales for this person
+      const userServiceSales = serviceSales.filter(sale => {
+        const match = sale.staffId === person.id || 
+                     sale.staffName === person.name ||
+                     sale.staffId === person.id.toString();
+        if (match) {
+          console.log(`✅ Service sale match for ${person.name}: ${sale.id}`);
+        }
+        return match;
+      });
+      
+      // Filter product sales for this person
+      const userProductSales = productSales.filter(sale => {
+        const match = sale.staffId === person.id || 
+                     sale.staffName === person.name ||
+                     sale.staffId === person.id.toString();
+        if (match) {
+          console.log(`✅ Product sale match for ${person.name}: ${sale.id}`);
+        }
+        return match;
+      });
+      
+      // Calculate metrics
+      const totalAppointments = userAppointments.length;
+      const confirmedAppointments = userAppointments.filter(apt => apt.status === 'confirmed').length;
+      const cancelledAppointments = userAppointments.filter(apt => apt.status === 'cancelled').length;
+      const pendingAppointments = userAppointments.filter(apt => apt.status === 'pending').length;
+      
+      // Calculate revenue
+      const serviceRevenue = userServiceSales.reduce((sum, sale) => sum + (sale.totalPrice || sale.price || 0), 0);
+      const productRevenue = userProductSales.reduce((sum, sale) => sum + (sale.totalPrice || 0), 0);
+      const totalRevenue = serviceRevenue + productRevenue;
+      
+      // Calculate commission
+      const calculatedCommission = totalRevenue * ((person.commissionRate || 0) / 100);
+      const existingCommission = userServiceSales.reduce((sum, sale) => sum + (sale.commissionAmount || 0), 0) +
+                                userProductSales.reduce((sum, sale) => sum + (sale.commissionAmount || 0), 0);
+      const totalCommission = existingCommission + calculatedCommission;
+      
+      const staffData: StaffPerformance = {
+        id: person.id,
+        staffId: person.id,
+        staffName: person.name,
+        name: person.name,
+        role: person.title || 'Personel',
+        date: new Date(),
+        appointmentsCompleted: confirmedAppointments,
+        appointmentsCount: totalAppointments,
+        confirmedAppointments,
+        cancelledAppointments,
+        pendingAppointments,
+        servicesProvided: userServiceSales.length,
+        productSales: userProductSales.length,
+        salesAmount: totalRevenue,
+        totalRevenue,
+        totalCommission,
+        avgRating: 0
+      };
+      
+      console.log(`📈 Performance calculated for ${person.name}:`, {
+        appointments: totalAppointments,
+        services: userServiceSales.length,
+        products: userProductSales.length,
+        revenue: totalRevenue,
+        commission: totalCommission
+      });
+      
+      return staffData;
+    });
+    
+    console.log('✅ Final staff performance calculated:', staffPerformance);
+    return staffPerformance;
+    
+  } catch (error) {
+    console.error('❌ Critical error in getStaffPerformance:', error);
     return [];
   }
-  
-  // Get real data
-  const appointments = await getAppointments();
-  const serviceSales = await getServiceSales();
-  const productSales = await getSales();
-  
-  console.log('Appointments data:', appointments);
-  console.log('Service sales data:', serviceSales);
-  console.log('Product sales data:', productSales);
-  
-  const staffPerformance = personnel.map((person) => {
-    console.log(`Processing staff: ${person.name} (ID: ${person.id})`);
-    
-    // Filter appointments for this person - match with personnel ID
-    const userAppointments = appointments.filter(apt => {
-      const match = apt.staffId === person.id || apt.staffName === person.name;
-      console.log(`Checking appointment staffId: ${apt.staffId} vs person.id: ${person.id}, staffName: ${apt.staffName} vs person.name: ${person.name}, match: ${match}`);
-      return match;
-    });
-    
-    console.log(`Found ${userAppointments.length} appointments for ${person.name}`);
-    
-    // Calculate appointment metrics
-    const totalAppointments = userAppointments.length;
-    const confirmedAppointments = userAppointments.filter(apt => apt.status === 'confirmed').length;
-    const cancelledAppointments = userAppointments.filter(apt => apt.status === 'cancelled').length;
-    const pendingAppointments = userAppointments.filter(apt => apt.status === 'pending').length;
-    
-    // Filter sales for this person - match with personnel ID or name
-    const userServiceSales = serviceSales.filter(sale => {
-      const match = sale.staffId === person.id || sale.staffName === person.name;
-      console.log(`Checking service sale staffId: ${sale.staffId} vs person.id: ${person.id}, staffName: ${sale.staffName} vs person.name: ${person.name}, match: ${match}`);
-      return match;
-    });
-    
-    const userProductSales = productSales.filter(sale => {
-      const match = sale.staffId === person.id || sale.staffName === person.name;
-      console.log(`Checking product sale staffId: ${sale.staffId} vs person.id: ${person.id}, staffName: ${sale.staffName} vs person.name: ${person.name}, match: ${match}`);
-      return match;
-    });
-    
-    console.log(`Found ${userServiceSales.length} service sales and ${userProductSales.length} product sales for ${person.name}`);
-    
-    // Calculate revenue
-    const serviceRevenue = userServiceSales.reduce((sum, sale) => sum + (sale.totalPrice || sale.price || 0), 0);
-    const productRevenue = userProductSales.reduce((sum, sale) => sum + (sale.totalPrice || 0), 0);
-    const totalRevenue = serviceRevenue + productRevenue;
-    
-    // Calculate commission based on personnel commission rate
-    const calculatedCommission = totalRevenue * (person.commissionRate / 100);
-    const totalCommission = userServiceSales.reduce((sum, sale) => sum + (sale.commissionAmount || 0), 0) +
-                           userProductSales.reduce((sum, sale) => sum + (sale.commissionAmount || 0), 0) +
-                           calculatedCommission;
-    
-    const staffData: StaffPerformance = {
-      id: person.id,
-      staffId: person.id,
-      staffName: person.name,
-      name: person.name,
-      role: person.title,
-      date: new Date(),
-      appointmentsCompleted: confirmedAppointments,
-      appointmentsCount: totalAppointments,
-      confirmedAppointments,
-      cancelledAppointments,
-      pendingAppointments,
-      servicesProvided: userServiceSales.length,
-      productSales: userProductSales.length,
-      salesAmount: totalRevenue,
-      totalRevenue,
-      totalCommission,
-      avgRating: 0
-    };
-    
-    console.log(`Staff data for ${person.name}:`, staffData);
-    return staffData;
-  });
-  
-  console.log('Final staff performance calculated:', staffPerformance);
-  return staffPerformance;
 };
 
 export const setStaffPerformance = async (staff: StaffPerformance[]): Promise<void> => {
-  await setToStorage(STORAGE_KEYS.STAFF, staff);
+  try {
+    await setToStorage(STORAGE_KEYS.STAFF, staff);
+  } catch (error) {
+    console.error('Error setting staff performance:', error);
+  }
 };
 
 export const updateStaffServiceCount = async (
@@ -127,37 +190,45 @@ export const updateStaffServiceCount = async (
   serviceCount: number = 1, 
   revenue: number = 0
 ): Promise<void> => {
-  const staffList = await getStaffPerformance();
-  
-  const updatedStaffList = staffList.map(staff => {
-    if (staff.id === staffId) {
-      return {
-        ...staff,
-        servicesProvided: (staff.servicesProvided || 0) + serviceCount,
-        totalRevenue: (staff.totalRevenue || 0) + revenue
-      };
-    }
-    return staff;
-  });
-  
-  await setStaffPerformance(updatedStaffList);
+  try {
+    const staffList = await getStaffPerformance();
+    
+    const updatedStaffList = staffList.map(staff => {
+      if (staff.id === staffId) {
+        return {
+          ...staff,
+          servicesProvided: (staff.servicesProvided || 0) + serviceCount,
+          totalRevenue: (staff.totalRevenue || 0) + revenue
+        };
+      }
+      return staff;
+    });
+    
+    await setStaffPerformance(updatedStaffList);
+  } catch (error) {
+    console.error('Error updating staff service count:', error);
+  }
 };
 
 export const updateStaffAppointmentCount = async (
   staffId: number, 
   appointmentCount: number = 1
 ): Promise<void> => {
-  const staffList = await getStaffPerformance();
-  
-  const updatedStaffList = staffList.map(staff => {
-    if (staff.id === staffId) {
-      return {
-        ...staff,
-        appointmentsCount: (staff.appointmentsCount || 0) + appointmentCount
-      };
-    }
-    return staff;
-  });
-  
-  await setStaffPerformance(updatedStaffList);
+  try {
+    const staffList = await getStaffPerformance();
+    
+    const updatedStaffList = staffList.map(staff => {
+      if (staff.id === staffId) {
+        return {
+          ...staff,
+          appointmentsCount: (staff.appointmentsCount || 0) + appointmentCount
+        };
+      }
+      return staff;
+    });
+    
+    await setStaffPerformance(updatedStaffList);
+  } catch (error) {
+    console.error('Error updating staff appointment count:', error);
+  }
 };

@@ -1,4 +1,3 @@
-
 import { getFromStorage, setToStorage } from './core';
 
 export interface Personnel {
@@ -31,16 +30,20 @@ export interface PersonnelRecord {
   createdAt: Date;
 }
 
-const PERSONNEL_KEY = 'personnel_v2'; // Version updated to clear demo data
-const PERSONNEL_RECORDS_KEY = 'personnel_records_v2'; // Version updated
+const PERSONNEL_KEY = 'personnel_v3'; // Version updated to force refresh
+const PERSONNEL_RECORDS_KEY = 'personnel_records_v3'; // Version updated
 
 // Temizlik fonksiyonu - eski demo verileri sil
 const clearOldPersonnelData = async (): Promise<void> => {
   try {
-    localStorage.removeItem('personnel_v1');
-    localStorage.removeItem('personnel_records_v1');
-    localStorage.removeItem('personnel');
-    localStorage.removeItem('personnel_records');
+    const oldKeys = [
+      'personnel_v1', 'personnel_records_v1', 'personnel', 'personnel_records', 
+      'personnel_v2', 'personnel_records_v2'
+    ];
+    
+    oldKeys.forEach(key => {
+      localStorage.removeItem(key);
+    });
   } catch (error) {
     console.log('Error clearing old personnel data:', error);
   }
@@ -48,19 +51,57 @@ const clearOldPersonnelData = async (): Promise<void> => {
 
 export const getPersonnel = async (): Promise<Personnel[]> => {
   try {
+    console.log('🔄 Loading personnel data...');
+    
     // İlk çalıştırmada eski verileri temizle
     await clearOldPersonnelData();
     
-    const personnel = await getFromStorage<Personnel>(PERSONNEL_KEY);
-    return personnel; // Boş liste döndür, demo veri yok
+    // Try to get data with fallback to localStorage
+    try {
+      const personnel = await getFromStorage<Personnel>(PERSONNEL_KEY);
+      console.log('✅ Personnel loaded from storage:', personnel);
+      return personnel;
+    } catch (storageError) {
+      console.warn('⚠️ Storage error, trying localStorage fallback:', storageError);
+      
+      // Fallback to localStorage
+      try {
+        const localData = localStorage.getItem(PERSONNEL_KEY);
+        if (localData) {
+          const personnel = JSON.parse(localData);
+          console.log('✅ Personnel loaded from localStorage fallback:', personnel);
+          return Array.isArray(personnel) ? personnel : [];
+        }
+      } catch (localError) {
+        console.error('❌ LocalStorage fallback failed:', localError);
+      }
+      
+      // Return empty array if all fails
+      console.log('⚠️ No personnel data found, returning empty array');
+      return [];
+    }
   } catch (error) {
-    console.error('Error getting personnel:', error);
-    return []; // Hata durumunda boş liste döndür
+    console.error('❌ Error getting personnel:', error);
+    return [];
   }
 };
 
 export const setPersonnel = async (personnel: Personnel[]): Promise<void> => {
-  await setToStorage(PERSONNEL_KEY, personnel);
+  try {
+    // Try both storage methods for reliability
+    await setToStorage(PERSONNEL_KEY, personnel);
+    localStorage.setItem(PERSONNEL_KEY, JSON.stringify(personnel));
+    console.log('✅ Personnel data saved successfully');
+  } catch (error) {
+    console.error('❌ Error saving personnel:', error);
+    // Try localStorage fallback
+    try {
+      localStorage.setItem(PERSONNEL_KEY, JSON.stringify(personnel));
+      console.log('✅ Personnel saved to localStorage fallback');
+    } catch (localError) {
+      console.error('❌ LocalStorage fallback failed:', localError);
+    }
+  }
 };
 
 export const addPersonnel = async (personnelData: Omit<Personnel, 'id' | 'createdAt' | 'updatedAt'>): Promise<Personnel> => {
