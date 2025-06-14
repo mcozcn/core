@@ -1,4 +1,3 @@
-
 import { getCustomers, getCustomerRecords } from './storage/customers';
 import { getAppointments } from './storage/appointments';
 import { getServices, getServiceSales } from './storage/services';
@@ -79,7 +78,7 @@ const migrateSales = (sales: any[]): any[] => {
   }));
 };
 
-const migratePersonnel = (personnel: any[]): any[] =>; {
+const migratePersonnel = (personnel: any[]): any[] => {
   return personnel.map(person => ({
     ...person,
     isActive: person.isActive !== undefined ? person.isActive : true,
