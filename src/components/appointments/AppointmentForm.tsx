@@ -13,7 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import CustomerSelectionDialog from '../common/CustomerSelectionDialog';
 import { format } from 'date-fns';
 import { getAllUsers } from '@/utils/auth';
-import { getPersonnel } from '@/utils/storage';
+import { getPersonnel, type Personnel } from '@/utils/storage/personnel';
+import { type User } from '@/utils/storage/types';
 import { CalendarIcon } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
@@ -22,6 +23,15 @@ interface AppointmentFormProps {
   onSuccess: () => void;
   onCancel: () => void;
 }
+
+// Combined type for staff selection
+type StaffMember = {
+  id: number;
+  name: string;
+  title: string;
+  color: string;
+  type: 'personnel' | 'user';
+};
 
 const AppointmentForm = ({ selectedDate: initialDate, onSuccess, onCancel }: AppointmentFormProps) => {
   const [customerId, setCustomerId] = useState('');
@@ -49,9 +59,24 @@ const AppointmentForm = ({ selectedDate: initialDate, onSuccess, onCancel }: App
     queryFn: getPersonnel,
   });
 
-  // Auth kullanıcıları da dahil et
+  // Combine personnel and auth users into a unified staff list
   const authUsers = getAllUsers();
-  const allStaff = [...personnel, ...authUsers];
+  const allStaff: StaffMember[] = [
+    ...personnel.map((person: Personnel) => ({
+      id: person.id,
+      name: person.name,
+      title: person.title,
+      color: person.color || '#3B82F6',
+      type: 'personnel' as const
+    })),
+    ...authUsers.map((user: User) => ({
+      id: user.id,
+      name: user.displayName || user.username,
+      title: user.title || 'Personel',
+      color: user.color || '#3B82F6',
+      type: 'user' as const
+    }))
+  ];
   
   const selectedCustomer = customers.find(c => c.id.toString() === customerId);
 
@@ -74,11 +99,8 @@ const AppointmentForm = ({ selectedDate: initialDate, onSuccess, onCancel }: App
       const customer = customers.find(c => c.id === Number(customerId));
       const service = services.find(s => s.id === Number(serviceId));
       
-      // Personnel veya auth users arasından staff bul
-      let staff = personnel.find(s => s.id === Number(staffId));
-      if (!staff) {
-        staff = authUsers.find(s => s.id === Number(staffId));
-      }
+      // Find staff member from combined list
+      const selectedStaff = allStaff.find(s => s.id === Number(staffId));
 
       if (!customer) {
         throw new Error("Müşteri bulunamadı");
@@ -88,7 +110,7 @@ const AppointmentForm = ({ selectedDate: initialDate, onSuccess, onCancel }: App
         throw new Error("Hizmet bulunamadı");
       }
 
-      if (!staff) {
+      if (!selectedStaff) {
         throw new Error("Personel bulunamadı");
       }
 
@@ -104,8 +126,8 @@ const AppointmentForm = ({ selectedDate: initialDate, onSuccess, onCancel }: App
         serviceName: service.name,
         service: service.name,
         staffId: Number(staffId),
-        staffName: staff.name || staff.displayName,
-        staffColor: staff.color || '#3B82F6',
+        staffName: selectedStaff.name,
+        staffColor: selectedStaff.color,
         date: formattedDate,
         startTime: appointmentTime,
         endTime: appointmentTime,
@@ -196,9 +218,9 @@ const AppointmentForm = ({ selectedDate: initialDate, onSuccess, onCancel }: App
                   <div className="flex items-center gap-2">
                     <div 
                       className="w-3 h-3 rounded-full" 
-                      style={{ backgroundColor: person.color || '#3B82F6' }}
+                      style={{ backgroundColor: person.color }}
                     />
-                    {person.name || person.displayName} - {person.title || 'Personel'}
+                    {person.name} - {person.title}
                   </div>
                 </SelectItem>
               ))}
