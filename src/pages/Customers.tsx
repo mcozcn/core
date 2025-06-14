@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -58,6 +57,16 @@ const Customers = () => {
   const handleEditSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ['customers'] });
     setShowEditDialog(false);
+  };
+
+  const handleCustomerUpdated = () => {
+    queryClient.invalidateQueries({ queryKey: ['customers'] });
+  };
+
+  const handleCustomerDeleted = () => {
+    setSelectedCustomerId(null);
+    queryClient.invalidateQueries({ queryKey: ['customers'] });
+    queryClient.invalidateQueries({ queryKey: ['customerRecords'] });
   };
 
   // Calculate stats
@@ -176,7 +185,8 @@ const Customers = () => {
           </div>
           <CustomerDetailView 
             customer={selectedCustomer}
-            onEdit={() => setShowEditDialog(true)}
+            onCustomerUpdated={handleCustomerUpdated}
+            onCustomerDeleted={handleCustomerDeleted}
           />
         </div>
       ) : (
@@ -325,12 +335,15 @@ const Customers = () => {
 
       {/* Edit Customer Modal Dialog */}
       {selectedCustomer && (
-        <EditCustomerForm
-          customer={selectedCustomer}
-          open={showEditDialog}
-          onOpenChange={setShowEditDialog}
-          onSuccess={handleEditSuccess}
-        />
+        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+            <EditCustomerForm
+              customer={selectedCustomer}
+              onSuccess={handleEditSuccess}
+              onCancel={() => setShowEditDialog(false)}
+            />
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

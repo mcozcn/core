@@ -14,6 +14,8 @@ import { tr } from 'date-fns/locale';
 import EditCustomerForm from './EditCustomerForm';
 import CustomerAppointmentsList from './CustomerAppointmentsList';
 import CustomerRecordsList from './CustomerRecordsList';
+import { useQuery } from '@tanstack/react-query';
+import { getAppointments, getCustomerRecords } from '@/utils/storage';
 
 interface CustomerDetailViewProps {
   customer: Customer;
@@ -25,6 +27,20 @@ const CustomerDetailView = ({ customer, onCustomerUpdated, onCustomerDeleted }: 
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const { toast } = useToast();
+
+  // Fetch appointments and records for this customer
+  const { data: allAppointments = [] } = useQuery({
+    queryKey: ['appointments'],
+    queryFn: getAppointments,
+  });
+
+  const { data: allRecords = [] } = useQuery({
+    queryKey: ['customerRecords'],
+    queryFn: getCustomerRecords,
+  });
+
+  const customerAppointments = allAppointments.filter(apt => apt.customerId === customer.id);
+  const customerRecords = allRecords.filter(record => record.customerId === customer.id);
 
   React.useEffect(() => {
     loadCurrentUser();
@@ -185,7 +201,7 @@ const CustomerDetailView = ({ customer, onCustomerUpdated, onCustomerDeleted }: 
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="flex items-center gap-2">
-              {getStatusBadge(customer.status)}
+              {getStatusBadge(customer.status || 'active')}
             </div>
             <div className="flex items-center gap-2 text-sm">
               <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -227,7 +243,7 @@ const CustomerDetailView = ({ customer, onCustomerUpdated, onCustomerDeleted }: 
           <CardContent className="space-y-2">
             <div className="flex items-center gap-2 text-sm">
               <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span>Randevu: {customer.appointmentCount || 0}</span>
+              <span>Randevu: {customerAppointments.length}</span>
             </div>
             {customer.lastVisit && (
               <div className="flex items-center gap-2 text-sm">
@@ -257,8 +273,25 @@ const CustomerDetailView = ({ customer, onCustomerUpdated, onCustomerDeleted }: 
 
       {/* Appointments and Records */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <CustomerAppointmentsList customerId={customer.id} />
-        <CustomerRecordsList customerId={customer.id} />
+        <Card>
+          <CardHeader>
+            <CardTitle>Randevular</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CustomerAppointmentsList 
+              appointments={customerAppointments} 
+              customerPhone={customer.phone}
+            />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Kayıtlar</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <CustomerRecordsList records={customerRecords} />
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
