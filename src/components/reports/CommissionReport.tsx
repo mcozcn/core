@@ -33,9 +33,6 @@ const CommissionReport = () => {
     queryFn: getUsers,
   });
 
-  // Get staff users for the filter
-  const staffUsers = users.filter(user => user.role === 'staff');
-  
   // Use our custom hook to get the processed commission data
   const { 
     staffCommissionData, 
@@ -50,7 +47,6 @@ const CommissionReport = () => {
         <CommissionFilters
           selectedStaffId={selectedStaffId}
           setSelectedStaffId={setSelectedStaffId}
-          staffUsers={staffUsers}
           date={date}
           setDate={setDate}
         />

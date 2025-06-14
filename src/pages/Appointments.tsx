@@ -95,7 +95,7 @@ const Appointments = () => {
             </CardHeader>
             <CardContent>
               <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                <div className="flex-1 max-w-md">
+                <div className="flex-1 max-w-sm">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                     <Input
@@ -106,14 +106,14 @@ const Appointments = () => {
                     />
                   </div>
                 </div>
-                <div className="w-full sm:w-auto min-w-[300px]">
+                <div className="w-full sm:w-auto min-w-[250px]">
                   <DateSelectionDialog
                     selectedDate={selectedDate}
                     onDateSelect={handleDateSelect}
                   />
                 </div>
               </div>
-              <AppointmentList appointments={dailyAppointments} />
+              <AppointmentList searchTerm={searchTerm} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -125,7 +125,7 @@ const Appointments = () => {
             </CardHeader>
             <CardContent>
               <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                <div className="flex-1 max-w-md">
+                <div className="flex-1 max-w-sm">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                     <Input
@@ -136,18 +136,14 @@ const Appointments = () => {
                     />
                   </div>
                 </div>
-                <div className="w-full sm:w-auto min-w-[300px]">
+                <div className="w-full sm:w-auto min-w-[250px]">
                   <DateSelectionDialog
                     selectedDate={selectedDate}
                     onDateSelect={handleDateSelect}
                   />
                 </div>
               </div>
-              <WeeklyCalendar 
-                selectedDate={selectedDate}
-                appointments={weeklyAppointments}
-                onDateSelect={handleDateSelect}
-              />
+              <WeeklyCalendar appointments={weeklyAppointments} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -159,7 +155,7 @@ const Appointments = () => {
             </CardHeader>
             <CardContent>
               <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                <div className="flex-1 max-w-md">
+                <div className="flex-1 max-w-sm">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                     <Input
@@ -172,9 +168,8 @@ const Appointments = () => {
                 </div>
               </div>
               <AppointmentCalendar 
-                appointments={filteredAppointments}
-                onDateSelect={handleDateSelect}
                 selectedDate={selectedDate}
+                onSelect={handleDateSelect}
               />
             </CardContent>
           </Card>
