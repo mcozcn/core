@@ -3,14 +3,13 @@ import { DateRange } from "react-day-picker";
 import { isWithinInterval, startOfDay, endOfDay } from "date-fns";
 
 export const useCommissionData = (sales: any[], serviceSales: any[], date: DateRange | undefined, selectedStaffId: string, users: any[] = []) => {
-  // Filter by date range
+  // Filter by date range - fixed to include end date properly
   const filterByDate = (saleDate: Date | string) => {
-    if (!date?.from || !date?.to) return true;
+    if (!date?.from) return true;
     
     const saleDateObj = typeof saleDate === 'string' ? new Date(saleDate) : saleDate;
-    
-    // Set time to start of day for from date and end of day for to date
     const fromDate = startOfDay(date.from);
+    // Include the entire end date (23:59:59) instead of just start of day
     const toDate = date.to ? endOfDay(date.to) : endOfDay(date.from);
     
     return isWithinInterval(saleDateObj, { 

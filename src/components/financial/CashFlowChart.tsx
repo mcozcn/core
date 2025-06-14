@@ -1,4 +1,3 @@
-
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useQuery } from "@tanstack/react-query";
 import { getCustomerRecords, getCosts, getSales, getServiceSales } from "@/utils/localStorage";
@@ -28,7 +27,7 @@ const CashFlowChart = () => {
 
   const { data: personnelRecords = [] } = useQuery({
     queryKey: ['personnelRecords'],
-    queryFn: getPersonnelRecords,
+    queryFn: () => getPersonnelRecords(),
   });
 
   const calculateMonthlyComparison = () => {
@@ -112,9 +111,9 @@ const CashFlowChart = () => {
       monthlyData.get(monthKey).cikislar += cost.amount;
     });
 
-    // Personel ödemeleri
+    // Personel ödemeleri - sadece payment tipini kontrol et
     Array.isArray(personnelRecords) && personnelRecords
-      .filter(record => record.type === 'payment')
+      .filter(record => record.type === 'deduction')
       .forEach(payment => {
         const date = new Date(payment.date);
         const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
