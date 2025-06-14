@@ -13,6 +13,8 @@ const clearOldStaffData = async (): Promise<void> => {
     localStorage.removeItem('staff_v1');
     localStorage.removeItem('staff');
     localStorage.removeItem('staffPerformance');
+    localStorage.removeItem('staffPerformance_v1');
+    localStorage.removeItem('staffPerformance_v2');
   } catch (error) {
     console.log('Error clearing old staff data:', error);
   }
@@ -25,7 +27,7 @@ export const getStaffPerformance = async (
   // İlk çalıştırmada eski verileri temizle
   await clearOldStaffData();
   
-  // Get personnel from personnel section instead of users
+  // Get personnel from personnel section
   const personnel = await getPersonnel();
   console.log('Personnel data loaded:', personnel);
   
@@ -44,13 +46,14 @@ export const getStaffPerformance = async (
   console.log('Service sales data:', serviceSales);
   console.log('Product sales data:', productSales);
   
-  const staffPerformance = await Promise.all(personnel.map(async (person) => {
+  const staffPerformance = personnel.map((person) => {
     console.log(`Processing staff: ${person.name} (ID: ${person.id})`);
     
-    // Filter appointments for this person
+    // Filter appointments for this person - match with personnel ID
     const userAppointments = appointments.filter(apt => {
-      console.log(`Checking appointment staffId: ${apt.staffId} vs person.id: ${person.id}`);
-      return apt.staffId === person.id;
+      const match = apt.staffId === person.id || apt.staffName === person.name;
+      console.log(`Checking appointment staffId: ${apt.staffId} vs person.id: ${person.id}, staffName: ${apt.staffName} vs person.name: ${person.name}, match: ${match}`);
+      return match;
     });
     
     console.log(`Found ${userAppointments.length} appointments for ${person.name}`);
@@ -61,15 +64,17 @@ export const getStaffPerformance = async (
     const cancelledAppointments = userAppointments.filter(apt => apt.status === 'cancelled').length;
     const pendingAppointments = userAppointments.filter(apt => apt.status === 'pending').length;
     
-    // Filter sales for this person
+    // Filter sales for this person - match with personnel ID or name
     const userServiceSales = serviceSales.filter(sale => {
-      console.log(`Checking service sale staffId: ${sale.staffId} vs person.id: ${person.id}`);
-      return sale.staffId === person.id;
+      const match = sale.staffId === person.id || sale.staffName === person.name;
+      console.log(`Checking service sale staffId: ${sale.staffId} vs person.id: ${person.id}, staffName: ${sale.staffName} vs person.name: ${person.name}, match: ${match}`);
+      return match;
     });
     
     const userProductSales = productSales.filter(sale => {
-      console.log(`Checking product sale staffId: ${sale.staffId} vs person.id: ${person.id}`);
-      return sale.staffId === person.id;
+      const match = sale.staffId === person.id || sale.staffName === person.name;
+      console.log(`Checking product sale staffId: ${sale.staffId} vs person.id: ${person.id}, staffName: ${sale.staffName} vs person.name: ${person.name}, match: ${match}`);
+      return match;
     });
     
     console.log(`Found ${userServiceSales.length} service sales and ${userProductSales.length} product sales for ${person.name}`);
@@ -79,9 +84,11 @@ export const getStaffPerformance = async (
     const productRevenue = userProductSales.reduce((sum, sale) => sum + (sale.totalPrice || 0), 0);
     const totalRevenue = serviceRevenue + productRevenue;
     
-    // Calculate commission
+    // Calculate commission based on personnel commission rate
+    const calculatedCommission = totalRevenue * (person.commissionRate / 100);
     const totalCommission = userServiceSales.reduce((sum, sale) => sum + (sale.commissionAmount || 0), 0) +
-                           userProductSales.reduce((sum, sale) => sum + (sale.commissionAmount || 0), 0);
+                           userProductSales.reduce((sum, sale) => sum + (sale.commissionAmount || 0), 0) +
+                           calculatedCommission;
     
     const staffData: StaffPerformance = {
       id: person.id,
@@ -105,7 +112,7 @@ export const getStaffPerformance = async (
     
     console.log(`Staff data for ${person.name}:`, staffData);
     return staffData;
-  }));
+  });
   
   console.log('Final staff performance calculated:', staffPerformance);
   return staffPerformance;
