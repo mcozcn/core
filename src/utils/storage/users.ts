@@ -6,7 +6,7 @@ import type { User } from './types';
 // Re-export the User type from types.ts
 export type { User } from './types';
 
-// Önceden tanımlı kullanıcılar
+// Sadece admin kullanıcısı
 const getDefaultUsers = (): User[] => [
   {
     id: 1,
@@ -22,36 +22,6 @@ const getDefaultUsers = (): User[] => [
     canDelete: true,
     createdAt: new Date(),
     isVisible: false // Gizli kullanıcı
-  },
-  {
-    id: 2,
-    username: 'mco',
-    password: '1474',
-    displayName: 'MCO Power User',
-    email: 'mco@salon.com',
-    role: 'power_user',
-    title: 'Power User',
-    color: '#7C3AED',
-    allowedPages: ['dashboard', 'appointments', 'customers', 'services', 'stock', 'sales', 'costs', 'financial', 'reports', 'backup', 'personnel', 'performance'],
-    canEdit: true,
-    canDelete: true,
-    createdAt: new Date(),
-    isVisible: false // Gizli kullanıcı
-  },
-  {
-    id: 3,
-    username: 'personel',
-    password: 'personel',
-    displayName: 'Demo Personel',
-    email: 'personel@salon.com',
-    role: 'staff',
-    title: 'Personel',
-    color: '#059669',
-    allowedPages: ['dashboard', 'appointments', 'customers', 'services'],
-    canEdit: false,
-    canDelete: false,
-    createdAt: new Date(),
-    isVisible: true // Görünür kullanıcı
   }
 ];
 

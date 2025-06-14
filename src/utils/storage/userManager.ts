@@ -1,3 +1,4 @@
+
 import { User, CreateUserRequest, AuthResponse, UserRole } from '@/types/user';
 import { hashPassword, verifyPassword, generateToken } from '@/utils/auth/security';
 import { getFromStorage, setToStorage } from './core';
@@ -8,7 +9,7 @@ export type { User } from '@/types/user';
 const USERS_KEY = 'users_v2';
 const CURRENT_USER_KEY = 'current_user_v2';
 
-// Varsayılan kullanıcılar
+// Sadece admin kullanıcısı
 const getDefaultUsers = async (): Promise<User[]> => [
   {
     id: 1,
@@ -23,38 +24,6 @@ const getDefaultUsers = async (): Promise<User[]> => [
     canEdit: true,
     canDelete: true,
     isVisible: false,
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: 2,
-    username: 'mco',
-    passwordHash: await hashPassword('1474'),
-    displayName: 'MCO Manager',
-    email: 'mco@beautiq.com',
-    role: 'manager',
-    title: 'Manager',
-    color: '#7C3AED',
-    allowedPages: ['dashboard', 'appointments', 'customers', 'services', 'stock', 'sales', 'costs', 'financial', 'reports', 'backup', 'performance', 'personnel'],
-    canEdit: true,
-    canDelete: true,
-    isVisible: false,
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: 3,
-    username: 'personel',
-    passwordHash: await hashPassword('personel'),
-    displayName: 'Demo Personel',
-    email: 'personel@beautiq.com',
-    role: 'user',
-    title: 'Personel',
-    color: '#059669',
-    allowedPages: ['dashboard', 'appointments', 'customers', 'services'],
-    canEdit: false,
-    canDelete: false,
-    isVisible: true,
     createdAt: new Date(),
     updatedAt: new Date()
   }
