@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getCustomerRecords, type CustomerRecord, setCustomerRecords } from '@/utils/storage';
+import { getCustomerRecords, type CustomerRecord, setCustomerRecords, updateCustomerRecord, addCustomerRecord } from '@/utils/storage';
 import SearchInput from '@/components/common/SearchInput';
 import { Edit, CheckCircle, XCircle, CircleDollarSign, Calendar, User } from "lucide-react";
 import {
@@ -51,6 +51,43 @@ const PaymentTracking = () => {
     setSelectedRecordId(record.id);
     setPaymentAmount(String(record.amount));
     setShowEditDialog(true);
+  };
+
+  const handlePayInstallment = async (installment: any) => {
+    try {
+      // Update the installment as paid
+      await updateCustomerRecord(installment.id, { isPaid: true });
+
+      // Create payment record
+      const paymentRecord: CustomerRecord = {
+        id: Date.now(),
+        customerId: installment.customerId,
+        customerName: installment.customerName,
+        type: 'payment' as const,
+        itemId: installment.id,
+        itemName: installment.itemName,
+        amount: installment.amount,
+        date: new Date(),
+        description: `${installment.description} ödemesi`,
+        recordType: 'installment_payment' as const,
+        createdAt: new Date(),
+      };
+
+      await addCustomerRecord(paymentRecord);
+      queryClient.invalidateQueries({ queryKey: ['customerRecords'] });
+
+      toast({
+        title: "Ödeme kaydedildi",
+        description: "Taksit ödemesi başarıyla kaydedildi.",
+      });
+    } catch (error) {
+      console.error("Ödeme kaydedilirken hata:", error);
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Ödeme kaydedilirken bir hata oluştu.",
+      });
+    }
   };
 
   const handlePaymentSubmit = async () => {

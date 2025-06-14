@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,7 @@ const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
     setIsSubmitting(true);
 
     try {
-      const customer = {
+      const customer: Customer = {
         id: Date.now(),
         name,
         phone,

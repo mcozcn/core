@@ -10,7 +10,7 @@ import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { getCustomers, getServices, createCustomerRecord, type Customer, type Service } from '@/utils/storage';
+import { getCustomers, getServices, createCustomerRecord, type Customer, type Service, addServiceSale, addCustomerRecord } from '@/utils/storage';
 
 interface ServiceSaleFormProps {
   onSuccess?: () => void;
@@ -39,42 +39,52 @@ const ServiceSaleForm = ({ onSuccess, onCancel }: ServiceSaleFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedCustomer || !selectedService || !date) return;
+    if (!selectedCustomer || !selectedService) return;
 
     setIsSubmitting(true);
 
     try {
-      const newRecord = {
+      // Create service sale record
+      const serviceSale: ServiceSale = {
         id: Date.now(),
+        serviceId: selectedService.id,
+        serviceName: selectedService.name,
+        price: selectedService.price,
+        saleDate: new Date(),
         customerId: selectedCustomer.id,
-        type: 'service' as const,
+        customerName: selectedCustomer.name,
+        customerPhone: selectedCustomer.phone,
+      };
+
+      await addServiceSale(serviceSale);
+
+      // Create customer record for the service
+      const customerRecord: CustomerRecord = {
+        id: Date.now() + 1,
+        customerId: selectedCustomer.id,
+        type: 'service',
         itemId: selectedService.id,
         itemName: selectedService.name,
         amount: selectedService.price,
-        date: new Date(date),
+        date: new Date(),
         isPaid: false,
-        description: `Hizmet satışı: ${selectedService.name}`,
-        recordType: 'debt' as const,
+        description: `${selectedService.name} hizmeti`,
+        recordType: 'debt',
         createdAt: new Date(),
       };
 
-      const success = await createCustomerRecord(newRecord);
+      await addCustomerRecord(customerRecord);
 
-      if (success) {
-        toast({
-          title: "Hizmet satışı kaydedildi",
-          description: "Hizmet satışı başarıyla kaydedildi.",
-        });
+      toast({
+        title: "Hizmet satışı kaydedildi",
+        description: `${selectedService.name} hizmeti ${selectedCustomer.name} için kaydedildi.`,
+      });
 
-        if (onSuccess) {
-          onSuccess();
-        }
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Hata",
-          description: "Hizmet satışı kaydedilirken bir hata oluştu.",
-        });
+      setSelectedCustomer(null);
+      setSelectedService(null);
+
+      if (onSuccess) {
+        onSuccess();
       }
     } catch (error) {
       console.error("Hizmet satışı kaydedilirken hata:", error);
