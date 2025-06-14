@@ -1,217 +1,227 @@
-
-import React, { useState } from 'react';
-import { Card } from "@/components/ui/card";
+import React, { useState, useEffect } from 'react';
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
-import { getStock, setStock, getSales, setSales, getCustomers, type StockItem, type Sale, setCustomerRecords, getCustomerRecords, type CustomerRecord } from "@/utils/localStorage";
-import { useQuery } from "@tanstack/react-query";
-import CustomerSelectionDialog from '../common/CustomerSelectionDialog';
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { tr } from 'date-fns/locale';
+import { DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { getCustomers, getStockItems, type Customer, type StockItem } from '@/utils/storage';
+import { useQuery } from '@tanstack/react-query';
+import { createCustomerRecord } from '@/utils/storage/customers';
 
 interface SaleFormProps {
-  showForm: boolean;
-  setShowForm: (show: boolean) => void;
-  stock: StockItem[];
-  sales: Sale[];
+  onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
-const SaleForm = ({ showForm, setShowForm, stock, sales }: SaleFormProps) => {
+const SaleForm = ({ onSuccess, onCancel }: SaleFormProps) => {
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<StockItem | null>(null);
+  const [quantity, setQuantity] = useState('1');
+  const [discount, setDiscount] = useState('0');
+  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [customerSearch, setCustomerSearch] = useState('');
-  const [saleData, setSaleData] = useState({
-    productId: '',
-    quantity: '',
-    customerId: '',
-    discount: '0'
-  });
 
   const { data: customers = [] } = useQuery({
     queryKey: ['customers'],
-    queryFn: () => {
-      console.log('Fetching customers for sale form');
-      return getCustomers();
-    },
+    queryFn: getCustomers,
   });
 
-  const selectedCustomer = customers.find(c => c.id.toString() === saleData.customerId);
+  const { data: products = [] } = useQuery({
+    queryKey: ['stockItems'],
+    queryFn: getStockItems,
+  });
 
-  const handleSale = async (e: React.FormEvent) => {
+  const totalPrice = selectedProduct ? selectedProduct.price * parseInt(quantity) * (1 - parseFloat(discount) / 100) : 0;
+
+  useEffect(() => {
+    if (!selectedCustomer) return;
+  }, [selectedCustomer]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedCustomer || !selectedProduct) return;
+
+    setIsSubmitting(true);
 
     try {
-      const product = stock.find(item => item.productId === Number(saleData.productId));
-      const customer = customers.find(c => c.id === Number(saleData.customerId));
-      
-      if (!product) {
-        throw new Error("Ürün bulunamadı");
-      }
+      const parsedQuantity = parseInt(quantity, 10);
+      const parsedDiscount = parseFloat(discount);
+      const unitPrice = selectedProduct.price;
+      const totalPrice = unitPrice * parsedQuantity * (1 - parsedDiscount / 100);
 
-      if (!customer) {
-        throw new Error("Müşteri bulunamadı");
-      }
-
-      const quantity = Number(saleData.quantity);
-      const discount = Number(saleData.discount);
-
-      if (product.quantity < quantity) {
-        throw new Error("Yetersiz stok");
-      }
-
-      const totalPrice = (product.price * quantity) - discount;
-
-      // Create a sale object with all required properties
-      const newSale: Sale = {
+      const newRecord = {
         id: Date.now(),
-        customerId: customer.id,
-        customerName: customer.name,
-        stockItemId: product.id,
-        stockItemName: product.productName || product.name || '',
-        quantity,
-        unitPrice: product.price,
-        totalPrice,
-        saleDate: new Date(),
-        date: new Date().toISOString(),
-        total: totalPrice,
-        paymentMethod: "Nakit", // Default
-        productId: product.productId,
-        productName: product.productName,
-        discount,
-        customerPhone: customer.phone,
-      };
-
-      // Update stock
-      const updatedStock = stock.map(item => 
-        item.productId === product.productId 
-          ? { ...item, quantity: item.quantity - quantity, lastUpdated: new Date() }
-          : item
-      );
-
-      // Update sales
-      const updatedSales = [...sales, newSale];
-
-      // Add to customer records
-      const newRecord: CustomerRecord = {
-        id: Date.now(),
-        customerId: Number(saleData.customerId),
-        type: 'product',
-        itemId: product.productId || product.id,
-        itemName: product.productName || product.name || '',
+        customerId: selectedCustomer.id,
+        type: 'product' as const,
+        itemId: selectedProduct.id,
+        itemName: selectedProduct.name,
         amount: totalPrice,
-        date: new Date(),
+        date: new Date(date),
         isPaid: false,
-        description: `Ürün satışı: ${product.productName} (${quantity} adet)`,
-        recordType: 'debt',
-        discount
+        description: `Ürün satışı: ${selectedProduct.name} (${quantity} adet)`,
+        recordType: 'debt' as const,
+        discount: parseFloat(discount) || 0,
+        createdAt: new Date(),
       };
 
-      const existingRecords = getCustomerRecords();
+      const success = await createCustomerRecord(newRecord);
 
-      setStock(updatedStock);
-      setSales(updatedSales);
-      setCustomerRecords([...existingRecords, newRecord]);
+      if (success) {
+        toast({
+          title: "Satış kaydedildi",
+          description: "Satış başarıyla kaydedildi.",
+        });
 
-      queryClient.setQueryData(['stock'], updatedStock);
-      queryClient.setQueryData(['sales'], updatedSales);
-      queryClient.invalidateQueries({ queryKey: ['customerRecords'] });
-
-      console.log('Sale completed:', newSale);
-      console.log('Customer record added:', newRecord);
-
-      toast({
-        title: "Satış başarılı",
-        description: `${product.productName} satışı gerçekleştirildi.`,
-      });
-
-      setSaleData({
-        productId: '',
-        quantity: '',
-        customerId: '',
-        discount: '0'
-      });
-      setShowForm(false);
+        if (onSuccess) {
+          onSuccess();
+        }
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Hata",
+          description: "Satış kaydedilirken bir hata oluştu.",
+        });
+      }
     } catch (error) {
-      console.error('Error processing sale:', error);
+      console.error("Satış kaydedilirken hata:", error);
       toast({
         variant: "destructive",
-        title: "Hata!",
-        description: error instanceof Error ? error.message : "Satış işlemi sırasında bir hata oluştu.",
+        title: "Hata",
+        description: "Satış kaydedilirken bir hata oluştu.",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  if (!showForm) return null;
-
   return (
-    <Card className="p-6 mb-8">
-      <form onSubmit={handleSale} className="space-y-4">
-        <div>
-          <Label>Ürün</Label>
-          <select
-            value={saleData.productId}
-            onChange={(e) => setSaleData({ ...saleData, productId: e.target.value })}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2"
-            required
-          >
-            <option value="">Ürün seçin</option>
-            {stock.map((item) => (
-              <option key={item.productId} value={item.productId}>
-                {item.productName} - Stok: {item.quantity}
-              </option>
-            ))}
-          </select>
+    <>
+      <DialogHeader>
+        <DialogTitle>Ürün Satışı</DialogTitle>
+        <DialogDescription>
+          Müşteriye ürün satışı yapmak için aşağıdaki alanları kullanın.
+        </DialogDescription>
+      </DialogHeader>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="customer">Müşteri</Label>
+          <Select onValueChange={(value) => setSelectedCustomer(customers.find(c => c.id === parseInt(value)) || null)}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Müşteri seçin" />
+            </SelectTrigger>
+            <SelectContent>
+              {customers.map((customer) => (
+                <SelectItem key={customer.id} value={customer.id.toString()}>
+                  {customer.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
-        <div>
-          <Label>Miktar</Label>
+        <div className="space-y-2">
+          <Label htmlFor="product">Ürün</Label>
+          <Select onValueChange={(value) => setSelectedProduct(products.find(p => p.id === parseInt(value)) || null)}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Ürün seçin" />
+            </SelectTrigger>
+            <SelectContent>
+              {products.map((product) => (
+                <SelectItem key={product.id} value={product.id.toString()}>
+                  {product.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="quantity">Miktar</Label>
           <Input
+            id="quantity"
             type="number"
-            value={saleData.quantity}
-            onChange={(e) => setSaleData({ ...saleData, quantity: e.target.value })}
-            placeholder="Satış miktarını girin"
+            value={quantity}
+            onChange={(e) => setQuantity(e.target.value)}
+            placeholder="Miktar girin"
             min="1"
             required
           />
         </div>
 
-        <div>
-          <Label>İndirim Tutarı (₺)</Label>
+        <div className="space-y-2">
+          <Label htmlFor="discount">İndirim (%)</Label>
           <Input
+            id="discount"
             type="number"
-            value={saleData.discount}
-            onChange={(e) => setSaleData({ ...saleData, discount: e.target.value })}
-            placeholder="İndirim tutarını girin"
+            value={discount}
+            onChange={(e) => setDiscount(e.target.value)}
+            placeholder="İndirim oranını girin"
             min="0"
+            max="100"
           />
         </div>
 
-        <div>
-          <Label>Müşteri</Label>
-          <CustomerSelectionDialog
-            customers={customers}
-            selectedCustomer={selectedCustomer}
-            customerSearch={customerSearch}
-            setCustomerSearch={setCustomerSearch}
-            onCustomerSelect={(customerId) => setSaleData(prev => ({ ...prev, customerId }))}
+        <div className="space-y-2">
+          <Label>Satış Tarihi</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className="w-full justify-start text-left font-normal"
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {date ? format(date, "PPP", { locale: tr }) : <span>Tarih Seç</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="center">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={setDate}
+                disabled={(date) =>
+                  date > new Date()
+                }
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="total">Toplam Tutar</Label>
+          <Input
+            id="total"
+            type="text"
+            value={totalPrice.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}
+            readOnly
           />
         </div>
 
-        <div className="flex gap-2">
-          <Button type="submit" className="flex-1">
-            Satışı Tamamla
+        <DialogFooter className="pt-4">
+          {onCancel && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              disabled={isSubmitting}
+            >
+              İptal
+            </Button>
+          )}
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Kaydediliyor...' : 'Satışı Kaydet'}
           </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setShowForm(false)}
-          >
-            İptal
-          </Button>
-        </div>
+        </DialogFooter>
       </form>
-    </Card>
+    </>
   );
 };
 

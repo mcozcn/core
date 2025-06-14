@@ -1,157 +1,181 @@
-import React, { useState } from 'react';
-import { Card } from "@/components/ui/card";
+import React, { useState, useEffect } from 'react';
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
-import { getServiceSales, setServiceSales, getServices, getCustomers, type Service, type ServiceSale, setCustomerRecords, getCustomerRecords, type CustomerRecord } from "@/utils/localStorage";
-import { useQuery } from "@tanstack/react-query";
-import CustomerSelectionDialog from '../common/CustomerSelectionDialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { getCustomers, getServices, createCustomerRecord, type Customer, type Service } from '@/utils/storage';
 
 interface ServiceSaleFormProps {
-  showForm: boolean;
-  setShowForm: (show: boolean) => void;
-  services: Service[];
-  sales: ServiceSale[];
+  onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
-const ServiceSaleForm = ({ showForm, setShowForm, services, sales }: ServiceSaleFormProps) => {
+const ServiceSaleForm = ({ onSuccess, onCancel }: ServiceSaleFormProps) => {
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [customerSearch, setCustomerSearch] = useState('');
-  const [saleData, setSaleData] = useState({
-    serviceId: '',
-    customerId: '',
-  });
 
-  const { data: customers = [] } = useQuery({
-    queryKey: ['customers'],
-    queryFn: () => {
-      console.log('Fetching customers for service sale form');
-      return getCustomers();
-    },
-  });
+  useEffect(() => {
+    const fetchCustomersAndServices = async () => {
+      const fetchedCustomers = await getCustomers();
+      const fetchedServices = await getServices();
+      setCustomers(fetchedCustomers);
+      setServices(fetchedServices);
+    };
 
-  const selectedCustomer = customers.find(c => c.id.toString() === saleData.customerId);
+    fetchCustomersAndServices();
+  }, []);
 
-  const handleSale = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedCustomer || !selectedService || !date) return;
+
+    setIsSubmitting(true);
 
     try {
-      const service = services.find(item => item.id === Number(saleData.serviceId));
-      const customer = customers.find(c => c.id === Number(saleData.customerId));
-      
-      if (!service) {
-        throw new Error("Hizmet bulunamadı");
-      }
-
-      if (!customer) {
-        throw new Error("Müşteri bulunamadı");
-      }
-
-      const newSale: ServiceSale = {
+      const newRecord = {
         id: Date.now(),
-        serviceId: service.id,
-        serviceName: service.name,
-        price: service.price,
-        customerName: customer.name,
-        customerPhone: customer.phone,
-        saleDate: new Date(),
-      };
-
-      // Update sales
-      const updatedSales = [...sales, newSale];
-      setServiceSales(updatedSales);
-      queryClient.setQueryData(['serviceSales'], updatedSales);
-
-      // Add to customer records
-      const newRecord: CustomerRecord = {
-        id: Date.now(),
-        customerId: Number(saleData.customerId),
-        type: 'service',
-        itemId: service.id,
-        itemName: service.name,
-        amount: service.price,
-        date: new Date(),
+        customerId: selectedCustomer.id,
+        type: 'service' as const,
+        itemId: selectedService.id,
+        itemName: selectedService.name,
+        amount: selectedService.price,
+        date: new Date(date),
         isPaid: false,
-        description: `Hizmet satışı: ${service.name}`,
-        recordType: 'debt'
+        description: `Hizmet satışı: ${selectedService.name}`,
+        recordType: 'debt' as const,
+        createdAt: new Date(),
       };
 
-      const existingRecords = getCustomerRecords();
-      setCustomerRecords([...existingRecords, newRecord]);
-      queryClient.invalidateQueries({ queryKey: ['customerRecords'] });
+      const success = await createCustomerRecord(newRecord);
 
-      console.log('Service sale completed:', newSale);
-      console.log('Customer record added:', newRecord);
+      if (success) {
+        toast({
+          title: "Hizmet satışı kaydedildi",
+          description: "Hizmet satışı başarıyla kaydedildi.",
+        });
 
-      toast({
-        title: "Satış başarılı",
-        description: `${service.name} satışı gerçekleştirildi.`,
-      });
-
-      setSaleData({
-        serviceId: '',
-        customerId: '',
-      });
-      setShowForm(false);
+        if (onSuccess) {
+          onSuccess();
+        }
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Hata",
+          description: "Hizmet satışı kaydedilirken bir hata oluştu.",
+        });
+      }
     } catch (error) {
-      console.error('Error processing sale:', error);
+      console.error("Hizmet satışı kaydedilirken hata:", error);
       toast({
         variant: "destructive",
-        title: "Hata!",
-        description: error instanceof Error ? error.message : "Satış işlemi sırasında bir hata oluştu.",
+        title: "Hata",
+        description: "Hizmet satışı kaydedilirken bir hata oluştu.",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  if (!showForm) return null;
-
   return (
-    <Card className="p-6 mb-8">
-      <form onSubmit={handleSale} className="space-y-4">
-        <div>
-          <Label>Hizmet</Label>
-          <select
-            value={saleData.serviceId}
-            onChange={(e) => setSaleData({ ...saleData, serviceId: e.target.value })}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2"
-            required
-          >
-            <option value="">Hizmet seçin</option>
-            {services.map((service) => (
-              <option key={service.id} value={service.id}>
-                {service.name} - {service.price} ₺
-              </option>
-            ))}
-          </select>
+    <>
+      <DialogHeader>
+        <DialogTitle>Hizmet Satışı Ekle</DialogTitle>
+        <DialogDescription>
+          Müşteriye hizmet satışı eklemek için aşağıdaki alanları kullanın.
+        </DialogDescription>
+      </DialogHeader>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="customer">Müşteri</Label>
+          <Select onValueChange={(value) => setSelectedCustomer(customers.find(c => c.id === parseInt(value)) || null)}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Müşteri seçin" />
+            </SelectTrigger>
+            <SelectContent>
+              {customers.map((customer) => (
+                <SelectItem key={customer.id} value={customer.id.toString()}>
+                  {customer.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
-        <div>
-          <Label>Müşteri</Label>
-          <CustomerSelectionDialog
-            customers={customers}
-            selectedCustomer={selectedCustomer}
-            customerSearch={customerSearch}
-            setCustomerSearch={setCustomerSearch}
-            onCustomerSelect={(customerId) => setSaleData(prev => ({ ...prev, customerId }))}
-          />
+        <div className="space-y-2">
+          <Label htmlFor="service">Hizmet</Label>
+          <Select onValueChange={(value) => setSelectedService(services.find(s => s.id === parseInt(value)) || null)}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Hizmet seçin" />
+            </SelectTrigger>
+            <SelectContent>
+              {services.map((service) => (
+                <SelectItem key={service.id} value={service.id.toString()}>
+                  {service.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
-        <div className="flex gap-2">
-          <Button type="submit" className="flex-1">
-            Satışı Tamamla
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setShowForm(false)}
-          >
-            İptal
-          </Button>
+        <div className="space-y-2">
+          <Label>Tarih</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !date && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {date ? format(date, "PPP") : <span>Tarih seçin</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="center" side="bottom">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={setDate}
+                disabled={(date) =>
+                  date > new Date()
+                }
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
         </div>
+
+        <DialogFooter className="pt-4">
+          {onCancel && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              disabled={isSubmitting}
+            >
+              İptal
+            </Button>
+          )}
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Kaydediliyor...' : 'Kaydet'}
+          </Button>
+        </DialogFooter>
       </form>
-    </Card>
+    </>
   );
 };
 

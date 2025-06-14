@@ -25,20 +25,22 @@ const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
     setIsSubmitting(true);
 
     try {
-      const newCustomer: Customer = {
+      const customer = {
         id: Date.now(),
         name,
         phone,
         email,
         address,
         notes,
+        status: 'active',
         createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
-      console.log('Yeni müşteri oluşturuluyor:', newCustomer);
+      console.log('Yeni müşteri oluşturuluyor:', customer);
 
       const existingCustomers = await getCustomers();
-      await setCustomers([...existingCustomers, newCustomer]);
+      await setCustomers([...existingCustomers, customer]);
 
       toast({
         title: "Müşteri eklendi",

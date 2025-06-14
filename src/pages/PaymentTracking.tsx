@@ -1,20 +1,11 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getCustomerRecords, getCustomers, setCustomerRecords } from '@/utils/storage';
-import { DatePickerWithRange } from "@/components/ui/date-range-picker";
-import { addDays, startOfDay, endOfDay } from "date-fns";
-import { RotateCcw, Clock, AlertCircle, CheckCircle, Calendar } from "lucide-react";
-import { DateRange } from "react-day-picker";
-import { tr } from 'date-fns/locale';
-import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { getCustomerRecords, type CustomerRecord, setCustomerRecords } from '@/utils/storage';
+import SearchInput from '@/components/common/SearchInput';
+import { Edit, CheckCircle, XCircle, CircleDollarSign, Calendar, User } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -23,288 +14,232 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { format } from 'date-fns';
+import { tr } from 'date-fns/locale';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 
 const PaymentTracking = () => {
-  const [dateRange, setDateRange] = useState<DateRange>({
-    from: new Date(),
-    to: addDays(new Date(), 30)
-  });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedRecordId, setSelectedRecordId] = useState<number | null>(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState('');
-  const [paymentNote, setPaymentNote] = useState('');
-  const [selectedRecord, setSelectedRecord] = useState<any>(null);
-  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
-  const { toast } = useToast();
+  const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
-  const { data: customers = [] } = useQuery({
-    queryKey: ['customers'],
-    queryFn: getCustomers,
-  });
-
-  const { data: records = [] } = useQuery({
+  const { data: records = [], isLoading: isLoadingRecords } = useQuery({
     queryKey: ['customerRecords'],
     queryFn: getCustomerRecords,
   });
 
-  const resetDateFilter = () => {
-    setDateRange({
-      from: new Date(),
-      to: addDays(new Date(), 30)
-    });
+  const filteredRecords = records.filter(record =>
+    record.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    record.itemName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    record.description?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const overdueRecords = filteredRecords.filter(record =>
+    !record.isPaid && record.dueDate && new Date(record.dueDate) < new Date()
+  );
+
+  const openRecords = filteredRecords.filter(record => !record.isPaid);
+
+  const handleMarkAsPaid = async (record: CustomerRecord) => {
+    setSelectedRecordId(record.id);
+    setPaymentAmount(String(record.amount));
+    setShowEditDialog(true);
   };
 
-  // Vadeli ödemeleri filtrele - sadece ödenmemiş olanlar
-  const installmentRecords = records.filter(record => 
-    record.recordType === 'installment' && 
-    record.dueDate &&
-    !record.isPaid
-  ).filter(record => {
-    if (!dateRange.from || !dateRange.to) return true;
-    const dueDate = new Date(record.dueDate!);
-    const fromDate = startOfDay(dateRange.from);
-    const toDate = endOfDay(dateRange.to);
-    return dueDate >= fromDate && dueDate <= toDate;
-  });
+  const handlePaymentSubmit = async () => {
+    if (!selectedRecordId) return;
 
-  // Müşteri bilgilerini ekle
-  const enrichedRecords = installmentRecords.map(record => {
-    const customer = customers.find(c => c.id === record.customerId);
-    return {
-      ...record,
-      customerName: customer?.name || 'Bilinmiyor',
-      customerPhone: customer?.phone || ''
-    };
-  });
+    setIsSubmittingPayment(true);
 
-  // Vade durumuna göre sırala
-  const sortedRecords = enrichedRecords.sort((a, b) => {
-    const dateA = new Date(a.dueDate!);
-    const dateB = new Date(b.dueDate!);
-    const today = new Date();
-    
-    // Geciken ödemeler önce
-    const isOverdueA = dateA < today;
-    const isOverdueB = dateB < today;
-    
-    if (isOverdueA && !isOverdueB) return -1;
-    if (!isOverdueA && isOverdueB) return 1;
-    
-    return dateA.getTime() - dateB.getTime();
-  });
+    try {
+      const record = records.find(r => r.id === selectedRecordId);
 
-  const handlePayment = async () => {
-    if (!selectedRecord || !paymentAmount) return;
-
-    const paymentAmountNum = Number(paymentAmount);
-    const installmentAmount = selectedRecord.amount;
-
-    // Ödeme kaydı oluştur
-    const paymentRecord = {
-      id: Date.now(),
-      customerId: selectedRecord.customerId,
-      customerName: selectedRecord.customerName,
-      type: 'payment' as const,
-      itemId: selectedRecord.id,
-      itemName: `Vadeli Ödeme Tahsilatı - ${selectedRecord.itemName}`,
-      amount: -paymentAmountNum, // Negatif değer çünkü ödeme
-      date: new Date(),
-      description: paymentNote || 'Vadeli ödeme tahsilatı',
-      recordType: 'installment_payment' as const
-    };
-
-    // Vadeli ödeme kaydını güncelle
-    const updatedRecords = records.map(record => {
-      if (record.id === selectedRecord.id) {
-        return {
-          ...record,
-          isPaid: paymentAmountNum >= installmentAmount,
-          // Kısmi ödeme durumunda tutarı güncelle
-          amount: paymentAmountNum >= installmentAmount ? installmentAmount : installmentAmount - paymentAmountNum
-        };
+      if (!record) {
+        toast({
+          variant: "destructive",
+          title: "Hata",
+          description: "Kayıt bulunamadı.",
+        });
+        return;
       }
-      return record;
-    });
 
-    await setCustomerRecords([...updatedRecords, paymentRecord]);
-    queryClient.invalidateQueries({ queryKey: ['customerRecords'] });
+      const amountPaid = parseFloat(paymentAmount);
 
-    toast({
-      title: "Vadeli ödeme tahsilatı yapıldı",
-      description: `${paymentAmountNum} ₺ tutarında vadeli ödeme tahsilatı alındı.`,
-    });
+      if (isNaN(amountPaid) || amountPaid <= 0) {
+        toast({
+          variant: "destructive",
+          title: "Hata",
+          description: "Geçersiz ödeme miktarı.",
+        });
+        return;
+      }
 
-    setSelectedRecord(null);
-    setPaymentAmount('');
-    setPaymentNote('');
-    setShowPaymentDialog(false);
-  };
+      if (amountPaid > record.amount) {
+        toast({
+          variant: "destructive",
+          title: "Hata",
+          description: "Ödeme miktarı borçtan fazla olamaz.",
+        });
+        return;
+      }
 
-  const getStatusBadge = (dueDate: Date) => {
-    const today = new Date();
-    const diffDays = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      // Update the original record to isPaid = true
+      const updatedRecords = records.map(r =>
+        r.id === selectedRecordId ? { ...r, isPaid: true } : r
+      );
 
-    if (diffDays < 0) {
-      return <Badge variant="destructive" className="gap-1"><AlertCircle className="h-3 w-3" />Gecikmiş</Badge>;
-    } else if (diffDays <= 3) {
-      return <Badge variant="secondary" className="gap-1"><Clock className="h-3 w-3" />Yaklaşan</Badge>;
-    } else {
-      return <Badge variant="default" className="gap-1"><CheckCircle className="h-3 w-3" />Normal</Badge>;
+      await setCustomerRecords(updatedRecords);
+      queryClient.setQueryData(['customerRecords'], updatedRecords);
+
+      // Create a new payment record
+      if (record.recordType === 'installment') {
+        const paymentRecord = {
+          id: Date.now(),
+          customerId: record.customerId,
+          customerName: record.customerName,
+          type: 'payment' as const,
+          itemId: record.id,
+          itemName: record.itemName,
+          amount: record.amount,
+          date: new Date(),
+          description: `Taksit ödemesi: ${record.itemName}`,
+          recordType: 'installment_payment' as const,
+          createdAt: new Date(),
+        };
+
+        const updatedRecordsWithPayment = [...updatedRecords, paymentRecord];
+        await setCustomerRecords(updatedRecordsWithPayment);
+        queryClient.setQueryData(['customerRecords'], updatedRecordsWithPayment);
+      }
+
+      toast({
+        title: "Başarılı",
+        description: "Ödeme başarıyla kaydedildi.",
+      });
+
+      setShowEditDialog(false);
+      setSelectedRecordId(null);
+      setPaymentAmount('');
+      queryClient.invalidateQueries({ queryKey: ['customerRecords'] });
+
+    } catch (error) {
+      console.error("Ödeme kaydedilirken hata:", error);
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Ödeme kaydedilirken bir hata oluştu.",
+      });
+    } finally {
+      setIsSubmittingPayment(false);
     }
   };
 
-  // İstatistikler
-  const totalAmount = enrichedRecords.reduce((sum, record) => sum + Math.abs(record.amount), 0);
-  const overdueRecords = enrichedRecords.filter(record => new Date(record.dueDate!) < new Date());
-  const upcomingRecords = enrichedRecords.filter(record => {
-    const dueDate = new Date(record.dueDate!);
-    const today = new Date();
-    const diffDays = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    return diffDays >= 0 && diffDays <= 7;
-  });
-
   return (
     <div className="p-6 pl-72 animate-fadeIn space-y-6">
-      {/* Header */}
+      {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-serif">Ödeme Takip</h1>
-          <p className="text-muted-foreground mt-1">Vadeli ödemeleri takip edin ve tahsilatları yapın</p>
+          <h1 className="text-3xl font-serif">Ödeme Takibi</h1>
+          <p className="text-muted-foreground mt-1">Müşteri ödemelerinizi takip edin ve yönetin</p>
         </div>
       </div>
 
-      {/* Date Filter */}
-      <div className="flex items-center gap-4">
-        <DatePickerWithRange date={dateRange} setDate={setDateRange} locale={tr} />
-        <Button 
-          variant="outline" 
-          size="icon" 
-          onClick={resetDateFilter} 
-          title="Filtreyi Sıfırla"
-        >
-          <RotateCcw className="h-4 w-4" />
-        </Button>
+      {/* Search and Filters */}
+      <div className="space-y-4">
+        <SearchInput
+          value={searchTerm}
+          onChange={setSearchTerm}
+          placeholder="Müşteri adı, ürün veya açıklama ile ara..."
+        />
+
+        <div className="flex flex-wrap gap-2">
+          <Badge variant="outline" className="cursor-pointer hover:bg-accent">
+            Tümü ({filteredRecords.length})
+          </Badge>
+          <Badge variant="outline" className="cursor-pointer hover:bg-accent text-orange-600">
+            Açık ({openRecords.length})
+          </Badge>
+          <Badge variant="outline" className="cursor-pointer hover:bg-accent text-red-600">
+            Gecikmiş ({overdueRecords.length})
+          </Badge>
+        </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-500 rounded-lg">
-                <Clock className="h-4 w-4 text-white" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Toplam Vadeli</p>
-                <p className="text-2xl font-bold text-blue-600">{enrichedRecords.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 border-red-200">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-red-500 rounded-lg">
-                <AlertCircle className="h-4 w-4 text-white" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Gecikmiş</p>
-                <p className="text-2xl font-bold text-red-600">{overdueRecords.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 border-orange-200">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-orange-500 rounded-lg">
-                <Calendar className="h-4 w-4 text-white" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Bu Hafta</p>
-                <p className="text-2xl font-bold text-orange-600">{upcomingRecords.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-500 rounded-lg">
-                <CheckCircle className="h-4 w-4 text-white" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Toplam Tutar</p>
-                <p className="text-2xl font-bold text-green-600">₺{totalAmount.toLocaleString()}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Payment Table */}
+      {/* Payment Tracking Table */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            Vadeli Ödemeler
+            <CircleDollarSign className="h-5 w-5" />
+            Ödeme Kayıtları
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <div className="rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Müşteri</TableHead>
+                  <TableHead>Açıklama</TableHead>
                   <TableHead>Tutar</TableHead>
                   <TableHead>Vade Tarihi</TableHead>
                   <TableHead>Durum</TableHead>
-                  <TableHead>Açıklama</TableHead>
                   <TableHead>İşlemler</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {sortedRecords.length === 0 ? (
+                {isLoadingRecords ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center h-32">
-                      Seçilen tarih aralığında vadeli ödeme bulunmamaktadır.
-                    </TableCell>
+                    <TableCell colSpan={6} className="text-center h-32">Ödeme kayıtları yükleniyor...</TableCell>
                   </TableRow>
-                ) : (
-                  sortedRecords.map((record) => (
+                ) : filteredRecords.length > 0 ? (
+                  filteredRecords.map((record) => (
                     <TableRow key={record.id}>
+                      <TableCell className="font-medium">{record.customerName}</TableCell>
+                      <TableCell>{record.description}</TableCell>
+                      <TableCell>₺{record.amount.toLocaleString()}</TableCell>
                       <TableCell>
-                        <div>
-                          <p className="font-medium">{record.customerName}</p>
-                          <p className="text-sm text-muted-foreground">{record.customerPhone}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        ₺{Math.abs(record.amount).toLocaleString()}
+                        {record.dueDate ? format(new Date(record.dueDate), 'PPP', { locale: tr }) : '-'}
                       </TableCell>
                       <TableCell>
-                        {new Date(record.dueDate!).toLocaleDateString('tr-TR')}
+                        {record.isPaid ? (
+                          <Badge variant="default" className="bg-green-500">
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                            Ödendi
+                          </Badge>
+                        ) : (
+                          <Badge variant="destructive">
+                            <XCircle className="h-4 w-4 mr-2" />
+                            Açık
+                          </Badge>
+                        )}
                       </TableCell>
                       <TableCell>
-                        {getStatusBadge(new Date(record.dueDate!))}
-                      </TableCell>
-                      <TableCell>{record.description || '-'}</TableCell>
-                      <TableCell>
-                        <Button 
-                          size="sm" 
-                          onClick={() => {
-                            setSelectedRecord(record);
-                            setPaymentAmount(Math.abs(record.amount).toString());
-                            setShowPaymentDialog(true);
-                          }}
-                        >
-                          Tahsilat Yap
-                        </Button>
+                        {!record.isPaid && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleMarkAsPaid(record)}
+                            disabled={record.isPaid}
+                          >
+                            Ödeme Al
+                          </Button>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center h-32">
+                      {searchTerm ? 'Arama sonucu bulunamadı' : 'Henüz ödeme kaydı bulunmamaktadır'}
+                    </TableCell>
+                  </TableRow>
                 )}
               </TableBody>
             </Table>
@@ -312,35 +247,32 @@ const PaymentTracking = () => {
         </CardContent>
       </Card>
 
-      {/* Payment Dialog */}
-      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
-        <DialogContent>
+      {/* Edit Payment Modal Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={() => setShowEditDialog(false)}>
+        <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle>Vadeli Ödeme Tahsilatı - {selectedRecord?.customerName}</DialogTitle>
+            <DialogTitle>Ödeme Al</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>Tahsilat Tutarı (₺)</Label>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="paymentAmount" className="text-right">
+                Ödeme Miktarı
+              </Label>
               <Input
                 type="number"
+                id="paymentAmount"
                 value={paymentAmount}
                 onChange={(e) => setPaymentAmount(e.target.value)}
-                max={selectedRecord?.amount || 0}
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Maksimum: ₺{selectedRecord?.amount?.toLocaleString() || 0}
-              </p>
-            </div>
-            <div>
-              <Label>Not</Label>
-              <Textarea
-                value={paymentNote}
-                onChange={(e) => setPaymentNote(e.target.value)}
-                placeholder="Tahsilat notu..."
+                className="col-span-3"
               />
             </div>
-            <Button onClick={handlePayment} className="w-full">
-              Tahsilatı Onayla
+          </div>
+          <div className="flex justify-end space-x-2">
+            <Button variant="secondary" onClick={() => setShowEditDialog(false)}>
+              İptal
+            </Button>
+            <Button onClick={handlePaymentSubmit} disabled={isSubmittingPayment}>
+              {isSubmittingPayment ? "Ödeniyor..." : "Öde"}
             </Button>
           </div>
         </DialogContent>
