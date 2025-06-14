@@ -160,17 +160,19 @@ const Appointments = () => {
             <TabsContent value="daily" className="space-y-6">
               {/* Search and Filter Section */}
               <div className="flex flex-col sm:flex-row gap-4">
-                <div className="flex-1">
+                <div className="flex-1 sm:flex-[3]">
                   <SearchInput
                     value={searchTerm}
                     onChange={setSearchTerm}
                     placeholder="Randevu veya müşteri ara..."
                   />
                 </div>
-                <DateSelectionDialog
-                  selectedDate={selectedDate}
-                  onDateSelect={setSelectedDate}
-                />
+                <div className="flex-none sm:flex-[1]">
+                  <DateSelectionDialog
+                    selectedDate={selectedDate}
+                    onDateSelect={setSelectedDate}
+                  />
+                </div>
               </div>
 
               {/* Quick Filters */}

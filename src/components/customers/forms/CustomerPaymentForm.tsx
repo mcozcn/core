@@ -113,10 +113,11 @@ const CustomerPaymentForm = ({ customerId, onSuccess }: CustomerPaymentFormProps
       // Vadeli ödeme kaydını güncelle
       const updatedRecords = allRecords.map(record => {
         if (record.id === installmentRecord.id) {
+          const remainingAmount = installmentRecord.amount - paymentAmount;
           return {
             ...record,
-            isPaid: paymentAmount >= installmentRecord.amount,
-            amount: paymentAmount >= installmentRecord.amount ? installmentRecord.amount : installmentRecord.amount - paymentAmount
+            isPaid: remainingAmount <= 0,
+            amount: remainingAmount <= 0 ? 0 : remainingAmount
           };
         }
         return record;

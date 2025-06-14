@@ -4,6 +4,8 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/components/ui/use-toast";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { getAppointments, setAppointments, type Appointment, getCustomers, getServices } from "@/utils/localStorage";
@@ -11,17 +13,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import CustomerSelectionDialog from '../common/CustomerSelectionDialog';
 import { format } from 'date-fns';
 import { getAllUsers } from '@/utils/auth';
+import { getPersonnel } from '@/utils/storage';
+import { CalendarIcon } from 'lucide-react';
+import { cn } from "@/lib/utils";
 
 interface AppointmentFormProps {
-  selectedDate: Date;
+  selectedDate?: Date;
   onSuccess: () => void;
   onCancel: () => void;
 }
 
-const AppointmentForm = ({ selectedDate, onSuccess, onCancel }: AppointmentFormProps) => {
+const AppointmentForm = ({ selectedDate: initialDate, onSuccess, onCancel }: AppointmentFormProps) => {
   const [customerId, setCustomerId] = useState('');
   const [customerSearch, setCustomerSearch] = useState('');
   const [appointmentTime, setAppointmentTime] = useState('');
+  const [appointmentDate, setAppointmentDate] = useState<Date | undefined>(initialDate || new Date());
   const [serviceId, setServiceId] = useState('');
   const [staffId, setStaffId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -38,19 +44,41 @@ const AppointmentForm = ({ selectedDate, onSuccess, onCancel }: AppointmentFormP
     queryFn: getCustomers,
   });
 
-  const staff = getAllUsers();
+  const { data: personnel = [] } = useQuery({
+    queryKey: ['personnel'],
+    queryFn: getPersonnel,
+  });
+
+  // Auth kullanıcıları da dahil et
+  const authUsers = getAllUsers();
+  const allStaff = [...personnel, ...authUsers];
+  
   const selectedCustomer = customers.find(c => c.id.toString() === customerId);
-  const selectedStaff = staff.find(s => s.id.toString() === staffId);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!appointmentDate) {
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Randevu tarihi seçmelisiniz.",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
       const appointments = getAppointments();
       const customer = customers.find(c => c.id === Number(customerId));
       const service = services.find(s => s.id === Number(serviceId));
-      const staff = getAllUsers().find(s => s.id === Number(staffId));
+      
+      // Personnel veya auth users arasından staff bul
+      let staff = personnel.find(s => s.id === Number(staffId));
+      if (!staff) {
+        staff = authUsers.find(s => s.id === Number(staffId));
+      }
 
       if (!customer) {
         throw new Error("Müşteri bulunamadı");
@@ -64,8 +92,8 @@ const AppointmentForm = ({ selectedDate, onSuccess, onCancel }: AppointmentFormP
         throw new Error("Personel bulunamadı");
       }
 
-      const formattedDate = format(selectedDate, 'yyyy-MM-dd');
-      console.log('Selected date:', selectedDate);
+      const formattedDate = format(appointmentDate, 'yyyy-MM-dd');
+      console.log('Selected date:', appointmentDate);
       console.log('Formatted date for appointment:', formattedDate);
 
       const newAppointment: Appointment = {
@@ -76,8 +104,8 @@ const AppointmentForm = ({ selectedDate, onSuccess, onCancel }: AppointmentFormP
         serviceName: service.name,
         service: service.name,
         staffId: Number(staffId),
-        staffName: staff.displayName,
-        staffColor: staff.color,
+        staffName: staff.name || staff.displayName,
+        staffColor: staff.color || '#3B82F6',
         date: formattedDate,
         startTime: appointmentTime,
         endTime: appointmentTime,
@@ -126,23 +154,52 @@ const AppointmentForm = ({ selectedDate, onSuccess, onCancel }: AppointmentFormP
         </div>
 
         <div>
+          <Label>Randevu Tarihi</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !appointmentDate && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {appointmentDate ? format(appointmentDate, "dd/MM/yyyy") : "Tarih seçin"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0">
+              <Calendar
+                mode="single"
+                selected={appointmentDate}
+                onSelect={setAppointmentDate}
+                initialFocus
+                className="pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        <div>
           <Label>Personel</Label>
           <Select value={staffId} onValueChange={setStaffId}>
             <SelectTrigger>
               <SelectValue placeholder="Personel seçin" />
             </SelectTrigger>
             <SelectContent>
-              {staff.map((person) => (
+              {allStaff.map((person) => (
                 <SelectItem 
                   key={person.id} 
                   value={person.id.toString()}
                   className="flex items-center gap-2"
                 >
-                  <div 
-                    className="w-3 h-3 rounded-full" 
-                    style={{ backgroundColor: person.color }}
-                  />
-                  {person.displayName} - {person.title}
+                  <div className="flex items-center gap-2">
+                    <div 
+                      className="w-3 h-3 rounded-full" 
+                      style={{ backgroundColor: person.color || '#3B82F6' }}
+                    />
+                    {person.name || person.displayName} - {person.title || 'Personel'}
+                  </div>
                 </SelectItem>
               ))}
             </SelectContent>

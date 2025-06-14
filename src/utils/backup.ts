@@ -79,7 +79,7 @@ const migrateSales = (sales: any[]): any[] => {
   }));
 };
 
-const migratePersonnel = (personnel: any[]): any[] => {
+const migratePersonnel = (personnel: any[]): any[] =>; {
   return personnel.map(person => ({
     ...person,
     isActive: person.isActive !== undefined ? person.isActive : true,
@@ -134,37 +134,91 @@ export const exportBackup = async (): Promise<string> => {
 export const importBackup = async (file: File): Promise<void> => {
   try {
     const text = await file.text();
-    const backupData: BackupData = JSON.parse(text);
+    let backupData: BackupData;
+
+    try {
+      backupData = JSON.parse(text);
+    } catch (parseError) {
+      throw new Error('Geçersiz JSON dosyası');
+    }
 
     if (!backupData.data) {
-      throw new Error('Geçersiz yedekleme dosyası');
+      throw new Error('Geçersiz yedekleme dosyası formatı');
     }
 
     console.log('Importing backup version:', backupData.version);
 
-    // Veri migrasyon işlemleri
-    const migratedCustomerRecords = migrateCustomerRecords(backupData.data.customerRecords || []);
-    const migratedAppointments = migrateAppointments(backupData.data.appointments || []);
-    const migratedStockItems = migrateStockItems(backupData.data.stockItems || []);
-    const migratedSales = migrateSales(backupData.data.sales || []);
-    const migratedPersonnel = migratePersonnel(backupData.data.personnel || []);
+    // Hata kontrolü ve güvenli veri migrasyon işlemleri
+    try {
+      const migratedCustomerRecords = migrateCustomerRecords(backupData.data.customerRecords || []);
+      const migratedAppointments = migrateAppointments(backupData.data.appointments || []);
+      const migratedStockItems = migrateStockItems(backupData.data.stockItems || []);
+      const migratedSales = migrateSales(backupData.data.sales || []);
+      const migratedPersonnel = migratePersonnel(backupData.data.personnel || []);
 
-    // Import all data with migration
-    await setCustomers(backupData.data.customers || []);
-    await setCustomerRecords(migratedCustomerRecords);
-    await setAppointments(migratedAppointments);
-    await setServices(backupData.data.services || []);
-    await setServiceSales(backupData.data.serviceSales || []);
-    await setStockItems(migratedStockItems);
-    await setSales(migratedSales);
-    await setCosts(backupData.data.costs || []);
-    await setPayments(backupData.data.payments || []);
-    await setUsers(backupData.data.users || []);
-    await setPersonnel(migratedPersonnel);
-    await setPersonnelRecords(backupData.data.personnelRecords || []);
-    await setStockMovements(backupData.data.stockMovements || []);
+      // Import all data with error handling
+      await Promise.all([
+        setCustomers(backupData.data.customers || []).catch(err => {
+          console.error('Error importing customers:', err);
+          throw new Error('Müşteri verileri içe aktarılamadı');
+        }),
+        setCustomerRecords(migratedCustomerRecords).catch(err => {
+          console.error('Error importing customer records:', err);
+          throw new Error('Müşteri kayıtları içe aktarılamadı');
+        }),
+        setAppointments(migratedAppointments).catch(err => {
+          console.error('Error importing appointments:', err);
+          throw new Error('Randevu verileri içe aktarılamadı');
+        }),
+        setServices(backupData.data.services || []).catch(err => {
+          console.error('Error importing services:', err);
+          throw new Error('Hizmet verileri içe aktarılamadı');
+        }),
+        setServiceSales(backupData.data.serviceSales || []).catch(err => {
+          console.error('Error importing service sales:', err);
+          throw new Error('Hizmet satış verileri içe aktarılamadı');
+        }),
+        setStockItems(migratedStockItems).catch(err => {
+          console.error('Error importing stock items:', err);
+          throw new Error('Stok verileri içe aktarılamadı');
+        }),
+        setSales(migratedSales).catch(err => {
+          console.error('Error importing sales:', err);
+          throw new Error('Satış verileri içe aktarılamadı');
+        }),
+        setCosts(backupData.data.costs || []).catch(err => {
+          console.error('Error importing costs:', err);
+          throw new Error('Masraf verileri içe aktarılamadı');
+        }),
+        setPayments(backupData.data.payments || []).catch(err => {
+          console.error('Error importing payments:', err);
+          throw new Error('Ödeme verileri içe aktarılamadı');
+        }),
+        setUsers(backupData.data.users || []).catch(err => {
+          console.error('Error importing users:', err);
+          // Users verisi olmayabilir, bu durumda hata vermeyiz
+          console.warn('Users data could not be imported, continuing...');
+        }),
+        setPersonnel(migratedPersonnel).catch(err => {
+          console.error('Error importing personnel:', err);
+          throw new Error('Personel verileri içe aktarılamadı');
+        }),
+        setPersonnelRecords(backupData.data.personnelRecords || []).catch(err => {
+          console.error('Error importing personnel records:', err);
+          throw new Error('Personel kayıtları içe aktarılamadı');
+        }),
+        setStockMovements(backupData.data.stockMovements || []).catch(err => {
+          console.error('Error importing stock movements:', err);
+          throw new Error('Stok hareketleri içe aktarılamadı');
+        })
+      ]);
 
-    console.log('Backup imported successfully with migrations');
+      console.log('Backup imported successfully with migrations');
+
+    } catch (migrationError) {
+      console.error('Migration error:', migrationError);
+      throw new Error('Veri dönüştürme sırasında hata: ' + (migrationError instanceof Error ? migrationError.message : 'Bilinmeyen hata'));
+    }
 
   } catch (error) {
     console.error('Import backup error:', error);
