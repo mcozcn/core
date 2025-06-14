@@ -1,17 +1,19 @@
-import React, { useState } from 'react';
-import { useToast } from "@/hooks/use-toast";
+import React, { useState, useEffect } from 'react';
+import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { DialogFooter } from "@/components/ui/dialog";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getCustomers, addCustomerRecord, type CustomerRecord } from '@/utils/storage';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Card } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { Calendar as CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useQuery } from "@tanstack/react-query";
+import { getCustomerRecords, setCustomerRecords, type CustomerRecord, getServices, getProducts, type Service, type StockItem } from '@/utils/localStorage';
 
 interface AddCustomerRecordFormProps {
   customerId: number;
@@ -19,189 +21,236 @@ interface AddCustomerRecordFormProps {
 }
 
 const AddCustomerRecordForm = ({ customerId, onSuccess }: AddCustomerRecordFormProps) => {
+  const [selectedItemId, setSelectedItemId] = useState('');
   const [amount, setAmount] = useState('');
+  const [discount, setDiscount] = useState('0');
+  const [type, setType] = useState<'service' | 'product'>('service');
+  const [recordType, setRecordType] = useState<'debt' | 'payment'>('debt');
+  const [isPaid, setIsPaid] = useState(false);
+  const [date, setDate] = useState<Date>(new Date());
+  const [dueDate, setDueDate] = useState<Date | undefined>();
   const [description, setDescription] = useState('');
-  const [date, setDate] = useState('');
-  const [dueDate, setDueDate] = useState('');
-  const [type, setType] = useState('debt');
-  const [discount, setDiscount] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
-  const { data: customers = [] } = useQuery({
-    queryKey: ['customers'],
-    queryFn: getCustomers,
+  const { data: services = [] } = useQuery({
+    queryKey: ['services'],
+    queryFn: getServices,
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const { data: products = [] } = useQuery({
+    queryKey: ['products'],
+    queryFn: getProducts,
+  });
+
+  useEffect(() => {
+    if (selectedItemId) {
+      const selectedService = services.find(s => s.id.toString() === selectedItemId);
+      const selectedProduct = products.find(p => p.id.toString() === selectedItemId);
+      const price = selectedService?.price || selectedProduct?.price || 0;
+      setAmount(price.toString());
+    }
+  }, [selectedItemId, services, products]);
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
 
-    try {
-      const customer = customers.find(c => c.id === customerId);
-      if (!customer) {
-        throw new Error('Müşteri bulunamadı');
-      }
+    const finalAmount = Number(amount) - Number(discount);
+    const selectedItem = type === 'service' 
+      ? services.find(s => s.id.toString() === selectedItemId)
+      : products.find(p => p.id.toString() === selectedItemId);
 
-      const record: CustomerRecord = {
-        id: Date.now(),
-        customerId,
-        itemId: Date.now(),
-        itemName: description,
-        amount: parseFloat(amount),
-        type: type as CustomerRecord['type'],
-        isPaid: type === 'payment',
-        date: new Date(date),
-        dueDate: dueDate ? new Date(dueDate) : new Date(),
-        description,
-        recordType: type === 'payment' ? 'payment' : 'debt',
-        discount: parseFloat(discount) || 0,
-        createdAt: new Date(),
-      };
-
-      await addCustomerRecord(record);
-      queryClient.invalidateQueries({ queryKey: ['customerRecords'] });
-
-      toast({
-        title: "Kayıt eklendi",
-        description: "Müşteri kaydı başarıyla eklendi.",
-      });
-
-      // Reset form
-      setAmount('');
-      setDescription('');
-      setDate('');
-      setDueDate('');
-      setDiscount('');
-
-      if (onSuccess) {
-        onSuccess();
-      }
-    } catch (error) {
-      console.error("Kayıt eklenirken hata:", error);
+    if (!selectedItem) {
       toast({
         variant: "destructive",
-        title: "Hata",
-        description: "Kayıt eklenirken bir hata oluştu.",
+        title: "Hata!",
+        description: "Lütfen bir ürün veya hizmet seçin.",
       });
-    } finally {
-      setIsSubmitting(false);
+      return;
+    }
+
+    const newRecord: CustomerRecord = {
+      id: Date.now(),
+      customerId,
+      itemId: type === 'service' ? selectedItem.id : selectedItem.id,
+      itemName: type === 'service' 
+        ? (selectedItem as Service).name 
+        : (selectedItem as StockItem).productName,
+      amount: recordType === 'debt' ? finalAmount : -finalAmount,
+      type: recordType === 'payment' ? 'payment' : type,
+      isPaid: recordType === 'payment' ? true : isPaid,
+      date,
+      dueDate,
+      description,
+      recordType,
+      discount: Number(discount),
+    };
+
+    console.log('Yeni müşteri kaydı oluşturuluyor:', newRecord);
+
+    const existingRecords = getCustomerRecords();
+    setCustomerRecords([...existingRecords, newRecord]);
+
+    toast({
+      title: "Kayıt eklendi",
+      description: `${recordType === 'debt' ? 'Borç' : 'Tahsilat'} kaydı başarıyla eklendi.`,
+    });
+
+    // Reset form
+    setSelectedItemId('');
+    setAmount('');
+    setDiscount('0');
+    setType('service');
+    setRecordType('debt');
+    setIsPaid(false);
+    setDueDate(undefined);
+    setDescription('');
+
+    if (onSuccess) {
+      onSuccess();
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="type">Kayıt Tipi</Label>
-        <select
-          id="type"
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-          value={type}
-          onChange={(e) => setType(e.target.value)}
-        >
-          <option value="debt">Borç</option>
-          <option value="payment">Ödeme</option>
-        </select>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="amount">Miktar</Label>
-        <Input
-          id="amount"
-          type="number"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          placeholder="Miktarı girin"
-          required
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="description">Açıklama</Label>
-        <Textarea
-          id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Açıklama girin"
-          required
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="date">Tarih</Label>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant={"outline"}
-              className={cn(
-                "w-full justify-start text-left font-normal",
-                !date && "text-muted-foreground"
-              )}
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {date ? format(new Date(date), "PPP") : <span>Tarih seçin</span>}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={date ? new Date(date) : undefined}
-              onSelect={(selectedDate) => setDate(selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '')}
-              disabled={(date) =>
-                date > new Date()
-              }
-              initialFocus
-            />
-          </PopoverContent>
-        </Popover>
-      </div>
-
-      {type === 'debt' && (
-        <div className="space-y-2">
-          <Label htmlFor="dueDate">Vade Tarihi</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={"outline"}
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !dueDate && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {dueDate ? format(new Date(dueDate), "PPP") : <span>Vade tarihi seçin</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={dueDate ? new Date(dueDate) : undefined}
-                onSelect={(selectedDate) => setDueDate(selectedDate ? format(selectedDate, 'yyyy-MM-dd') : '')}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
+    <Card className="p-6">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <Label>Kayıt Türü</Label>
+          <RadioGroup value={recordType} onValueChange={(value) => setRecordType(value as 'debt' | 'payment')} className="flex space-x-4">
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="debt" id="debt" />
+              <Label htmlFor="debt">Borç</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="payment" id="payment" />
+              <Label htmlFor="payment">Tahsilat</Label>
+            </div>
+          </RadioGroup>
         </div>
-      )}
 
-      <div className="space-y-2">
-        <Label htmlFor="discount">İndirim</Label>
-        <Input
-          id="discount"
-          type="number"
-          value={discount}
-          onChange={(e) => setDiscount(e.target.value)}
-          placeholder="İndirim miktarını girin"
-        />
-      </div>
+        {recordType === 'debt' && (
+          <div>
+            <Label>Tür</Label>
+            <RadioGroup value={type} onValueChange={(value) => setType(value as 'service' | 'product')} className="flex space-x-4">
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="service" id="service" />
+                <Label htmlFor="service">Hizmet</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="product" id="product" />
+                <Label htmlFor="product">Ürün</Label>
+              </div>
+            </RadioGroup>
+          </div>
+        )}
 
-      <DialogFooter className="pt-4">
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Ekleniyor...' : 'Kaydet'}
-        </Button>
-      </DialogFooter>
-    </form>
+        {recordType === 'debt' && (
+          <div>
+            <Label>{type === 'service' ? 'Hizmet' : 'Ürün'}</Label>
+            <Select value={selectedItemId} onValueChange={setSelectedItemId}>
+              <SelectTrigger>
+                <SelectValue placeholder={type === 'service' ? 'Hizmet seçin' : 'Ürün seçin'} />
+              </SelectTrigger>
+              <SelectContent>
+                {type === 'service' ? (
+                  services.map((service) => (
+                    <SelectItem key={service.id} value={service.id.toString()}>
+                      {service.name} - {service.price} ₺
+                    </SelectItem>
+                  ))
+                ) : (
+                  products.map((product) => (
+                    <SelectItem key={product.id} value={product.id.toString()}>
+                      {product.productName} - {product.price} ₺
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        <div>
+          <Label>Tutar (₺)</Label>
+          <Input
+            type="number"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="Tutarı girin"
+            required
+            readOnly={recordType === 'debt'}
+          />
+        </div>
+
+        {recordType === 'debt' && (
+          <div>
+            <Label>İndirim Tutarı (₺)</Label>
+            <Input
+              type="number"
+              value={discount}
+              onChange={(e) => setDiscount(e.target.value)}
+              placeholder="İndirim tutarını girin"
+              min="0"
+            />
+          </div>
+        )}
+
+        {recordType === 'debt' && (
+          <div>
+            <Label>Ödeme Durumu</Label>
+            <RadioGroup value={isPaid ? "paid" : "unpaid"} onValueChange={(value) => setIsPaid(value === "paid")} className="flex space-x-4">
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="paid" id="paid" />
+                <Label htmlFor="paid">Ödendi</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="unpaid" id="unpaid" />
+                <Label htmlFor="unpaid">Ödenmedi</Label>
+              </div>
+            </RadioGroup>
+          </div>
+        )}
+
+        {recordType === 'debt' && !isPaid && (
+          <div>
+            <Label>Vade Tarihi</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !dueDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dueDate ? format(dueDate, "PPP") : "Tarih seçin"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={dueDate}
+                  onSelect={setDueDate}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+        )}
+
+        <div>
+          <Label>Açıklama</Label>
+          <Textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Açıklama ekleyin (opsiyonel)"
+            className="min-h-[100px]"
+          />
+        </div>
+
+        <Button type="submit" className="w-full">Kaydet</Button>
+      </form>
+    </Card>
   );
 };
 

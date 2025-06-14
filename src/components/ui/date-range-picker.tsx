@@ -2,7 +2,7 @@
 "use client"
 
 import * as React from "react"
-import { addDays, format, startOfDay, endOfDay } from "date-fns"
+import { addDays, format } from "date-fns"
 import { Calendar as CalendarIcon } from "lucide-react"
 import { DateRange } from "react-day-picker"
 import { tr } from 'date-fns/locale'
@@ -30,20 +30,6 @@ export function DatePickerWithRange({
   setDate,
   locale = tr,
 }: DatePickerWithRangeProps) {
-  
-  const handleDateSelect = (selectedDate: DateRange | undefined) => {
-    if (selectedDate) {
-      // Ensure proper date handling - include full days
-      const normalizedRange = {
-        from: selectedDate.from ? startOfDay(selectedDate.from) : undefined,
-        to: selectedDate.to ? endOfDay(selectedDate.to) : selectedDate.from ? endOfDay(selectedDate.from) : undefined
-      };
-      setDate(normalizedRange);
-    } else {
-      setDate(selectedDate);
-    }
-  };
-
   return (
     <div className={cn("grid gap-2", className)}>
       <Popover>
@@ -77,10 +63,11 @@ export function DatePickerWithRange({
             mode="range"
             defaultMonth={date?.from}
             selected={date}
-            onSelect={handleDateSelect}
+            onSelect={setDate}
             numberOfMonths={2}
             locale={locale}
             className="pointer-events-auto"
+            // Set today's date to be used as single selection when clicking on a date
             today={new Date()}
           />
         </PopoverContent>

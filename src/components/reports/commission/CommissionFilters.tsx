@@ -7,7 +7,6 @@ interface CommissionFiltersProps {
   selectedStaffId: string;
   setSelectedStaffId: (id: string) => void;
   staffUsers: any[];
-  personnel?: any[];
   date: DateRange | undefined;
   setDate: (date: DateRange | undefined) => void;
 }
@@ -16,27 +15,9 @@ export const CommissionFilters = ({
   selectedStaffId,
   setSelectedStaffId,
   staffUsers,
-  personnel = [],
   date,
   setDate
 }: CommissionFiltersProps) => {
-  // Show personnel from personnel section primarily
-  const allStaffOptions = [
-    ...personnel.map(person => ({
-      id: person.id.toString(),
-      name: person.name,
-      title: person.title,
-      type: 'personnel'
-    })),
-    // Add users as fallback if no personnel exist
-    ...staffUsers.map(user => ({
-      id: user.id.toString(),
-      name: user.displayName || user.username,
-      title: 'Kullanıcı',
-      type: 'user'
-    }))
-  ];
-
   return (
     <div className="flex flex-col sm:flex-row gap-3 mt-3 sm:mt-0">
       <Select value={selectedStaffId} onValueChange={setSelectedStaffId}>
@@ -45,9 +26,9 @@ export const CommissionFilters = ({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">Tüm Personeller</SelectItem>
-          {allStaffOptions.map((staff) => (
-            <SelectItem key={`${staff.type}-${staff.id}`} value={staff.id}>
-              {staff.name} {staff.title && `(${staff.title})`}
+          {staffUsers.map((user) => (
+            <SelectItem key={user.id} value={user.id.toString()}>
+              {user.displayName || user.username}
             </SelectItem>
           ))}
         </SelectContent>

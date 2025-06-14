@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -26,22 +25,20 @@ const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
     setIsSubmitting(true);
 
     try {
-      const customer: Customer = {
+      const newCustomer: Customer = {
         id: Date.now(),
         name,
         phone,
         email,
         address,
         notes,
-        status: 'active',
         createdAt: new Date(),
-        updatedAt: new Date(),
       };
 
-      console.log('Yeni müşteri oluşturuluyor:', customer);
+      console.log('Yeni müşteri oluşturuluyor:', newCustomer);
 
       const existingCustomers = await getCustomers();
-      await setCustomers([...existingCustomers, customer]);
+      await setCustomers([...existingCustomers, newCustomer]);
 
       toast({
         title: "Müşteri eklendi",

@@ -1,135 +1,217 @@
 
 import React, { useState } from 'react';
-import { useToast } from "@/hooks/use-toast";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { DialogFooter } from "@/components/ui/dialog";
-import { addCustomerRecord, type CustomerRecord } from '@/utils/storage';
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { getStock, setStock, getSales, setSales, getCustomers, type StockItem, type Sale, setCustomerRecords, getCustomerRecords, type CustomerRecord } from "@/utils/localStorage";
+import { useQuery } from "@tanstack/react-query";
+import CustomerSelectionDialog from '../common/CustomerSelectionDialog';
 
 interface SaleFormProps {
-  customerId: number;
-  productName: string;
-  productPrice: number;
-  onSuccess?: () => void;
+  showForm: boolean;
+  setShowForm: (show: boolean) => void;
+  stock: StockItem[];
+  sales: Sale[];
 }
 
-const SaleForm = ({ customerId, productName, productPrice, onSuccess }: SaleFormProps) => {
-  const [quantity, setQuantity] = useState('1');
-  const [price, setPrice] = useState(productPrice.toString());
-  const [description, setDescription] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const SaleForm = ({ showForm, setShowForm, stock, sales }: SaleFormProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [customerSearch, setCustomerSearch] = useState('');
+  const [saleData, setSaleData] = useState({
+    productId: '',
+    quantity: '',
+    customerId: '',
+    discount: '0'
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const { data: customers = [] } = useQuery({
+    queryKey: ['customers'],
+    queryFn: () => {
+      console.log('Fetching customers for sale form');
+      return getCustomers();
+    },
+  });
+
+  const selectedCustomer = customers.find(c => c.id.toString() === saleData.customerId);
+
+  const handleSale = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
 
     try {
-      const totalAmount = parseFloat(price) * parseFloat(quantity);
+      const product = stock.find(item => item.productId === Number(saleData.productId));
+      const customer = customers.find(c => c.id === Number(saleData.customerId));
+      
+      if (!product) {
+        throw new Error("Ürün bulunamadı");
+      }
 
-      const record: Omit<CustomerRecord, 'id' | 'createdAt'> = {
-        customerId,
-        type: 'product',
-        itemId: Date.now(),
-        itemName: productName,
-        amount: totalAmount,
-        quantity: parseFloat(quantity),
-        date: new Date(),
-        description: description || `${productName} ürün satışı`,
-        recordType: 'product',
+      if (!customer) {
+        throw new Error("Müşteri bulunamadı");
+      }
+
+      const quantity = Number(saleData.quantity);
+      const discount = Number(saleData.discount);
+
+      if (product.quantity < quantity) {
+        throw new Error("Yetersiz stok");
+      }
+
+      const totalPrice = (product.price * quantity) - discount;
+
+      // Create a sale object with all required properties
+      const newSale: Sale = {
+        id: Date.now(),
+        customerId: customer.id,
+        customerName: customer.name,
+        stockItemId: product.id,
+        stockItemName: product.productName || product.name || '',
+        quantity,
+        unitPrice: product.price,
+        totalPrice,
+        saleDate: new Date(),
+        date: new Date().toISOString(),
+        total: totalPrice,
+        paymentMethod: "Nakit", // Default
+        productId: product.productId,
+        productName: product.productName,
+        discount,
+        customerPhone: customer.phone,
       };
 
-      await addCustomerRecord(record);
-      
+      // Update stock
+      const updatedStock = stock.map(item => 
+        item.productId === product.productId 
+          ? { ...item, quantity: item.quantity - quantity, lastUpdated: new Date() }
+          : item
+      );
+
+      // Update sales
+      const updatedSales = [...sales, newSale];
+
+      // Add to customer records
+      const newRecord: CustomerRecord = {
+        id: Date.now(),
+        customerId: Number(saleData.customerId),
+        type: 'product',
+        itemId: product.productId || product.id,
+        itemName: product.productName || product.name || '',
+        amount: totalPrice,
+        date: new Date(),
+        isPaid: false,
+        description: `Ürün satışı: ${product.productName} (${quantity} adet)`,
+        recordType: 'debt',
+        discount
+      };
+
+      const existingRecords = getCustomerRecords();
+
+      setStock(updatedStock);
+      setSales(updatedSales);
+      setCustomerRecords([...existingRecords, newRecord]);
+
+      queryClient.setQueryData(['stock'], updatedStock);
+      queryClient.setQueryData(['sales'], updatedSales);
       queryClient.invalidateQueries({ queryKey: ['customerRecords'] });
-      
+
+      console.log('Sale completed:', newSale);
+      console.log('Customer record added:', newRecord);
+
       toast({
-        title: "Ürün satışı eklendi",
-        description: "Ürün satışı başarıyla kaydedildi.",
+        title: "Satış başarılı",
+        description: `${product.productName} satışı gerçekleştirildi.`,
       });
 
-      if (onSuccess) {
-        onSuccess();
-      }
+      setSaleData({
+        productId: '',
+        quantity: '',
+        customerId: '',
+        discount: '0'
+      });
+      setShowForm(false);
     } catch (error) {
-      console.error("Ürün satışı eklenirken hata:", error);
+      console.error('Error processing sale:', error);
       toast({
         variant: "destructive",
-        title: "Hata",
-        description: "Ürün satışı eklenirken bir hata oluştu.",
+        title: "Hata!",
+        description: error instanceof Error ? error.message : "Satış işlemi sırasında bir hata oluştu.",
       });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
-  const totalPrice = parseFloat(price || '0') * parseFloat(quantity || '0');
+  if (!showForm) return null;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="productName">Ürün Adı</Label>
-        <Input
-          id="productName"
-          type="text"
-          value={productName}
-          disabled
-        />
-      </div>
+    <Card className="p-6 mb-8">
+      <form onSubmit={handleSale} className="space-y-4">
+        <div>
+          <Label>Ürün</Label>
+          <select
+            value={saleData.productId}
+            onChange={(e) => setSaleData({ ...saleData, productId: e.target.value })}
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2"
+            required
+          >
+            <option value="">Ürün seçin</option>
+            {stock.map((item) => (
+              <option key={item.productId} value={item.productId}>
+                {item.productName} - Stok: {item.quantity}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="quantity">Miktar</Label>
+        <div>
+          <Label>Miktar</Label>
           <Input
-            id="quantity"
             type="number"
-            value={quantity}
-            onChange={(e) => setQuantity(e.target.value)}
-            placeholder="Miktar"
+            value={saleData.quantity}
+            onChange={(e) => setSaleData({ ...saleData, quantity: e.target.value })}
+            placeholder="Satış miktarını girin"
+            min="1"
             required
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="price">Birim Fiyat</Label>
+        <div>
+          <Label>İndirim Tutarı (₺)</Label>
           <Input
-            id="price"
             type="number"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            placeholder="Birim fiyat"
-            required
+            value={saleData.discount}
+            onChange={(e) => setSaleData({ ...saleData, discount: e.target.value })}
+            placeholder="İndirim tutarını girin"
+            min="0"
           />
         </div>
-      </div>
 
-      <div className="space-y-2">
-        <Label>Toplam Tutar</Label>
-        <div className="text-lg font-semibold">
-          ₺{totalPrice.toLocaleString()}
+        <div>
+          <Label>Müşteri</Label>
+          <CustomerSelectionDialog
+            customers={customers}
+            selectedCustomer={selectedCustomer}
+            customerSearch={customerSearch}
+            setCustomerSearch={setCustomerSearch}
+            onCustomerSelect={(customerId) => setSaleData(prev => ({ ...prev, customerId }))}
+          />
         </div>
-      </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="description">Açıklama</Label>
-        <Input
-          id="description"
-          type="text"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Açıklama (opsiyonel)"
-        />
-      </div>
-
-      <DialogFooter className="pt-4">
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Kaydediliyor...' : 'Ürün Satışı Kaydet'}
-        </Button>
-      </DialogFooter>
-    </form>
+        <div className="flex gap-2">
+          <Button type="submit" className="flex-1">
+            Satışı Tamamla
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setShowForm(false)}
+          >
+            İptal
+          </Button>
+        </div>
+      </form>
+    </Card>
   );
 };
 

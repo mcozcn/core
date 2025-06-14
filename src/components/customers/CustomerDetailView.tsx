@@ -1,365 +1,269 @@
-
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { getCurrentUser, type User } from '@/utils/storage/userManager';
-import { type Customer } from '@/utils/storage/customers';
-import { useQuery } from '@tanstack/react-query';
-import { getAppointments, getCustomerRecords } from '@/utils/storage';
-import { Phone, Mail, Calendar, MapPin, Edit, Trash2, Plus } from 'lucide-react';
-import { format } from 'date-fns';
-import { tr } from 'date-fns/locale';
-import EditCustomerForm from './EditCustomerForm';
-import CustomerAppointmentsList from './CustomerAppointmentsList';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getCustomerRecords, getAppointments, type Customer, type Appointment } from '@/utils/storage';
 import CustomerRecordsList from './CustomerRecordsList';
-import AddCustomerRecordForm from './AddCustomerRecordForm';
-import CustomerPaymentForm from './forms/CustomerPaymentForm';
-import CustomerDebtForm from './forms/CustomerDebtForm';
+import CustomerAppointmentsList from './CustomerAppointmentsList';
 import CustomerInstallmentForm from './forms/CustomerInstallmentForm';
+import CustomerPaymentForm from './forms/CustomerPaymentForm';
+import EditCustomerForm from './EditCustomerForm';
+import { Phone, Mail, MapPin, Calendar, Edit } from 'lucide-react';
 
 interface CustomerDetailViewProps {
   customer: Customer;
-  onCustomerUpdated: () => void;
-  onCustomerDeleted?: () => void;
+  onEdit: () => void;
 }
 
-const CustomerDetailView = ({ customer, onCustomerUpdated, onCustomerDeleted }: CustomerDetailViewProps) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+const CustomerDetailView = ({ customer, onEdit }: CustomerDetailViewProps) => {
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [showAddRecordDialog, setShowAddRecordDialog] = useState(false);
-
-  // Fetch appointments and records for this customer
-  const { data: allAppointments = [] } = useQuery({
-    queryKey: ['appointments'],
-    queryFn: getAppointments,
+  const queryClient = useQueryClient();
+  
+  const { data: records = [] } = useQuery({
+    queryKey: ['customerRecords', customer.id],
+    queryFn: async () => {
+      const allRecords = await getCustomerRecords();
+      return allRecords.filter(record => record.customerId === customer.id);
+    }
   });
 
-  const { data: allRecords = [] } = useQuery({
-    queryKey: ['customerRecords'],
-    queryFn: getCustomerRecords,
+  const { data: appointments = [] } = useQuery({
+    queryKey: ['customerAppointments', customer.id],
+    queryFn: async () => {
+      const allAppointments = await getAppointments();
+      return allAppointments.filter(apt => apt.customerId === customer.id);
+    }
   });
-
-  const customerAppointments = allAppointments.filter(apt => apt.customerId === customer.id);
-  const customerRecords = allRecords.filter(record => record.customerId === customer.id);
-
-  React.useEffect(() => {
-    loadCurrentUser();
-  }, []);
-
-  const loadCurrentUser = async () => {
-    const user = await getCurrentUser();
-    setCurrentUser(user);
-  };
-
-  const isAdmin = currentUser?.role === 'admin';
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('tr-TR', {
-      style: 'currency',
-      currency: 'TRY'
-    }).format(amount);
-  };
 
   const handleEditSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: ['customers'] });
     setShowEditDialog(false);
-    onCustomerUpdated();
   };
 
-  const handleDeleteCustomer = async () => {
-    try {
-      const { deleteCustomer } = await import('@/utils/storage/customers');
-      const success = await deleteCustomer(customer.id);
-      if (success) {
-        const { toast } = await import('@/hooks/use-toast');
-        toast({
-          title: 'Başarılı',
-          description: 'Müşteri başarıyla silindi.'
-        });
-        onCustomerDeleted?.();
-      }
-    } catch (error) {
-      console.error('Error deleting customer:', error);
-    }
+  // Son işlem tarihi
+  const lastTransaction = records.length > 0 
+    ? records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
+    : null;
+
+  // Hesaplamalar - Düzeltilmiş versiyon
+  const totalDebt = records.reduce((acc, record) => 
+    (record.type === 'debt' || record.type === 'service' || record.type === 'product') && record.recordType !== 'installment'
+      ? acc + record.amount : acc, 0
+  );
+  const totalPayments = records.reduce((acc, record) => 
+    record.type === 'payment' ? acc + Math.abs(record.amount) : acc, 0
+  );
+  const installmentedAmount = records.reduce((acc, record) => 
+    record.recordType === 'installment' ? acc + record.amount : acc, 0
+  );
+  const remainingDebt = Math.max(0, totalDebt - totalPayments);
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase();
   };
-
-  const getStatusBadge = (status: string) => {
-    const variants = {
-      active: 'default',
-      inactive: 'secondary',
-      blocked: 'destructive'
-    } as const;
-    
-    const labels = {
-      active: 'Aktif',
-      inactive: 'Pasif',
-      blocked: 'Engelli'
-    };
-    
-    return (
-      <Badge variant={variants[status as keyof typeof variants] || 'outline'}>
-        {labels[status as keyof typeof labels] || status}
-      </Badge>
-    );
-  };
-
-  const handleDialogSuccess = () => {
-    setShowAddRecordDialog(false);
-    onCustomerUpdated();
-  };
-
-  // Calculate financial summary with improved installment handling
-  const totalSpent = customerRecords
-    .filter(record => record.type !== 'payment')
-    .reduce((sum, record) => sum + record.amount, 0);
-
-  const totalPayments = customerRecords
-    .filter(record => record.type === 'payment')
-    .reduce((sum, record) => sum + Math.abs(record.amount), 0);
-
-  // Calculate installment amounts using recordType field
-  const installmentRecords = customerRecords.filter(record => record.recordType === 'installment');
-  const totalInstallmentAmount = installmentRecords.reduce((sum, record) => sum + record.amount, 0);
-
-  // Calculate installment payments using recordType field
-  const installmentPayments = customerRecords
-    .filter(record => record.recordType === 'installment_payment')
-    .reduce((sum, record) => sum + Math.abs(record.amount), 0);
-
-  const remainingInstallmentAmount = Math.max(0, totalInstallmentAmount - installmentPayments);
-  const remainingDebt = Math.max(0, totalSpent - totalPayments);
 
   return (
     <div className="space-y-6">
-      {/* Header with Customer Info */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - Customer Info */}
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
+      <Card>
+        <CardHeader className="pb-2">
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-2xl font-serif">Müşteri Bilgisi</CardTitle>
+            <Button size="sm" variant="outline" onClick={() => setShowEditDialog(true)}>
+              <Edit className="h-4 w-4 mr-2" />
+              Düzenle
+            </Button>
+          </div>
+          <p className="text-sm text-muted-foreground">Kişisel ve iletişim bilgileri</p>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col md:flex-row gap-6">
+            <div className="flex flex-col items-center">
+              <Avatar className="h-24 w-24 mb-2">
+                <AvatarFallback className="text-lg">{getInitials(customer.name)}</AvatarFallback>
+              </Avatar>
+              <h3 className="font-medium text-lg">{customer.name}</h3>
+              <p className="text-sm text-muted-foreground">Müşteri</p>
+            </div>
+
+            <div className="flex-1 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <CardTitle className="text-2xl font-bold">{customer.name}</CardTitle>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-sm text-muted-foreground">Kişisel ve İletişim Bilgileri</span>
-                    {getStatusBadge(customer.status || 'active')}
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2">İletişim Bilgileri</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center">
+                      <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
+                      <span>{customer.phone}</span>
+                    </div>
+                    {customer.email && (
+                      <div className="flex items-center">
+                        <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
+                        <span>{customer.email}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        <Edit className="h-4 w-4 mr-2" />
-                        Düzenle
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-                      <EditCustomerForm 
-                        customer={customer}
-                        onSuccess={handleEditSuccess}
-                      />
-                    </DialogContent>
-                  </Dialog>
 
-                  {isAdmin && (
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="sm">
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Sil
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Müşteriyi Sil</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            <strong>{customer.name}</strong> müşterisini silmek istediğinizden emin misiniz? 
-                            Bu işlem geri alınamaz ve müşteriye ait tüm kayıtlar silinecektir.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>İptal</AlertDialogCancel>
-                          <AlertDialogAction 
-                            onClick={handleDeleteCustomer}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                          >
-                            Sil
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  )}
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground mb-2">Son İşlem</h4>
+                  <div className="space-y-2">
+                    {lastTransaction ? (
+                      <div className="flex items-center">
+                        <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                        <span>{new Date(lastTransaction.date).toLocaleDateString('tr-TR')}</span>
+                        <span className="ml-2 text-sm text-muted-foreground">
+                          ({lastTransaction.itemName})
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">İşlem bulunamadı</span>
+                    )}
+                    <div className="text-sm text-muted-foreground">
+                      Toplam İşlem: {records.length}
+                    </div>
+                  </div>
                 </div>
               </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
-                  <span className="text-xl font-bold text-gray-600">
-                    {customer.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                  </span>
-                </div>
-                <div className="space-y-1">
-                  <h3 className="font-medium">{customer.name}</h3>
-                  <p className="text-sm text-muted-foreground">Müşteri</p>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                {customer.phone && (
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">{customer.phone}</span>
-                  </div>
-                )}
-                {customer.email && (
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">{customer.email}</span>
-                  </div>
-                )}
-                {customer.address && (
-                  <div className="flex items-start gap-2 col-span-2">
-                    <MapPin className="h-4 w-4 text-muted-foreground mt-1" />
-                    <span className="text-sm">{customer.address}</span>
-                  </div>
-                )}
-              </div>
 
-              {customer.notes && (
-                <div className="pt-4 border-t">
-                  <h4 className="font-medium mb-2">Notlar</h4>
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                    {customer.notes}
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground mb-2">Notlar</h4>
+                <p className="text-sm">
+                  {customer.notes || "Not bulunmamaktadır."}
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* Right Column - Financial Summary */}
-        <div className="space-y-4">
+      <Tabs defaultValue="genel" className="w-full">
+        <TabsList className="mb-4 w-full md:w-auto">
+          <TabsTrigger value="genel">Genel Bakış</TabsTrigger>
+          <TabsTrigger value="islemler">İşlem Geçmişi</TabsTrigger>
+          <TabsTrigger value="randevular">Randevu Geçmişi</TabsTrigger>
+          <TabsTrigger value="vadeli">Vadeli Ödeme</TabsTrigger>
+          <TabsTrigger value="odeme">Ödeme Al</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="genel">
           <Card>
             <CardHeader>
               <CardTitle>Genel Bakış</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Toplam Harcama</span>
-                  <span className="font-semibold text-orange-600">
-                    {formatCurrency(totalSpent)}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Vadeli Tutar</span>
-                  <span className="font-semibold text-blue-600">
-                    {formatCurrency(remainingInstallmentAmount)}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Toplam Ödeme</span>
-                  <span className="font-semibold text-green-600">
-                    {formatCurrency(totalPayments)}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Kalan Borç</span>
-                  <span className="font-semibold text-red-600">
-                    {formatCurrency(remainingDebt)}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <Card className="bg-orange-50 dark:bg-orange-900/20 border-none">
+                  <CardHeader className="p-4 pb-2">
+                    <h3 className="text-sm font-medium text-muted-foreground">Toplam Harcama</h3>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0">
+                    <p className="text-2xl font-semibold text-orange-600 dark:text-orange-400">
+                      {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(totalDebt)}
+                    </p>
+                  </CardContent>
+                </Card>
 
-          <Card className="p-4">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Calendar className="h-4 w-4" />
-                <span>Son İşlem</span>
+                <Card className="bg-purple-50 dark:bg-purple-900/20 border-none">
+                  <CardHeader className="p-4 pb-2">
+                    <h3 className="text-sm font-medium text-muted-foreground">Vadelenen Tutar</h3>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0">
+                    <p className="text-2xl font-semibold text-purple-600 dark:text-purple-400">
+                      {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(installmentedAmount)}
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-green-50 dark:bg-green-900/20 border-none">
+                  <CardHeader className="p-4 pb-2">
+                    <h3 className="text-sm font-medium text-muted-foreground">Toplam Ödeme</h3>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0">
+                    <p className="text-2xl font-semibold text-green-600 dark:text-green-400">
+                      {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(totalPayments)}
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-red-50 dark:bg-red-900/20 border-none">
+                  <CardHeader className="p-4 pb-2">
+                    <h3 className="text-sm font-medium text-muted-foreground">Kalan Borç</h3>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0">
+                    <p className="text-2xl font-semibold text-red-600 dark:text-red-400">
+                      {new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(remainingDebt)}
+                    </p>
+                  </CardContent>
+                </Card>
               </div>
-              <div className="space-y-1">
-                {customer.lastVisit ? (
-                  <>
-                    <div className="text-lg font-semibold">
-                      {format(new Date(customer.lastVisit), 'dd.MM.yyyy', { locale: tr })}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      Son ziyaret tarihi
-                    </div>
-                  </>
+
+              <div className="mt-6">
+                <h3 className="text-lg font-medium mb-4">Son 5 İşlem</h3>
+                <CustomerRecordsList 
+                  records={records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5)}
+                />
+              </div>
+
+              <div className="mt-6">
+                <h3 className="text-lg font-medium mb-4">Yaklaşan Randevular</h3>
+                {appointments.filter(apt => new Date(apt.date) >= new Date()).length > 0 ? (
+                  <CustomerAppointmentsList 
+                    appointments={appointments
+                      .filter(apt => new Date(apt.date) >= new Date())
+                      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                      .slice(0, 3)
+                      .map((apt): Appointment => ({
+                        ...apt,
+                        service: apt.service || ''
+                      }))}
+                    customerPhone={customer.phone}
+                  />
                 ) : (
-                  <div className="text-sm text-muted-foreground">Henüz işlem bulunmamaktadır</div>
+                  <div className="text-center py-8 text-muted-foreground">
+                    Yaklaşan randevu bulunmamaktadır
+                  </div>
                 )}
               </div>
-              <div className="text-sm text-muted-foreground">
-                Toplam İşlem: {customerRecords.length}
-              </div>
-            </div>
-          </Card>
-        </div>
-      </div>
-
-      {/* Tabs Section */}
-      <Tabs defaultValue="records" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="records">İşlem Geçmişi</TabsTrigger>
-          <TabsTrigger value="appointments">Randevu Geçmişi</TabsTrigger>
-          <TabsTrigger value="installment">Vadeli Ödeme</TabsTrigger>
-          <TabsTrigger value="payment">Ödeme Al</TabsTrigger>
-          <TabsTrigger value="debt">Borç Ver</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="records">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>İşlem Geçmişi</CardTitle>
-                <Dialog open={showAddRecordDialog} onOpenChange={setShowAddRecordDialog}>
-                  <DialogTrigger asChild>
-                    <Button size="sm">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Yeni Kayıt
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[500px]">
-                    <DialogHeader>
-                      <DialogTitle>Yeni Kayıt Ekle</DialogTitle>
-                    </DialogHeader>
-                    <AddCustomerRecordForm 
-                      customerId={customer.id}
-                      onSuccess={handleDialogSuccess}
-                    />
-                  </DialogContent>
-                </Dialog>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <CustomerRecordsList records={customerRecords} />
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="appointments">
+        <TabsContent value="islemler">
+          <Card>
+            <CardHeader>
+              <CardTitle>İşlem Geçmişi</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CustomerRecordsList 
+                records={records}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="randevular">
           <Card>
             <CardHeader>
               <CardTitle>Randevu Geçmişi</CardTitle>
             </CardHeader>
             <CardContent>
               <CustomerAppointmentsList 
-                appointments={customerAppointments} 
+                appointments={appointments.map((apt): Appointment => ({
+                  ...apt,
+                  service: apt.service || ''
+                }))}
                 customerPhone={customer.phone}
               />
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="installment">
+        <TabsContent value="vadeli">
           <Card>
             <CardHeader>
               <CardTitle>Vadeli Ödeme</CardTitle>
@@ -367,13 +271,13 @@ const CustomerDetailView = ({ customer, onCustomerUpdated, onCustomerDeleted }: 
             <CardContent>
               <CustomerInstallmentForm 
                 customerId={customer.id}
-                onSuccess={handleDialogSuccess}
+                onSuccess={() => queryClient.invalidateQueries({ queryKey: ['customerRecords'] })}
               />
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="payment">
+        <TabsContent value="odeme">
           <Card>
             <CardHeader>
               <CardTitle>Ödeme Al</CardTitle>
@@ -381,26 +285,22 @@ const CustomerDetailView = ({ customer, onCustomerUpdated, onCustomerDeleted }: 
             <CardContent>
               <CustomerPaymentForm 
                 customerId={customer.id}
-                onSuccess={handleDialogSuccess}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="debt">
-          <Card>
-            <CardHeader>
-              <CardTitle>Borç Ver</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CustomerDebtForm 
-                customerId={customer.id}
-                onSuccess={handleDialogSuccess}
+                onSuccess={() => queryClient.invalidateQueries({ queryKey: ['customerRecords'] })}
               />
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Edit Customer Dialog */}
+      {customer && (
+        <EditCustomerForm
+          customer={customer}
+          open={showEditDialog}
+          onOpenChange={setShowEditDialog}
+          onSuccess={handleEditSuccess}
+        />
+      )}
     </div>
   );
 };

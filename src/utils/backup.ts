@@ -44,19 +44,17 @@ const migrateCustomerRecords = (records: any[]): any[] => {
   return records.map(record => ({
     ...record,
     recordType: record.recordType || (record.type === 'payment' ? 'payment' : 'debt'),
-    date: record.date instanceof Date ? record.date : new Date(record.date || Date.now()),
+    date: record.date instanceof Date ? record.date : new Date(record.date),
     dueDate: record.dueDate ? (record.dueDate instanceof Date ? record.dueDate : new Date(record.dueDate)) : undefined,
-    isPaid: record.isPaid !== undefined ? record.isPaid : false,
-    createdAt: record.createdAt instanceof Date ? record.createdAt : new Date(record.createdAt || Date.now())
+    isPaid: record.isPaid !== undefined ? record.isPaid : false
   }));
 };
 
 const migrateAppointments = (appointments: any[]): any[] => {
   return appointments.map(appointment => ({
     ...appointment,
-    date: typeof appointment.date === 'string' ? appointment.date : appointment.date?.toISOString?.()?.split('T')[0] || new Date().toISOString().split('T')[0],
-    createdAt: appointment.createdAt instanceof Date ? appointment.createdAt : new Date(appointment.createdAt || Date.now()),
-    status: appointment.status || 'pending'
+    date: typeof appointment.date === 'string' ? appointment.date : appointment.date?.toISOString?.() || new Date().toISOString(),
+    createdAt: appointment.createdAt instanceof Date ? appointment.createdAt : new Date(appointment.createdAt || Date.now())
   }));
 };
 
@@ -68,9 +66,7 @@ const migrateStockItems = (items: any[]): any[] => {
     id: item.id || item.productId || Date.now(),
     productId: item.productId || item.id || Date.now(),
     lastUpdated: item.lastUpdated instanceof Date ? item.lastUpdated : new Date(item.lastUpdated || Date.now()),
-    createdAt: item.createdAt instanceof Date ? item.createdAt : new Date(item.createdAt || Date.now()),
-    quantity: item.quantity || 0,
-    price: item.price || 0
+    createdAt: item.createdAt instanceof Date ? item.createdAt : new Date(item.createdAt || Date.now())
   }));
 };
 
@@ -78,10 +74,8 @@ const migrateSales = (sales: any[]): any[] => {
   return sales.map(sale => ({
     ...sale,
     saleDate: sale.saleDate instanceof Date ? sale.saleDate : new Date(sale.saleDate || sale.date || Date.now()),
-    totalPrice: sale.totalPrice || sale.total || (sale.unitPrice * sale.quantity) || 0,
-    total: sale.total || sale.totalPrice || (sale.unitPrice * sale.quantity) || 0,
-    quantity: sale.quantity || 1,
-    unitPrice: sale.unitPrice || sale.price || 0
+    totalPrice: sale.totalPrice || sale.total || (sale.unitPrice * sale.quantity),
+    total: sale.total || sale.totalPrice || (sale.unitPrice * sale.quantity)
   }));
 };
 
@@ -91,26 +85,14 @@ const migratePersonnel = (personnel: any[]): any[] => {
     isActive: person.isActive !== undefined ? person.isActive : true,
     commissionRate: person.commissionRate || 0,
     createdAt: person.createdAt instanceof Date ? person.createdAt : new Date(person.createdAt || Date.now()),
-    updatedAt: person.updatedAt instanceof Date ? person.updatedAt : new Date(person.updatedAt || Date.now()),
-    color: person.color || '#3B82F6'
-  }));
-};
-
-const migrateCustomers = (customers: any[]): any[] => {
-  return customers.map(customer => ({
-    ...customer,
-    createdAt: customer.createdAt instanceof Date ? customer.createdAt : new Date(customer.createdAt || Date.now()),
-    updatedAt: customer.updatedAt instanceof Date ? customer.updatedAt : new Date(customer.updatedAt || Date.now()),
-    debt: customer.debt || 0,
-    totalSpent: customer.totalSpent || 0,
-    status: customer.status || 'active'
+    updatedAt: person.updatedAt instanceof Date ? person.updatedAt : new Date(person.updatedAt || Date.now())
   }));
 };
 
 export const exportBackup = async (): Promise<string> => {
   try {
     const backupData: BackupData = {
-      version: '2.1',
+      version: '2.0',
       timestamp: new Date().toISOString(),
       data: {
         customers: await getCustomers(),
@@ -152,81 +134,37 @@ export const exportBackup = async (): Promise<string> => {
 export const importBackup = async (file: File): Promise<void> => {
   try {
     const text = await file.text();
-    let backupData: BackupData;
-
-    try {
-      backupData = JSON.parse(text);
-    } catch (parseError) {
-      throw new Error('Geçersiz JSON dosyası');
-    }
+    const backupData: BackupData = JSON.parse(text);
 
     if (!backupData.data) {
-      throw new Error('Geçersiz yedekleme dosyası formatı');
+      throw new Error('Geçersiz yedekleme dosyası');
     }
 
     console.log('Importing backup version:', backupData.version);
 
-    // Hata kontrolü ve güvenli veri migrasyon işlemleri
-    try {
-      const migratedCustomers = migrateCustomers(backupData.data.customers || []);
-      const migratedCustomerRecords = migrateCustomerRecords(backupData.data.customerRecords || []);
-      const migratedAppointments = migrateAppointments(backupData.data.appointments || []);
-      const migratedStockItems = migrateStockItems(backupData.data.stockItems || []);
-      const migratedSales = migrateSales(backupData.data.sales || []);
-      const migratedPersonnel = migratePersonnel(backupData.data.personnel || []);
+    // Veri migrasyon işlemleri
+    const migratedCustomerRecords = migrateCustomerRecords(backupData.data.customerRecords || []);
+    const migratedAppointments = migrateAppointments(backupData.data.appointments || []);
+    const migratedStockItems = migrateStockItems(backupData.data.stockItems || []);
+    const migratedSales = migrateSales(backupData.data.sales || []);
+    const migratedPersonnel = migratePersonnel(backupData.data.personnel || []);
 
-      console.log('Starting data import...');
+    // Import all data with migration
+    await setCustomers(backupData.data.customers || []);
+    await setCustomerRecords(migratedCustomerRecords);
+    await setAppointments(migratedAppointments);
+    await setServices(backupData.data.services || []);
+    await setServiceSales(backupData.data.serviceSales || []);
+    await setStockItems(migratedStockItems);
+    await setSales(migratedSales);
+    await setCosts(backupData.data.costs || []);
+    await setPayments(backupData.data.payments || []);
+    await setUsers(backupData.data.users || []);
+    await setPersonnel(migratedPersonnel);
+    await setPersonnelRecords(backupData.data.personnelRecords || []);
+    await setStockMovements(backupData.data.stockMovements || []);
 
-      // Import all data with error handling
-      await setCustomers(migratedCustomers);
-      console.log('Customers imported successfully');
-
-      await setCustomerRecords(migratedCustomerRecords);
-      console.log('Customer records imported successfully');
-
-      await setAppointments(migratedAppointments);
-      console.log('Appointments imported successfully');
-
-      await setServices(backupData.data.services || []);
-      console.log('Services imported successfully');
-
-      await setServiceSales(backupData.data.serviceSales || []);
-      console.log('Service sales imported successfully');
-
-      await setStockItems(migratedStockItems);
-      console.log('Stock items imported successfully');
-
-      await setSales(migratedSales);
-      console.log('Sales imported successfully');
-
-      await setCosts(backupData.data.costs || []);
-      console.log('Costs imported successfully');
-
-      await setPayments(backupData.data.payments || []);
-      console.log('Payments imported successfully');
-
-      try {
-        await setUsers(backupData.data.users || []);
-        console.log('Users imported successfully');
-      } catch (err) {
-        console.warn('Users data could not be imported, continuing...');
-      }
-
-      await setPersonnel(migratedPersonnel);
-      console.log('Personnel imported successfully');
-
-      await setPersonnelRecords(backupData.data.personnelRecords || []);
-      console.log('Personnel records imported successfully');
-
-      await setStockMovements(backupData.data.stockMovements || []);
-      console.log('Stock movements imported successfully');
-
-      console.log('Backup imported successfully with migrations');
-
-    } catch (migrationError) {
-      console.error('Migration error:', migrationError);
-      throw new Error('Veri dönüştürme sırasında hata: ' + (migrationError instanceof Error ? migrationError.message : 'Bilinmeyen hata'));
-    }
+    console.log('Backup imported successfully with migrations');
 
   } catch (error) {
     console.error('Import backup error:', error);

@@ -1,11 +1,18 @@
+
 import React, { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { DialogFooter } from "@/components/ui/dialog";
-import { addCustomerRecord, type CustomerRecord } from '@/utils/storage';
-import { useQueryClient } from "@tanstack/react-query";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { Calendar as CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { getCustomerRecords, setCustomerRecords, type CustomerRecord } from '@/utils/storage';
 
 interface CustomerInstallmentFormProps {
   customerId: number;
@@ -13,125 +20,163 @@ interface CustomerInstallmentFormProps {
 }
 
 const CustomerInstallmentForm = ({ customerId, onSuccess }: CustomerInstallmentFormProps) => {
-  const [totalAmount, setTotalAmount] = useState('');
-  const [installmentCount, setInstallmentCount] = useState('');
-  const [firstPaymentDate, setFirstPaymentDate] = useState('');
+  const [amount, setAmount] = useState('');
+  const [dueDate, setDueDate] = useState<Date | undefined>();
   const [description, setDescription] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Use useQuery to get customer records
+  const { data: allRecords = [] } = useQuery({
+    queryKey: ['customerRecords'],
+    queryFn: getCustomerRecords,
+  });
+
+  // Mevcut borç hesaplama
+  const existingRecords = allRecords.filter(record => record.customerId === customerId);
+  const totalDebt = existingRecords.reduce((acc, record) => 
+    (record.type === 'debt' || record.type === 'service' || record.type === 'product') && record.recordType !== 'installment' 
+      ? acc + record.amount : acc, 0
+  );
+  const totalPayments = existingRecords.reduce((acc, record) => 
+    record.type === 'payment' ? acc + Math.abs(record.amount) : acc, 0
+  );
+  const installmentedAmount = existingRecords.reduce((acc, record) => 
+    record.recordType === 'installment' ? acc + record.amount : acc, 0
+  );
+  const currentDebt = Math.max(0, totalDebt - totalPayments);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
 
-    try {
-      const installmentAmount = parseFloat(totalAmount) / parseInt(installmentCount);
-      const startDate = new Date(firstPaymentDate);
-
-      // Create installment records
-      for (let i = 0; i < parseInt(installmentCount); i++) {
-        const dueDate = new Date(startDate);
-        dueDate.setMonth(dueDate.getMonth() + i);
-
-        const record: CustomerRecord = {
-          id: Date.now() + i,
-          customerId,
-          type: 'debt',
-          itemId: Date.now(),
-          itemName: description,
-          amount: installmentAmount,
-          date: new Date(),
-          dueDate,
-          isPaid: false,
-          description: `${description} - Taksit ${i + 1}/${installmentCount}`,
-          recordType: 'installment',
-          createdAt: new Date(),
-        };
-
-        await addCustomerRecord(record);
-      }
-      
-      toast({
-        title: "Taksitler oluşturuldu",
-        description: `${installmentCount} adet taksit başarıyla oluşturuldu.`,
-      });
-
-      // Reset form
-      setTotalAmount('');
-      setInstallmentCount('');
-      setFirstPaymentDate('');
-      setDescription('');
-
-      if (onSuccess) {
-        onSuccess();
-      }
-    } catch (error) {
-      console.error("Taksit oluşturulurken hata:", error);
+    if (!amount || !dueDate) {
       toast({
         variant: "destructive",
         title: "Hata",
-        description: "Taksit oluşturulurken bir hata oluştu.",
+        description: "Vadeli ödeme tutarı ve vade tarihini girin.",
       });
-    } finally {
-      setIsSubmitting(false);
+      return;
+    }
+
+    const installmentAmount = Number(amount);
+    
+    if (installmentAmount > currentDebt) {
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Vadeli ödeme tutarı mevcut borçtan fazla olamaz.",
+      });
+      return;
+    }
+
+    // Vadeli ödeme kaydı oluştur
+    const installmentRecord: CustomerRecord = {
+      id: Date.now(),
+      customerId,
+      type: 'debt',
+      itemId: 0,
+      itemName: 'Vadeli Ödeme',
+      amount: installmentAmount,
+      date: new Date(),
+      dueDate,
+      isPaid: false,
+      description: description || 'Vadeli ödeme planlaması',
+      recordType: 'installment'
+    };
+
+    const existingRecords = await getCustomerRecords();
+    await setCustomerRecords([...existingRecords, installmentRecord]);
+
+    queryClient.invalidateQueries({ queryKey: ['customerRecords'] });
+
+    toast({
+      title: "Vadeli ödeme oluşturuldu",
+      description: `${installmentAmount} ₺ tutarında vadeli ödeme ${format(dueDate, 'dd/MM/yyyy')} tarihine planlandı.`,
+    });
+
+    setAmount('');
+    setDescription('');
+    setDueDate(undefined);
+
+    if (onSuccess) {
+      onSuccess();
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="totalAmount">Toplam Tutar</Label>
+      <div>
+        {currentDebt > 0 && (
+          <div className="mb-4 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+            <p className="text-sm text-orange-700 dark:text-orange-300">
+              Mevcut Borç: <span className="font-medium">₺{currentDebt.toLocaleString()}</span>
+            </p>
+          </div>
+        )}
+
+        {installmentedAmount > 0 && (
+          <div className="mb-4 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+            <p className="text-sm text-purple-700 dark:text-purple-300">
+              Vadelenen Tutar: <span className="font-medium">₺{installmentedAmount.toLocaleString()}</span>
+            </p>
+          </div>
+        )}
+      </div>
+
+      <div>
+        <Label>Vadeli Ödeme Tutarı (₺)</Label>
+        <p className="text-xs text-muted-foreground mb-1">
+          Maksimum: ₺{currentDebt.toLocaleString()}
+        </p>
         <Input
-          id="totalAmount"
           type="number"
-          value={totalAmount}
-          onChange={(e) => setTotalAmount(e.target.value)}
-          placeholder="Toplam tutarı girin"
+          max={currentDebt}
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          placeholder="Vadeli ödeme tutarını girin"
           required
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="installmentCount">Taksit Sayısı</Label>
-        <Input
-          id="installmentCount"
-          type="number"
-          value={installmentCount}
-          onChange={(e) => setInstallmentCount(e.target.value)}
-          placeholder="Taksit sayısını girin"
-          required
-        />
+      <div>
+        <Label>Vade Tarihi</Label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant={"outline"}
+              className={cn(
+                "w-full justify-start text-left font-normal",
+                !dueDate && "text-muted-foreground"
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {dueDate ? format(dueDate, "PPP") : "Tarih seçin"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0">
+            <Calendar
+              mode="single"
+              selected={dueDate}
+              onSelect={setDueDate}
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="firstPaymentDate">İlk Ödeme Tarihi</Label>
-        <Input
-          id="firstPaymentDate"
-          type="date"
-          value={firstPaymentDate}
-          onChange={(e) => setFirstPaymentDate(e.target.value)}
-          required
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="description">Açıklama</Label>
-        <Input
-          id="description"
-          type="text"
+      <div>
+        <Label>Açıklama</Label>
+        <Textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Taksit açıklaması"
-          required
+          placeholder="Vadeli ödeme açıklaması"
+          className="min-h-[100px]"
         />
       </div>
 
-      <DialogFooter className="pt-4">
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Oluşturuluyor...' : 'Taksit Oluştur'}
-        </Button>
-      </DialogFooter>
+      <Button type="submit" className="w-full">
+        Vadeli Ödeme Planla
+      </Button>
     </form>
   );
 };

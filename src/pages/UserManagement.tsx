@@ -28,13 +28,7 @@ const UserManagement = () => {
       // Get all users including admin
       const allUsers = await getAllUsers();
       const current = await getCurrentUser();
-      
-      // Sadece admin ve görünür personel kullanıcılarını göster
-      const filteredUsers = allUsers.filter(user => 
-        user.role === 'admin' || user.isVisible === true
-      );
-      
-      setUsers(filteredUsers);
+      setUsers(allUsers);
       setCurrentUser(current);
     } catch (error) {
       console.error('Error loading users:', error);

@@ -27,14 +27,7 @@ export interface Customer {
   address?: string;
   notes?: string;
   appointments?: Appointment[];
-  status: string;
-  birthDate?: Date;
-  debt?: number;
-  totalSpent?: number;
-  appointmentCount?: number;
-  lastVisit?: Date;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt?: Date;
 }
 
 export interface CustomerRecord {
@@ -56,7 +49,6 @@ export interface CustomerRecord {
   staffId?: number;
   staffName?: string;
   commissionAmount?: number;
-  createdAt: Date;
 }
 
 export interface Service {

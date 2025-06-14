@@ -158,7 +158,7 @@ const Appointments = () => {
             </TabsList>
             
             <TabsContent value="daily" className="space-y-6">
-              {/* Search and Filter Section - Fixed width proportions */}
+              {/* Search and Filter Section */}
               <div className="flex flex-col sm:flex-row gap-4">
                 <div className="flex-1">
                   <SearchInput
@@ -167,12 +167,10 @@ const Appointments = () => {
                     placeholder="Randevu veya müşteri ara..."
                   />
                 </div>
-                <div className="w-full sm:w-80">
-                  <DateSelectionDialog
-                    selectedDate={selectedDate}
-                    onDateSelect={setSelectedDate}
-                  />
-                </div>
+                <DateSelectionDialog
+                  selectedDate={selectedDate}
+                  onDateSelect={setSelectedDate}
+                />
               </div>
 
               {/* Quick Filters */}

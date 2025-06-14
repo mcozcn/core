@@ -1,12 +1,16 @@
-
 import React, { useState } from 'react';
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { DialogFooter } from "@/components/ui/dialog";
-import { addCustomerRecord, type CustomerRecord } from '@/utils/storage';
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { Calendar as CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Textarea } from "@/components/ui/textarea";
 import { useQueryClient } from "@tanstack/react-query";
+import { getCustomerRecords, setCustomerRecords, type CustomerRecord } from '@/utils/localStorage';
 
 interface CustomerDebtFormProps {
   customerId: number;
@@ -14,114 +18,100 @@ interface CustomerDebtFormProps {
 }
 
 const CustomerDebtForm = ({ customerId, onSuccess }: CustomerDebtFormProps) => {
-  const [itemName, setItemName] = useState('');
   const [amount, setAmount] = useState('');
-  const [dueDate, setDueDate] = useState('');
+  const [date, setDate] = useState<Date>(new Date());
+  const [dueDate, setDueDate] = useState<Date | undefined>();
   const [description, setDescription] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
 
-    try {
-      const record: Omit<CustomerRecord, 'id' | 'createdAt'> = {
-        customerId,
-        type: 'debt',
-        itemId: Date.now(),
-        itemName,
-        amount: parseFloat(amount),
-        date: new Date(),
-        dueDate: dueDate ? new Date(dueDate) : undefined,
-        isPaid: false,
-        description,
-        recordType: 'debt',
-      };
+    const newRecord: CustomerRecord = {
+      id: Date.now(),
+      customerId,
+      type: 'payment',
+      itemId: 0,
+      itemName: 'Manuel Borç Kaydı',
+      amount: Number(amount),
+      date,
+      dueDate,
+      isPaid: false,
+      description,
+      recordType: 'debt'
+    };
 
-      await addCustomerRecord(record);
-      
-      queryClient.invalidateQueries({ queryKey: ['customerRecords'] });
-      
-      toast({
-        title: "Borç eklendi",
-        description: "Müşteri borcu başarıyla eklendi.",
-      });
+    console.log('Yeni borç kaydı oluşturuluyor:', newRecord);
 
-      // Reset form
-      setItemName('');
-      setAmount('');
-      setDueDate('');
-      setDescription('');
+    const existingRecords = getCustomerRecords();
+    setCustomerRecords([...existingRecords, newRecord]);
+    queryClient.invalidateQueries({ queryKey: ['customerRecords'] });
 
-      if (onSuccess) {
-        onSuccess();
-      }
-    } catch (error) {
-      console.error("Borç eklenirken hata:", error);
-      toast({
-        variant: "destructive",
-        title: "Hata",
-        description: "Borç eklenirken bir hata oluştu.",
-      });
-    } finally {
-      setIsSubmitting(false);
+    toast({
+      title: "Borç kaydı eklendi",
+      description: `${amount} ₺ tutarında borç kaydı eklendi.`,
+    });
+
+    setAmount('');
+    setDescription('');
+    setDueDate(undefined);
+
+    if (onSuccess) {
+      onSuccess();
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="itemName">Ürün/Hizmet Adı</Label>
+      <div>
+        <Label>Borç Tutarı (₺)</Label>
         <Input
-          id="itemName"
-          type="text"
-          value={itemName}
-          onChange={(e) => setItemName(e.target.value)}
-          placeholder="Ürün veya hizmet adını girin"
-          required
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="amount">Tutar</Label>
-        <Input
-          id="amount"
           type="number"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          placeholder="Tutar girin"
+          placeholder="Tutarı girin"
           required
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="dueDate">Vade Tarihi</Label>
-        <Input
-          id="dueDate"
-          type="date"
-          value={dueDate}
-          onChange={(e) => setDueDate(e.target.value)}
-        />
+      <div>
+        <Label>Vade Tarihi</Label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant={"outline"}
+              className={cn(
+                "w-full justify-start text-left font-normal",
+                !dueDate && "text-muted-foreground"
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {dueDate ? format(dueDate, "PPP") : "Tarih seçin"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0">
+            <Calendar
+              mode="single"
+              selected={dueDate}
+              onSelect={setDueDate}
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="description">Açıklama</Label>
-        <Input
-          id="description"
-          type="text"
+      <div>
+        <Label>Açıklama</Label>
+        <Textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Açıklama"
+          placeholder="Açıklama ekleyin"
+          className="min-h-[100px]"
         />
       </div>
 
-      <DialogFooter className="pt-4">
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Ekleniyor...' : 'Borç Ekle'}
-        </Button>
-      </DialogFooter>
+      <Button type="submit" className="w-full">Borç Kaydı Ekle</Button>
     </form>
   );
 };

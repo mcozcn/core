@@ -5,7 +5,6 @@ import { DateRange } from "react-day-picker";
 import { addDays } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import { getSales, getServiceSales, getUsers } from "@/utils/localStorage";
-import { getPersonnel } from "@/utils/storage/personnel";
 import { CommissionFilters } from "./commission/CommissionFilters";
 import { CommissionSummary } from "./commission/CommissionSummary";
 import { CommissionStaffList } from "./commission/CommissionStaffList";
@@ -34,11 +33,6 @@ const CommissionReport = () => {
     queryFn: getUsers,
   });
 
-  const { data: personnel = [] } = useQuery({
-    queryKey: ['personnel'],
-    queryFn: () => getPersonnel(),
-  });
-
   // Get staff users for the filter
   const staffUsers = users.filter(user => user.role === 'staff');
   
@@ -57,7 +51,6 @@ const CommissionReport = () => {
           selectedStaffId={selectedStaffId}
           setSelectedStaffId={setSelectedStaffId}
           staffUsers={staffUsers}
-          personnel={personnel}
           date={date}
           setDate={setDate}
         />
