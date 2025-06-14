@@ -7,12 +7,32 @@ import { getAppointments } from './appointments';
 import { getServiceSales } from './services';
 import { getSales } from './stock';
 
+// Eski demo verilerini temizle
+const clearOldStaffData = async (): Promise<void> => {
+  try {
+    localStorage.removeItem('staff_v1');
+    localStorage.removeItem('staff');
+    localStorage.removeItem('staffPerformance');
+  } catch (error) {
+    console.log('Error clearing old staff data:', error);
+  }
+};
+
 export const getStaffPerformance = async (
   startDate?: Date, 
   endDate?: Date
 ): Promise<StaffPerformance[]> => {
+  // İlk çalıştırmada eski verileri temizle
+  await clearOldStaffData();
+  
   // Get personnel from personnel section instead of users
   const personnel = await getPersonnel();
+  
+  // Eğer personel yoksa boş liste döndür
+  if (!personnel || personnel.length === 0) {
+    console.log('No personnel found, returning empty staff performance');
+    return [];
+  }
   
   // Get real data
   const appointments = await getAppointments();
@@ -65,6 +85,7 @@ export const getStaffPerformance = async (
     return staffData;
   }));
   
+  console.log('Staff performance calculated:', staffPerformance);
   return staffPerformance;
 };
 

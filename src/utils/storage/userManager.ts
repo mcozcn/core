@@ -6,8 +6,8 @@ import { getFromStorage, setToStorage } from './core';
 // Export the User type so it can be imported from this module
 export type { User } from '@/types/user';
 
-const USERS_KEY = 'users_v3'; // Version changed to force database refresh
-const CURRENT_USER_KEY = 'current_user_v3'; // Version changed to force database refresh
+const USERS_KEY = 'users_v4'; // Version changed to force database refresh and clear any cached staff data
+const CURRENT_USER_KEY = 'current_user_v4'; // Version changed to force database refresh
 
 // Sadece admin kullanıcısı
 const getDefaultUsers = async (): Promise<User[]> => [
@@ -33,10 +33,17 @@ const getDefaultUsers = async (): Promise<User[]> => [
 const clearOldUserData = async (): Promise<void> => {
   try {
     // Eski versiyonları temizle
+    localStorage.removeItem('users_v3');
+    localStorage.removeItem('current_user_v3');
     localStorage.removeItem('users_v2');
     localStorage.removeItem('current_user_v2');
     localStorage.removeItem('users');
     localStorage.removeItem('currentUser');
+    
+    // Staff performans cache'ini de temizle
+    localStorage.removeItem('staff');
+    localStorage.removeItem('staffPerformance');
+    localStorage.removeItem('staff_v1');
     
     // IndexedDB'de eski verileri temizle
     if (typeof window !== 'undefined' && window.indexedDB) {
