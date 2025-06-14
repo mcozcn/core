@@ -7,7 +7,7 @@
 
 // Database configuration
 const DB_NAME = 'glamAppointmentKeeperDB';
-const DB_VERSION = 1;
+const DB_VERSION = 2; // Version increased to add missing tables
 
 // Initialize the database
 const initDB = (): Promise<IDBDatabase> => {
@@ -27,15 +27,16 @@ const initDB = (): Promise<IDBDatabase> => {
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
       
-      // Create object stores for all data types
+      // Create object stores for all data types including personnel
       const storeNames = [
         'appointments', 'customers', 'services', 'stock', 'sales', 'serviceSales',
         'customerRecords', 'payments', 'costs', 'users', 'userPerformance',
-        'userActivities', 'stockMovements', 'staff'
+        'userActivities', 'stockMovements', 'staff', 'personnel_v3', 'personnel_records_v3'
       ];
       
       storeNames.forEach(storeName => {
         if (!db.objectStoreNames.contains(storeName)) {
+          console.log(`Creating object store: ${storeName}`);
           db.createObjectStore(storeName, { keyPath: 'id' });
         }
       });
@@ -54,10 +55,12 @@ export const getAllFromIDB = async <T>(storeName: string): Promise<T[]> => {
       const request = store.getAll();
       
       request.onerror = () => {
+        console.error(`Error fetching data from ${storeName}`);
         reject('Error fetching data from IndexedDB');
       };
       
       request.onsuccess = () => {
+        console.log(`✅ Successfully loaded ${request.result.length} items from ${storeName}`);
         resolve(request.result as T[]);
       };
     });
@@ -87,6 +90,7 @@ export const saveToIDB = async <T extends { id: number | string }>(storeName: st
     
     // Also save to localStorage as backup
     localStorage.setItem(storeName, JSON.stringify(items));
+    console.log(`✅ Saved ${items.length} items to ${storeName}`);
     
     return new Promise((resolve, reject) => {
       transaction.oncomplete = () => resolve();
