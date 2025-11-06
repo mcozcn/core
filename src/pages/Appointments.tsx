@@ -20,6 +20,7 @@ const Appointments = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [searchTerm, setSearchTerm] = useState('');
   const [showAppointmentForm, setShowAppointmentForm] = useState(false);
+  const [editingAppointment, setEditingAppointment] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("daily");
 
   const { data: appointments = [], refetch } = useQuery({
@@ -33,7 +34,13 @@ const Appointments = () => {
 
   const handleAppointmentSuccess = () => {
     setShowAppointmentForm(false);
+    setEditingAppointment(null);
     refetch();
+  };
+
+  const handleEditAppointment = (appointment: any) => {
+    setEditingAppointment(appointment);
+    setShowAppointmentForm(true);
   };
 
   // Filtreleme fonksiyonu
@@ -113,7 +120,7 @@ const Appointments = () => {
                   />
                 </div>
               </div>
-              <AppointmentList searchTerm={searchTerm} />
+              <AppointmentList searchTerm={searchTerm} onEdit={handleEditAppointment} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -176,15 +183,24 @@ const Appointments = () => {
         </TabsContent>
       </Tabs>
 
-      <Dialog open={showAppointmentForm} onOpenChange={setShowAppointmentForm}>
+      <Dialog open={showAppointmentForm} onOpenChange={(open) => {
+        setShowAppointmentForm(open);
+        if (!open) {
+          setEditingAppointment(null);
+        }
+      }}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Yeni Randevu</DialogTitle>
+            <DialogTitle>{editingAppointment ? 'Randevu Düzenle' : 'Yeni Randevu'}</DialogTitle>
           </DialogHeader>
           <AppointmentForm
             selectedDate={selectedDate}
             onSuccess={handleAppointmentSuccess}
-            onCancel={() => setShowAppointmentForm(false)}
+            onCancel={() => {
+              setShowAppointmentForm(false);
+              setEditingAppointment(null);
+            }}
+            appointment={editingAppointment}
           />
         </DialogContent>
       </Dialog>

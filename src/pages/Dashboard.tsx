@@ -79,8 +79,8 @@ const Dashboard = () => {
       <div className="text-center space-y-4">
         <div className="flex justify-center mb-6">
           <img 
-            src="/lovable-uploads/18599c6d-da00-4149-814e-e1ce55f990d5.png" 
-            alt="Beautiq Logo" 
+            src="/lovable-uploads/core.png" 
+            alt="CORE Logo" 
             className="w-80 h-auto" 
           />
         </div>

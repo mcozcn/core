@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { addPersonnel } from "@/utils/storage/personnel";
+import { useQueryClient } from "@tanstack/react-query";
 
 const CreatePersonnelForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const [name, setName] = useState("");
@@ -21,6 +22,7 @@ const CreatePersonnelForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const [selectedColor, setSelectedColor] = useState("#e11d48");
   const [showColorPicker, setShowColorPicker] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const handleCreatePersonnel = async () => {
     if (!name || !title || !phone) {
@@ -48,6 +50,9 @@ const CreatePersonnelForm = ({ onSuccess }: { onSuccess: () => void }) => {
         title: "Başarılı",
         description: "Personel başarıyla eklendi",
       });
+      
+      // React Query cache'ini güncelle
+      queryClient.invalidateQueries({ queryKey: ['personnel'] });
       
       // Reset form
       setName("");

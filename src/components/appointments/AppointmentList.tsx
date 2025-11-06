@@ -21,14 +21,26 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { Ban, MessageSquare } from "lucide-react";
+import { Ban, MessageSquare, Edit, Trash2 } from "lucide-react";
 import { createAppointmentWhatsAppLink } from "@/utils/whatsapp";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface AppointmentListProps {
   searchTerm?: string;
+  onEdit?: (appointment: any) => void;
 }
 
-const AppointmentList = ({ searchTerm = '' }: AppointmentListProps) => {
+const AppointmentList = ({ searchTerm = '', onEdit }: AppointmentListProps) => {
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
   const [cancellationNote, setCancellationNote] = useState('');
   const [showCancelDialog, setShowCancelDialog] = useState(false);
@@ -75,6 +87,17 @@ const AppointmentList = ({ searchTerm = '' }: AppointmentListProps) => {
     setShowCancelDialog(false);
     setCancellationNote('');
     setSelectedAppointment(null);
+  };
+
+  const handleDeleteAppointment = (appointment: any) => {
+    const updatedAppointments = appointments.filter(apt => apt.id !== appointment.id);
+    setAppointments(updatedAppointments);
+    queryClient.setQueryData(['appointments'], updatedAppointments);
+
+    toast({
+      title: "Randevu silindi",
+      description: "Randevu başarıyla silindi.",
+    });
   };
 
   const handleWhatsAppShare = (appointment: any) => {
@@ -160,9 +183,48 @@ const AppointmentList = ({ searchTerm = '' }: AppointmentListProps) => {
                     </TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
+                        {onEdit && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onEdit(appointment)}
+                            title="Düzenle"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive hover:text-destructive"
+                              title="Sil"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Randevuyu Sil</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Bu işlem geri alınamaz. Bu randevuyu kalıcı olarak silmek istediğinizden emin misiniz?
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>İptal</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={() => handleDeleteAppointment(appointment)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Sil
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                         {appointment.status !== 'cancelled' && (
                           <Button
-                            variant="destructive"
+                            variant="outline"
                             size="sm"
                             onClick={() => handleCancelAppointment(appointment)}
                           >

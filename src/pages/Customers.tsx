@@ -30,7 +30,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
 
 const Customers = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -39,10 +38,9 @@ const Customers = () => {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { user } = useAuth();
 
-  // Admin kontrolü
-  const isAdmin = user?.role === 'admin';
+  // Admin kontrolü - artık herkes admin yetkisine sahip
+  const isAdmin = true;
 
   const { data: customers = [], isLoading: isLoadingCustomers } = useQuery({
     queryKey: ['customers'],

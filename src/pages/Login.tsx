@@ -63,8 +63,8 @@ const Login = () => {
       {/* Background Logo */}
       <div className="absolute inset-0 flex items-center justify-center opacity-5">
         <img 
-          src="/lovable-uploads/18599c6d-da00-4149-814e-e1ce55f990d5.png" 
-          alt="Beautiq Logo" 
+          src="/lovable-uploads/core.png" 
+          alt="CORE Logo" 
           className="w-96 h-96 object-contain"
         />
       </div>
@@ -75,8 +75,8 @@ const Login = () => {
           <div className="p-8 space-y-6">
             <div className="text-center space-y-2">
               <img 
-                src="/lovable-uploads/18599c6d-da00-4149-814e-e1ce55f990d5.png" 
-                alt="Beautiq Logo" 
+                src="/lovable-uploads/core.png" 
+                alt="CORE Logo" 
                 className="w-32 mx-auto mb-4 opacity-90"
               />
               <h1 className="text-3xl font-serif text-foreground">Hoş Geldiniz</h1>
