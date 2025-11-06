@@ -1,6 +1,6 @@
 
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Calendar, Users, BarChart3, Package, DollarSign, CreditCard, ShoppingCart, Database, BarChart, Menu, User, LogOut, Clock, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar, Users, BarChart3, Package, DollarSign, CreditCard, ShoppingCart, Database, BarChart, Menu, User, LogOut, Clock, ChevronLeft, ChevronRight, Dumbbell, UserCheck, Activity, Target, Scale, ClipboardCheck } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from "./ui/button";
@@ -18,18 +18,22 @@ const Navigation = () => {
   };
   
   const links = [
-    { to: "/", label: "Panel", icon: BarChart3, permission: "dashboard" },
-    { to: "/appointments", label: "Randevular", icon: Calendar, permission: "appointments" },
-    { to: "/customers", label: "Müşteriler", icon: Users, permission: "customers" },
+    { to: "/", label: "Ana Sayfa", icon: BarChart3, permission: "dashboard" },
+    { to: "/customers", label: "Üyeler", icon: Users, permission: "customers" },
+    { to: "/appointments", label: "PT Seansları", icon: Dumbbell, permission: "appointments" },
+    { to: "/services", label: "Grup Dersleri", icon: Activity, permission: "services" },
+    { to: "/personnel", label: "Antrenörler", icon: UserCheck, permission: "personnel" },
+    { to: "/check-in", label: "Giriş/Çıkış", icon: ClipboardCheck, permission: "check_in" },
+    { to: "/body-metrics", label: "Vücut Ölçümleri", icon: Scale, permission: "body_metrics" },
+    { to: "/membership-packages", label: "Üyelik Paketleri", icon: Target, permission: "membership_packages" },
     { to: "/payment-tracking", label: "Ödeme Takip", icon: Clock, permission: "payment_tracking" },
-    { to: "/stock", label: "Stok Yönetimi", icon: Package, permission: "stock" },
+    { to: "/stock", label: "Ürün Yönetimi", icon: Package, permission: "stock" },
     { to: "/sales", label: "Satışlar", icon: ShoppingCart, permission: "sales" },
     { to: "/costs", label: "Masraflar", icon: DollarSign, permission: "costs" },
     { to: "/financial", label: "Finansal", icon: CreditCard, permission: "financial" },
     { to: "/reports", label: "Raporlar", icon: BarChart, permission: "reports" },
-    { to: "/backup", label: "Yedekleme", icon: Database, permission: "backup" },
-    { to: "/personnel", label: "Personel", icon: Users, permission: "personnel" },
     { to: "/performance", label: "Performans", icon: BarChart3, permission: "performance" },
+    { to: "/backup", label: "Yedekleme", icon: Database, permission: "backup" },
   ];
 
   console.log('Navigation - User info:', {
@@ -120,7 +124,9 @@ const Navigation = () => {
           <div className="flex items-center justify-between w-full">
             {!isCollapsed && (
               <div className="text-center flex-1">
-                <p className="text-xs text-muted-foreground">Salon Yönetimi</p>
+                <p className="text-xs font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                  CORE FITNESS
+                </p>
               </div>
             )}
             <Button

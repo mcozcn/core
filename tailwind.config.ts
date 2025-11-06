@@ -54,7 +54,7 @@ export default {
         },
       },
       fontFamily: {
-        serif: ["Playfair Display", "serif"],
+        heading: ["Rajdhani", "sans-serif"],
         sans: ["Inter", "sans-serif"],
       },
       borderRadius: {

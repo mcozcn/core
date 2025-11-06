@@ -1,0 +1,322 @@
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Plus, Edit, Trash2, Check, X } from 'lucide-react';
+import { getMembershipPackages, saveMembershipPackage, updateMembershipPackage, deleteMembershipPackage, MembershipPackage } from '@/utils/storage/membershipPackages';
+import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+
+const MembershipPackages = () => {
+  const { toast } = useToast();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingPackage, setEditingPackage] = useState<MembershipPackage | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    duration: 1,
+    price: 0,
+    features: [] as string[],
+    type: 'standard' as 'standard' | 'premium' | 'vip',
+    isActive: true,
+  });
+  const [newFeature, setNewFeature] = useState('');
+
+  const { data: packages = [], refetch } = useQuery({
+    queryKey: ['membershipPackages'],
+    queryFn: getMembershipPackages,
+  });
+
+  const handleOpenDialog = (pkg?: MembershipPackage) => {
+    if (pkg) {
+      setEditingPackage(pkg);
+      setFormData({
+        name: pkg.name,
+        description: pkg.description || '',
+        duration: pkg.duration,
+        price: pkg.price,
+        features: pkg.features,
+        type: pkg.type,
+        isActive: pkg.isActive,
+      });
+    } else {
+      setEditingPackage(null);
+      setFormData({
+        name: '',
+        description: '',
+        duration: 1,
+        price: 0,
+        features: [],
+        type: 'standard',
+        isActive: true,
+      });
+    }
+    setDialogOpen(true);
+  };
+
+  const handleAddFeature = () => {
+    if (newFeature.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        features: [...prev.features, newFeature.trim()]
+      }));
+      setNewFeature('');
+    }
+  };
+
+  const handleRemoveFeature = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      features: prev.features.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleSave = async () => {
+    if (!formData.name || !formData.price) {
+      toast({
+        variant: 'destructive',
+        title: 'Hata',
+        description: 'Lütfen tüm gerekli alanları doldurun',
+      });
+      return;
+    }
+
+    const success = editingPackage
+      ? await updateMembershipPackage(editingPackage.id, formData)
+      : await saveMembershipPackage(formData);
+
+    if (success) {
+      toast({
+        title: 'Başarılı',
+        description: `Paket ${editingPackage ? 'güncellendi' : 'oluşturuldu'}`,
+      });
+      refetch();
+      setDialogOpen(false);
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Hata',
+        description: 'İşlem başarısız oldu',
+      });
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (window.confirm('Bu paketi silmek istediğinizden emin misiniz?')) {
+      const success = await deleteMembershipPackage(id);
+      if (success) {
+        toast({
+          title: 'Başarılı',
+          description: 'Paket silindi',
+        });
+        refetch();
+      }
+    }
+  };
+
+  const getPackageColor = (type: string) => {
+    switch (type) {
+      case 'standard':
+        return 'from-secondary/20 to-secondary/10';
+      case 'premium':
+        return 'from-primary/20 to-primary/10';
+      case 'vip':
+        return 'from-yellow-500/20 to-yellow-500/10';
+      default:
+        return 'from-muted to-muted/50';
+    }
+  };
+
+  return (
+    <div className="min-h-screen p-6 ml-56">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-4xl font-bold mb-2">Üyelik Paketleri</h1>
+            <p className="text-muted-foreground">Spor salonu üyelik paketlerini yönetin</p>
+          </div>
+          <Button onClick={() => handleOpenDialog()} className="gradient-primary">
+            <Plus className="mr-2 h-4 w-4" />
+            Yeni Paket
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {packages.map((pkg) => (
+            <Card key={pkg.id} className={`relative overflow-hidden bg-gradient-to-br ${getPackageColor(pkg.type)}`}>
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-2xl">{pkg.name}</CardTitle>
+                    <CardDescription className="mt-2">{pkg.description}</CardDescription>
+                  </div>
+                  {pkg.isActive && (
+                    <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">Aktif</span>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <div className="text-3xl font-bold text-primary">₺{pkg.price.toLocaleString()}</div>
+                    <div className="text-sm text-muted-foreground">{pkg.duration} ay</div>
+                  </div>
+
+                  <div className="space-y-2">
+                    {pkg.features.map((feature, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <Check className="h-4 w-4 text-green-500" />
+                        <span className="text-sm">{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex gap-2 pt-4 border-t">
+                    <Button variant="outline" size="sm" onClick={() => handleOpenDialog(pkg)}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Düzenle
+                    </Button>
+                    <Button variant="destructive" size="sm" onClick={() => handleDelete(pkg.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {editingPackage ? 'Paket Düzenle' : 'Yeni Paket Oluştur'}
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="name">Paket Adı *</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Örn: Standart Üyelik"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="description">Açıklama</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Paket açıklaması"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="duration">Süre (Ay) *</Label>
+                  <Input
+                    id="duration"
+                    type="number"
+                    min="1"
+                    value={formData.duration}
+                    onChange={(e) => setFormData(prev => ({ ...prev, duration: parseInt(e.target.value) }))}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="price">Fiyat (₺) *</Label>
+                  <Input
+                    id="price"
+                    type="number"
+                    min="0"
+                    value={formData.price}
+                    onChange={(e) => setFormData(prev => ({ ...prev, price: parseFloat(e.target.value) }))}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="type">Paket Tipi</Label>
+                <Select
+                  value={formData.type}
+                  onValueChange={(value: 'standard' | 'premium' | 'vip') => 
+                    setFormData(prev => ({ ...prev, type: value }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="standard">Standard</SelectItem>
+                    <SelectItem value="premium">Premium</SelectItem>
+                    <SelectItem value="vip">VIP</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Özellikler</Label>
+                <div className="space-y-2">
+                  {formData.features.map((feature, index) => (
+                    <div key={index} className="flex items-center gap-2 bg-muted p-2 rounded">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="flex-1 text-sm">{feature}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveFeature(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  
+                  <div className="flex gap-2">
+                    <Input
+                      value={newFeature}
+                      onChange={(e) => setNewFeature(e.target.value)}
+                      placeholder="Yeni özellik ekle"
+                      onKeyPress={(e) => e.key === 'Enter' && handleAddFeature()}
+                    />
+                    <Button onClick={handleAddFeature} size="sm">
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label htmlFor="isActive">Aktif</Label>
+                <Switch
+                  id="isActive"
+                  checked={formData.isActive}
+                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isActive: checked }))}
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                  İptal
+                </Button>
+                <Button onClick={handleSave} className="gradient-primary">
+                  {editingPackage ? 'Güncelle' : 'Oluştur'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </div>
+  );
+};
+
+export default MembershipPackages;

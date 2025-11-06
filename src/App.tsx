@@ -21,6 +21,9 @@ import Backup from '@/pages/Backup';
 import UserManagement from '@/pages/UserManagement';
 import Personnel from '@/pages/Personnel';
 import Performance from '@/pages/Performance';
+import MembershipPackages from '@/pages/MembershipPackages';
+import CheckIn from '@/pages/CheckIn';
+import BodyMetrics from '@/pages/BodyMetrics';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -63,6 +66,9 @@ const AppContent = () => {
           <Route path="/users" element={<UserManagement />} />
           <Route path="/personnel" element={<Personnel />} />
           <Route path="/performance" element={<Performance />} />
+          <Route path="/membership-packages" element={<MembershipPackages />} />
+          <Route path="/check-in" element={<CheckIn />} />
+          <Route path="/body-metrics" element={<BodyMetrics />} />
         </Routes>
       </AccessControl>
       <Toaster />
