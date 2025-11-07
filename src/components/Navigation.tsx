@@ -18,7 +18,7 @@ const Navigation = () => {
     { to: "/check-in", label: "Giriş/Çıkış", icon: ClipboardCheck },
     { to: "/body-metrics", label: "Vücut Ölçümleri", icon: Scale },
     { to: "/membership-packages", label: "Üyelik Paketleri", icon: Target },
-    { to: "/payment-tracking", label: "Ödeme Takip", icon: Clock },
+    { to: "/payment-tracking", label: "Ödeme ve Üyelik Takip", icon: Clock },
     { to: "/stock", label: "Ürün Yönetimi", icon: Package },
     { to: "/sales", label: "Satışlar", icon: ShoppingCart },
     { to: "/costs", label: "Masraflar", icon: DollarSign },
