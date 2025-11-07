@@ -5,13 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getCustomerRecords, getAppointments, type Customer, type Appointment } from '@/utils/storage';
+import { getCustomerRecords, getAppointments, getBodyMetrics, type Customer, type Appointment } from '@/utils/storage';
 import CustomerRecordsList from './CustomerRecordsList';
 import CustomerAppointmentsList from './CustomerAppointmentsList';
 import CustomerInstallmentForm from './forms/CustomerInstallmentForm';
 import CustomerPaymentForm from './forms/CustomerPaymentForm';
 import EditCustomerForm from './EditCustomerForm';
-import { Phone, Mail, MapPin, Calendar, Edit } from 'lucide-react';
+import { Phone, Mail, MapPin, Calendar, Edit, Scale, TrendingUp, TrendingDown } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface CustomerDetailViewProps {
   customer: Customer;
@@ -35,6 +36,16 @@ const CustomerDetailView = ({ customer, onEdit }: CustomerDetailViewProps) => {
     queryFn: async () => {
       const allAppointments = await getAppointments();
       return allAppointments.filter(apt => apt.customerId === customer.id);
+    }
+  });
+
+  const { data: bodyMetrics = [] } = useQuery({
+    queryKey: ['customerBodyMetrics', customer.id],
+    queryFn: async () => {
+      const allMetrics = await getBodyMetrics();
+      return allMetrics
+        .filter(metric => metric.memberId === customer.id)
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     }
   });
 
@@ -146,10 +157,11 @@ const CustomerDetailView = ({ customer, onEdit }: CustomerDetailViewProps) => {
       </Card>
 
       <Tabs defaultValue="genel" className="w-full">
-        <TabsList className="mb-4 w-full md:w-auto">
+        <TabsList className="mb-4 w-full md:w-auto grid grid-cols-3 md:grid-cols-6">
           <TabsTrigger value="genel">Genel Bakış</TabsTrigger>
           <TabsTrigger value="islemler">İşlem Geçmişi</TabsTrigger>
           <TabsTrigger value="randevular">Randevu Geçmişi</TabsTrigger>
+          <TabsTrigger value="vucut">Vücut Ölçümleri</TabsTrigger>
           <TabsTrigger value="vadeli">Vadeli Ödeme</TabsTrigger>
           <TabsTrigger value="odeme">Ödeme Al</TabsTrigger>
         </TabsList>
@@ -263,6 +275,148 @@ const CustomerDetailView = ({ customer, onEdit }: CustomerDetailViewProps) => {
                 }))}
                 customerPhone={customer.phone}
               />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="vucut">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Scale className="h-5 w-5" />
+                Vücut Ölçümleri
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {bodyMetrics.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  Henüz vücut ölçümü kaydı bulunmamaktadır
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* İlerleme Kartları */}
+                  {bodyMetrics.length > 1 && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                      {(() => {
+                        const latest = bodyMetrics[0];
+                        const previous = bodyMetrics[1];
+                        const weightDiff = latest.weight - previous.weight;
+                        const bodyFatDiff = latest.bodyFat - previous.bodyFat;
+                        const muscleMassDiff = latest.muscleMass - previous.muscleMass;
+
+                        return (
+                          <>
+                            <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20">
+                              <CardContent className="p-4">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <p className="text-sm text-muted-foreground">Kilo Değişimi</p>
+                                    <p className="text-2xl font-bold">{latest.weight} kg</p>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    {weightDiff > 0 ? (
+                                      <TrendingUp className="h-5 w-5 text-orange-500" />
+                                    ) : (
+                                      <TrendingDown className="h-5 w-5 text-green-500" />
+                                    )}
+                                    <span className={`text-sm font-medium ${weightDiff > 0 ? 'text-orange-500' : 'text-green-500'}`}>
+                                      {Math.abs(weightDiff).toFixed(1)} kg
+                                    </span>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+
+                            <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20">
+                              <CardContent className="p-4">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <p className="text-sm text-muted-foreground">Yağ Oranı</p>
+                                    <p className="text-2xl font-bold">{latest.bodyFat}%</p>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    {bodyFatDiff > 0 ? (
+                                      <TrendingUp className="h-5 w-5 text-orange-500" />
+                                    ) : (
+                                      <TrendingDown className="h-5 w-5 text-green-500" />
+                                    )}
+                                    <span className={`text-sm font-medium ${bodyFatDiff > 0 ? 'text-orange-500' : 'text-green-500'}`}>
+                                      {Math.abs(bodyFatDiff).toFixed(1)}%
+                                    </span>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+
+                            <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20">
+                              <CardContent className="p-4">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <p className="text-sm text-muted-foreground">Kas Kütlesi</p>
+                                    <p className="text-2xl font-bold">{latest.muscleMass} kg</p>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    {muscleMassDiff > 0 ? (
+                                      <TrendingUp className="h-5 w-5 text-green-500" />
+                                    ) : (
+                                      <TrendingDown className="h-5 w-5 text-orange-500" />
+                                    )}
+                                    <span className={`text-sm font-medium ${muscleMassDiff > 0 ? 'text-green-500' : 'text-orange-500'}`}>
+                                      {Math.abs(muscleMassDiff).toFixed(1)} kg
+                                    </span>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          </>
+                        );
+                      })()}
+                    </div>
+                  )}
+
+                  {/* Ölçüm Tablosu */}
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Tarih</TableHead>
+                          <TableHead>Kilo (kg)</TableHead>
+                          <TableHead>Boy (cm)</TableHead>
+                          <TableHead>Yağ Oranı (%)</TableHead>
+                          <TableHead>Kas Kütlesi (kg)</TableHead>
+                          <TableHead>Göğüs (cm)</TableHead>
+                          <TableHead>Bel (cm)</TableHead>
+                          <TableHead>Kalça (cm)</TableHead>
+                          <TableHead>Kol (cm)</TableHead>
+                          <TableHead>Bacak (cm)</TableHead>
+                          <TableHead>Notlar</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {bodyMetrics.map((metric) => (
+                          <TableRow key={metric.id}>
+                            <TableCell className="font-medium">
+                              {new Date(metric.date).toLocaleDateString('tr-TR')}
+                            </TableCell>
+                            <TableCell>{metric.weight}</TableCell>
+                            <TableCell>{metric.height}</TableCell>
+                            <TableCell>{metric.bodyFat}</TableCell>
+                            <TableCell>{metric.muscleMass}</TableCell>
+                            <TableCell>{metric.chest || '-'}</TableCell>
+                            <TableCell>{metric.waist || '-'}</TableCell>
+                            <TableCell>{metric.hips || '-'}</TableCell>
+                            <TableCell>{metric.biceps || '-'}</TableCell>
+                            <TableCell>{metric.thighs || '-'}</TableCell>
+                            <TableCell className="max-w-xs truncate">
+                              {metric.notes || '-'}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

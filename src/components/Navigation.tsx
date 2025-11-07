@@ -26,7 +26,6 @@ const Navigation = () => {
     { to: "/reports", label: "Raporlar", icon: BarChart },
     { to: "/performance", label: "Performans", icon: BarChart3 },
     { to: "/backup", label: "Yedekleme", icon: Database },
-    { to: "/users", label: "Kullanıcılar", icon: User },
   ];
 
   const NavItem = ({ to, label, icon: Icon }: { to: string; label: string; icon: any }) => {
