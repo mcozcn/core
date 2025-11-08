@@ -3,20 +3,23 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { getGroupSchedules } from "@/utils/storage/groupSchedules";
-import { format, addWeeks, subWeeks, startOfWeek, endOfWeek, addDays } from "date-fns";
+import { format, addWeeks, subWeeks, startOfWeek, addDays } from "date-fns";
 import { tr } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Printer } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Printer, X } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import GroupScheduleManagement from "@/components/customers/GroupScheduleManagement";
 
 const Calendar = () => {
   const [currentWeek, setCurrentWeek] = useState<Date>(new Date());
+  const [selectedCustomer, setSelectedCustomer] = useState<{ id: number; name: string } | null>(null);
 
   const { data: schedules = [] } = useQuery({
     queryKey: ['groupSchedules'],
     queryFn: getGroupSchedules,
   });
 
-  const weekStart = startOfWeek(currentWeek, { locale: tr });
-  const weekEnd = endOfWeek(currentWeek, { locale: tr });
+  // Pazartesi ile başla (weekStartsOn: 1)
+  const weekStart = startOfWeek(currentWeek, { weekStartsOn: 1 });
 
   const goToNextWeek = () => setCurrentWeek(addWeeks(currentWeek, 1));
   const goToPreviousWeek = () => setCurrentWeek(subWeeks(currentWeek, 1));
@@ -38,10 +41,9 @@ const Calendar = () => {
     printWindow.print();
   };
 
-  // Çalışma günleri: Pazartesi-Cumartesi
+  // Çalışma günleri: Pazartesi-Cumartesi (weekStart zaten Pazartesi)
   const workingDays = Array.from({ length: 6 }, (_, i) => {
-    const day = addDays(weekStart, i + 1); // +1 to skip Sunday
-    return day;
+    return addDays(weekStart, i); // Pazartesi'den başla
   });
 
   // Çalışma saatleri: 07:00-21:00
@@ -74,12 +76,14 @@ const Calendar = () => {
     return '';
   };
 
+  const weekEnd = addDays(weekStart, 5); // Cumartesi
+
   return (
     <div className="p-6 pl-72 animate-fadeIn">
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
         <div>
           <h1 className="text-3xl font-serif">Grup Takvimi</h1>
-          <p className="text-muted-foreground mt-1">Haftalık grup antrenman programı</p>
+          <p className="text-muted-foreground mt-1">Haftalık grup antrenman programı - Pazartesi'den Cumartesi'ye</p>
         </div>
       </div>
 
@@ -149,10 +153,20 @@ const Calendar = () => {
                           {slotSchedules.map((schedule) => (
                             <div 
                               key={schedule.id}
-                              className="text-xs p-1.5 bg-primary/20 rounded truncate"
-                              title={schedule.customerName}
+                              className="group relative text-xs p-1.5 bg-primary/20 hover:bg-primary/30 rounded truncate cursor-pointer transition-colors"
+                              onClick={() => setSelectedCustomer({ id: schedule.customerId, name: schedule.customerName })}
+                              title="Üye programını düzenlemek için tıklayın"
                             >
-                              {schedule.customerName}
+                              <span className="font-medium">{schedule.customerName}</span>
+                              <button
+                                className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-destructive/20 rounded"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedCustomer({ id: schedule.customerId, name: schedule.customerName });
+                                }}
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
                             </div>
                           ))}
                           <div className="text-xs text-muted-foreground text-center mt-2">
@@ -184,6 +198,21 @@ const Calendar = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Üye Programı Düzenleme Dialog */}
+      <Dialog open={!!selectedCustomer} onOpenChange={(open) => !open && setSelectedCustomer(null)}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Üye Programını Düzenle</DialogTitle>
+          </DialogHeader>
+          {selectedCustomer && (
+            <GroupScheduleManagement
+              customerId={selectedCustomer.id}
+              customerName={selectedCustomer.name}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
