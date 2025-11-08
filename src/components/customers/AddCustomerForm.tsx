@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DialogFooter } from "@/components/ui/dialog";
 import { getCustomers, setCustomers, type Customer, getMembershipPackages, saveMemberSubscription, getCustomerRecords, setCustomerRecords, type MembershipPackage, type CustomerRecord } from '@/utils/storage';
+import { addGroupSchedule, getSchedulesByDayAndTime } from '@/utils/storage/groupSchedules';
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -25,9 +26,16 @@ const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
   const [notes, setNotes] = useState('');
   const [membershipStartDate, setMembershipStartDate] = useState<Date>();
   const [selectedPackageId, setSelectedPackageId] = useState<string>('');
+  const [selectedGroup, setSelectedGroup] = useState<'A' | 'B' | ''>('');
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>('');
   const [packages, setPackages] = useState<MembershipPackage[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+
+  const timeSlots = Array.from({ length: 14 }, (_, i) => {
+    const hour = 7 + i;
+    return `${hour.toString().padStart(2, '0')}:00`;
+  });
 
   useEffect(() => {
     const loadPackages = async () => {
@@ -98,6 +106,39 @@ const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
           };
           await setCustomerRecords([...existingRecords, debtRecord]);
 
+          // Grup programı seçildiyse ekle
+          if (selectedGroup && selectedTimeSlot) {
+            // Kontenjan kontrolü
+            const groupDays = selectedGroup === 'A' ? [1, 3, 5] : [2, 4, 6];
+            let hasCapacity = true;
+
+            for (const dayOfWeek of groupDays) {
+              const existingSchedules = await getSchedulesByDayAndTime(dayOfWeek, selectedTimeSlot);
+              if (existingSchedules.length >= 4) {
+                hasCapacity = false;
+                break;
+              }
+            }
+
+            if (hasCapacity) {
+              await addGroupSchedule({
+                customerId: newCustomer.id,
+                customerName: newCustomer.name,
+                group: selectedGroup,
+                timeSlot: selectedTimeSlot,
+                startDate: membershipStartDate,
+                isActive: true,
+              });
+              console.log('Grup programı oluşturuldu');
+            } else {
+              toast({
+                variant: "destructive",
+                title: "Uyarı",
+                description: "Seçilen grup ve saat için kontenjan dolu! Grup programı oluşturulamadı.",
+              });
+            }
+          }
+
           console.log('Üyelik kaydı ve borç kaydı oluşturuldu');
         }
       }
@@ -117,6 +158,8 @@ const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
       setNotes('');
       setMembershipStartDate(undefined);
       setSelectedPackageId('');
+      setSelectedGroup('');
+      setSelectedTimeSlot('');
 
       if (onSuccess) {
         onSuccess();
@@ -238,6 +281,54 @@ const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
             </PopoverContent>
           </Popover>
         </div>
+
+        {selectedPackageId && membershipStartDate && (
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="groupSelect">Grup Seçimi (İsteğe Bağlı)</Label>
+              <Select value={selectedGroup} onValueChange={(value: 'A' | 'B' | '') => setSelectedGroup(value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Grup seçin" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="A">
+                    <div className="flex flex-col items-start">
+                      <span className="font-medium">Grup A</span>
+                      <span className="text-xs text-muted-foreground">Pazartesi, Çarşamba, Cuma</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="B">
+                    <div className="flex flex-col items-start">
+                      <span className="font-medium">Grup B</span>
+                      <span className="text-xs text-muted-foreground">Salı, Perşembe, Cumartesi</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {selectedGroup && (
+              <div className="space-y-2">
+                <Label htmlFor="timeSlot">Saat Seçimi</Label>
+                <Select value={selectedTimeSlot} onValueChange={setSelectedTimeSlot}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Saat seçin" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {timeSlots.map((slot) => (
+                      <SelectItem key={slot} value={slot}>
+                        {slot} - {parseInt(slot.split(':')[0]) + 1}:00
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Her saat dilimi maksimum 4 kişilik gruptur
+                </p>
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       <DialogFooter className="pt-4">

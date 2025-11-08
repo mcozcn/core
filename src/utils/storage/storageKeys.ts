@@ -14,5 +14,10 @@ export const STORAGE_KEYS = {
   USER_ACTIVITIES: 'userActivities',
   STAFF: 'staff',
   STOCK_MOVEMENTS: 'stockMovements',
-  CURRENT_USER: 'currentUser'
+  CURRENT_USER: 'currentUser',
+  GROUP_SCHEDULES: 'groupSchedules',
+  MEMBERSHIP_PACKAGES: 'membershipPackages',
+  MEMBER_SUBSCRIPTIONS: 'memberSubscriptions',
+  BODY_METRICS: 'bodyMetrics',
+  CHECK_INS: 'checkIns',
 };

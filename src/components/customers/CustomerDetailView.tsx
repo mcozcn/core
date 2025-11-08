@@ -8,6 +8,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getCustomerRecords, getAppointments, getBodyMetrics, type Customer, type Appointment } from '@/utils/storage';
 import CustomerRecordsList from './CustomerRecordsList';
 import CustomerAppointmentsList from './CustomerAppointmentsList';
+import GroupScheduleManagement from './GroupScheduleManagement';
 import CustomerInstallmentForm from './forms/CustomerInstallmentForm';
 import CustomerPaymentForm from './forms/CustomerPaymentForm';
 import EditCustomerForm from './EditCustomerForm';
@@ -157,11 +158,12 @@ const CustomerDetailView = ({ customer, onEdit }: CustomerDetailViewProps) => {
       </Card>
 
       <Tabs defaultValue="genel" className="w-full">
-        <TabsList className="mb-4 w-full md:w-auto grid grid-cols-3 md:grid-cols-6">
+        <TabsList className="mb-4 w-full md:w-auto grid grid-cols-3 md:grid-cols-7">
           <TabsTrigger value="genel">Genel Bakış</TabsTrigger>
           <TabsTrigger value="islemler">İşlem Geçmişi</TabsTrigger>
           <TabsTrigger value="randevular">Randevu Geçmişi</TabsTrigger>
           <TabsTrigger value="vucut">Vücut Ölçümleri</TabsTrigger>
+          <TabsTrigger value="grup">Grup Programı</TabsTrigger>
           <TabsTrigger value="vadeli">Vadeli Ödeme</TabsTrigger>
           <TabsTrigger value="odeme">Ödeme Al</TabsTrigger>
         </TabsList>
@@ -419,6 +421,13 @@ const CustomerDetailView = ({ customer, onEdit }: CustomerDetailViewProps) => {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="grup">
+          <GroupScheduleManagement 
+            customerId={customer.id}
+            customerName={customer.name}
+          />
         </TabsContent>
 
         <TabsContent value="vadeli">

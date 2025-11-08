@@ -210,3 +210,28 @@ export interface UserActivity {
   action?: string; // For backward compatibility
   username?: string; // For backward compatibility
 }
+
+export interface GroupSchedule {
+  id: number;
+  customerId: number;
+  customerName: string;
+  group: 'A' | 'B'; // A: Pazartesi-Çarşamba-Cuma, B: Salı-Perşembe-Cumartesi
+  timeSlot: string; // Format: "07:00" - saatlik slot
+  startDate: Date;
+  endDate?: Date;
+  isActive: boolean;
+  createdAt: Date;
+}
+
+export interface MemberSubscription {
+  id: number;
+  customerId: number;
+  packageId: number;
+  packageName: string;
+  startDate: Date;
+  endDate: Date;
+  price: number;
+  status: 'active' | 'expired' | 'cancelled';
+  groupScheduleId?: number;
+  createdAt: Date;
+}
