@@ -143,10 +143,50 @@ const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
         }
       }
 
+      // Grup programı seçildiyse ekle (üyelikten bağımsız)
+      if (selectedGroup && selectedTimeSlot && !membershipStartDate) {
+        // Kontenjan kontrolü
+        const groupDays = selectedGroup === 'A' ? [1, 3, 5] : [2, 4, 6];
+        let hasCapacity = true;
+
+        for (const dayOfWeek of groupDays) {
+          const existingSchedules = await getSchedulesByDayAndTime(dayOfWeek, selectedTimeSlot);
+          if (existingSchedules.length >= 4) {
+            hasCapacity = false;
+            break;
+          }
+        }
+
+        if (hasCapacity) {
+          await addGroupSchedule({
+            customerId: newCustomer.id,
+            customerName: newCustomer.name,
+            group: selectedGroup,
+            timeSlot: selectedTimeSlot,
+            startDate: new Date(), // Bugünü başlangıç tarihi olarak kullan
+            isActive: true,
+          });
+          console.log('Grup programı oluşturuldu');
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Uyarı",
+            description: "Seçilen grup ve saat için kontenjan dolu! Grup programı oluşturulamadı.",
+          });
+        }
+      }
+
+      const hasGroupSchedule = selectedGroup && selectedTimeSlot;
+      const hasMembership = selectedPackageId && membershipStartDate;
+
       toast({
         title: "Müşteri eklendi",
-        description: selectedPackageId && membershipStartDate 
-          ? "Yeni müşteri ve üyelik kaydı başarıyla oluşturuldu." 
+        description: hasMembership && hasGroupSchedule
+          ? "Yeni müşteri, üyelik kaydı ve grup programı başarıyla oluşturuldu."
+          : hasMembership
+          ? "Yeni müşteri ve üyelik kaydı başarıyla oluşturuldu."
+          : hasGroupSchedule
+          ? "Yeni müşteri ve grup programı başarıyla oluşturuldu."
           : "Yeni müşteri başarıyla eklendi.",
       });
 
@@ -281,53 +321,53 @@ const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
             </PopoverContent>
           </Popover>
         </div>
+      </div>
 
-        {selectedPackageId && membershipStartDate && (
-          <>
-            <div className="space-y-2">
-              <Label htmlFor="groupSelect">Grup Seçimi (İsteğe Bağlı)</Label>
-              <Select value={selectedGroup} onValueChange={(value: 'A' | 'B' | '') => setSelectedGroup(value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Grup seçin" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="A">
-                    <div className="flex flex-col items-start">
-                      <span className="font-medium">Grup A</span>
-                      <span className="text-xs text-muted-foreground">Pazartesi, Çarşamba, Cuma</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="B">
-                    <div className="flex flex-col items-start">
-                      <span className="font-medium">Grup B</span>
-                      <span className="text-xs text-muted-foreground">Salı, Perşembe, Cumartesi</span>
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+      <div className="space-y-4 pt-4 border-t">
+        <h4 className="font-medium text-sm">Grup Takvimi (İsteğe Bağlı)</h4>
+        
+        <div className="space-y-2">
+          <Label htmlFor="groupSelect">Grup Seçimi</Label>
+          <Select value={selectedGroup} onValueChange={(value: 'A' | 'B' | '') => setSelectedGroup(value)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Grup seçin" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="A">
+                <div className="flex flex-col items-start">
+                  <span className="font-medium">Grup A</span>
+                  <span className="text-xs text-muted-foreground">Pazartesi, Çarşamba, Cuma</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="B">
+                <div className="flex flex-col items-start">
+                  <span className="font-medium">Grup B</span>
+                  <span className="text-xs text-muted-foreground">Salı, Perşembe, Cumartesi</span>
+                </div>
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-            {selectedGroup && (
-              <div className="space-y-2">
-                <Label htmlFor="timeSlot">Saat Seçimi</Label>
-                <Select value={selectedTimeSlot} onValueChange={setSelectedTimeSlot}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Saat seçin" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {timeSlots.map((slot) => (
-                      <SelectItem key={slot} value={slot}>
-                        {slot} - {parseInt(slot.split(':')[0]) + 1}:00
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">
-                  Her saat dilimi maksimum 4 kişilik gruptur
-                </p>
-              </div>
-            )}
-          </>
+        {selectedGroup && (
+          <div className="space-y-2">
+            <Label htmlFor="timeSlot">Saat Seçimi</Label>
+            <Select value={selectedTimeSlot} onValueChange={setSelectedTimeSlot}>
+              <SelectTrigger>
+                <SelectValue placeholder="Saat seçin (07:00 - 21:00)" />
+              </SelectTrigger>
+              <SelectContent>
+                {timeSlots.map((slot) => (
+                  <SelectItem key={slot} value={slot}>
+                    {slot} - {parseInt(slot.split(':')[0]) + 1}:00
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Her saat dilimi maksimum 4 kişilik gruptur
+            </p>
+          </div>
         )}
       </div>
 
