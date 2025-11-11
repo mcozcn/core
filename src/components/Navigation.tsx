@@ -12,8 +12,7 @@ const Navigation = () => {
   const links = [
     { to: "/", label: "Ana Sayfa", icon: BarChart3 },
     { to: "/customers", label: "Üyeler", icon: Users },
-    { to: "/appointments", label: "PT Seansları", icon: Dumbbell },
-    { to: "/calendar", label: "Takvim", icon: CalendarDays },
+    { to: "/calendar", label: "Antrenman Takvimi", icon: CalendarDays },
     { to: "/services", label: "Hizmetler", icon: Activity },
     { to: "/personnel", label: "Antrenörler", icon: UserCheck },
     { to: "/check-in", label: "Giriş/Çıkış", icon: ClipboardCheck },

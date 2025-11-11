@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Navigation from "@/components/Navigation";
 import React from 'react';
 import Dashboard from '@/pages/Dashboard';
-import Appointments from '@/pages/Appointments';
 import Calendar from '@/pages/Calendar';
 import Customers from '@/pages/Customers';
 import PaymentTracking from '@/pages/PaymentTracking';
@@ -39,7 +38,6 @@ const AppContent = () => {
       <Navigation />
       <Routes>
         <Route path="/" element={<Dashboard />} />
-        <Route path="/appointments" element={<Appointments />} />
         <Route path="/calendar" element={<Calendar />} />
         <Route path="/customers" element={<Customers />} />
         <Route path="/payment-tracking" element={<PaymentTracking />} />
