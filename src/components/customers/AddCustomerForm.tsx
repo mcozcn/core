@@ -3,7 +3,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { DialogFooter } from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { getCustomers, setCustomers, type Customer, getMembershipPackages, saveMemberSubscription, getCustomerRecords, setCustomerRecords, type MembershipPackage, type CustomerRecord } from '@/utils/storage';
 import { addGroupSchedule, getSchedulesByDayAndTime } from '@/utils/storage/groupSchedules';
 import { Textarea } from "@/components/ui/textarea";
@@ -217,165 +218,183 @@ const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      
-      <div className="space-y-2">
-        <Label htmlFor="name">Müşteri Adı</Label>
-        <Input
-          id="name"
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Müşteri adını girin"
-          required
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="phone">Telefon</Label>
-        <Input
-          id="phone"
-          type="tel"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          placeholder="Telefon numarasını girin"
-          required
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="email">E-posta</Label>
-        <Input
-          id="email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="E-posta adresini girin"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="address">Adres</Label>
-        <Input
-          id="address"
-          type="text"
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-          placeholder="Adres bilgisini girin"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="notes">Notlar</Label>
-        <Textarea
-          id="notes"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Müşteri hakkında notlar"
-          className="min-h-[80px]"
-        />
-      </div>
-
-      <div className="space-y-4 pt-4 border-t">
-        <h4 className="font-medium text-sm">Üyelik Bilgileri (İsteğe Bağlı)</h4>
+    <form onSubmit={handleSubmit} className="space-y-6 pb-6">
+      {/* Temel Bilgiler */}
+      <div className="space-y-4">
+        <h3 className="text-base font-semibold">Temel Bilgiler</h3>
         
         <div className="space-y-2">
-          <Label htmlFor="membershipPackage">Üyelik Paketi</Label>
-          <Select value={selectedPackageId} onValueChange={setSelectedPackageId}>
-            <SelectTrigger>
-              <SelectValue placeholder="Üyelik paketi seçin" />
-            </SelectTrigger>
-            <SelectContent>
-              {packages.map((pkg) => (
-                <SelectItem key={pkg.id} value={pkg.id.toString()}>
-                  {pkg.name} - {pkg.price.toFixed(2)} TL ({pkg.duration} ay)
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Label htmlFor="name">Müşteri Adı *</Label>
+          <Input
+            id="name"
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Müşteri adını girin"
+            required
+          />
         </div>
 
         <div className="space-y-2">
-          <Label>Üyelik Başlama Tarihi</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !membershipStartDate && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {membershipStartDate ? format(membershipStartDate, "PPP") : <span>Tarih seçin</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={membershipStartDate}
-                onSelect={setMembershipStartDate}
-                initialFocus
-                className={cn("p-3 pointer-events-auto")}
-              />
-            </PopoverContent>
-          </Popover>
+          <Label htmlFor="phone">Telefon *</Label>
+          <Input
+            id="phone"
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="Telefon numarasını girin"
+            required
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="email">E-posta</Label>
+          <Input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="E-posta adresini girin"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="address">Adres</Label>
+          <Input
+            id="address"
+            type="text"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            placeholder="Adres bilgisini girin"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="notes">Notlar</Label>
+          <Textarea
+            id="notes"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Müşteri hakkında notlar"
+            className="min-h-[80px]"
+          />
         </div>
       </div>
 
-      <div className="space-y-4 pt-4 border-t">
-        <h4 className="font-medium text-sm">Grup Takvimi (İsteğe Bağlı)</h4>
-        
-        <div className="space-y-2">
-          <Label htmlFor="groupSelect">Grup Seçimi</Label>
-          <Select value={selectedGroup} onValueChange={(value: 'A' | 'B' | '') => setSelectedGroup(value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Grup seçin" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="A">
-                <div className="flex flex-col items-start">
-                  <span className="font-medium">Grup A</span>
-                  <span className="text-xs text-muted-foreground">Pazartesi, Çarşamba, Cuma</span>
-                </div>
-              </SelectItem>
-              <SelectItem value="B">
-                <div className="flex flex-col items-start">
-                  <span className="font-medium">Grup B</span>
-                  <span className="text-xs text-muted-foreground">Salı, Perşembe, Cumartesi</span>
-                </div>
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      <Separator />
 
-        {selectedGroup && (
-          <div className="space-y-2">
-            <Label htmlFor="timeSlot">Saat Seçimi</Label>
-            <Select value={selectedTimeSlot} onValueChange={setSelectedTimeSlot}>
-              <SelectTrigger>
-                <SelectValue placeholder="Saat seçin (07:00 - 21:00)" />
-              </SelectTrigger>
-              <SelectContent>
-                {timeSlots.map((slot) => (
-                  <SelectItem key={slot} value={slot}>
-                    {slot} - {parseInt(slot.split(':')[0]) + 1}:00
+      {/* İsteğe Bağlı Bilgiler - Accordion */}
+      <Accordion type="multiple" className="w-full">
+        <AccordionItem value="membership">
+          <AccordionTrigger className="text-sm font-semibold">
+            Üyelik Bilgileri (İsteğe Bağlı)
+          </AccordionTrigger>
+          <AccordionContent className="space-y-4 pt-2">
+        
+            <div className="space-y-2">
+              <Label htmlFor="membershipPackage">Üyelik Paketi</Label>
+              <Select value={selectedPackageId} onValueChange={setSelectedPackageId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Üyelik paketi seçin" />
+                </SelectTrigger>
+                <SelectContent>
+                  {packages.map((pkg) => (
+                    <SelectItem key={pkg.id} value={pkg.id.toString()}>
+                      {pkg.name} - {pkg.price.toFixed(2)} TL ({pkg.duration} ay)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Üyelik Başlama Tarihi</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !membershipStartDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {membershipStartDate ? format(membershipStartDate, "PPP") : <span>Tarih seçin</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={membershipStartDate}
+                    onSelect={setMembershipStartDate}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="group">
+          <AccordionTrigger className="text-sm font-semibold">
+            Grup Takvimi (İsteğe Bağlı)
+          </AccordionTrigger>
+          <AccordionContent className="space-y-4 pt-2">
+        
+            <div className="space-y-2">
+              <Label htmlFor="groupSelect">Grup Seçimi</Label>
+              <Select value={selectedGroup} onValueChange={(value: 'A' | 'B' | '') => setSelectedGroup(value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Grup seçin" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="A">
+                    <div className="flex flex-col items-start">
+                      <span className="font-medium">Grup A</span>
+                      <span className="text-xs text-muted-foreground">Pazartesi, Çarşamba, Cuma</span>
+                    </div>
                   </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              Her saat dilimi maksimum 4 kişilik gruptur
-            </p>
-          </div>
-        )}
-      </div>
+                  <SelectItem value="B">
+                    <div className="flex flex-col items-start">
+                      <span className="font-medium">Grup B</span>
+                      <span className="text-xs text-muted-foreground">Salı, Perşembe, Cumartesi</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-      <DialogFooter className="pt-4">
-        <Button type="submit" disabled={isSubmitting}>
+            {selectedGroup && (
+              <div className="space-y-2">
+                <Label htmlFor="timeSlot">Saat Seçimi</Label>
+                <Select value={selectedTimeSlot} onValueChange={setSelectedTimeSlot}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Saat seçin (07:00 - 21:00)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {timeSlots.map((slot) => (
+                      <SelectItem key={slot} value={slot}>
+                        {slot} - {parseInt(slot.split(':')[0]) + 1}:00
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Her saat dilimi maksimum 4 kişilik gruptur
+                </p>
+              </div>
+            )}
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+
+      {/* Submit Button */}
+      <div className="pt-4 sticky bottom-0 bg-background border-t">
+        <Button type="submit" disabled={isSubmitting} className="w-full">
           {isSubmitting ? 'Ekleniyor...' : 'Müşteri Ekle'}
         </Button>
-      </DialogFooter>
+      </div>
     </form>
   );
 };

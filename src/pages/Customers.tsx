@@ -7,9 +7,11 @@ import { getCustomers, getCustomerRecords, getAppointments, setCustomers } from 
 import SearchInput from '@/components/common/SearchInput';
 import CustomerDetailView from '@/components/customers/CustomerDetailView';
 import { Edit, Plus, User, Users, Calendar, DollarSign, TrendingUp, Trash2 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import AddCustomerForm from '@/components/customers/AddCustomerForm';
 import EditCustomerForm from '@/components/customers/EditCustomerForm';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
   Table,
   TableBody,
@@ -38,6 +40,7 @@ const Customers = () => {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   // Admin kontrolü - artık herkes admin yetkisine sahip
   const isAdmin = true;
@@ -120,27 +123,33 @@ const Customers = () => {
   );
 
   return (
-    <div className="p-6 pl-72 animate-fadeIn space-y-6">
+    <div className="p-4 md:p-6 md:pl-72 animate-fadeIn space-y-6">
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-serif">Müşteri Yönetimi</h1>
           <p className="text-muted-foreground mt-1">Müşterilerinizi yönetin ve ilişkilerinizi güçlendirin</p>
         </div>
-        <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-          <DialogTrigger asChild>
+        <Sheet open={showAddDialog} onOpenChange={setShowAddDialog}>
+          <SheetTrigger asChild>
             <Button className="bg-primary hover:bg-primary/90 gap-2">
               <Plus className="h-4 w-4" />
               Yeni Müşteri
             </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Yeni Müşteri Ekle</DialogTitle>
-            </DialogHeader>
-            <AddCustomerForm onSuccess={handleAddSuccess} />
-          </DialogContent>
-        </Dialog>
+          </SheetTrigger>
+          <SheetContent 
+            side={isMobile ? "bottom" : "right"} 
+            className={isMobile ? "h-[90vh]" : "w-full sm:max-w-[540px]"}
+            onInteractOutside={(e) => e.preventDefault()}
+          >
+            <SheetHeader>
+              <SheetTitle>Yeni Müşteri Ekle</SheetTitle>
+            </SheetHeader>
+            <ScrollArea className="h-[calc(100vh-8rem)] mt-4 pr-4">
+              <AddCustomerForm onSuccess={handleAddSuccess} />
+            </ScrollArea>
+          </SheetContent>
+        </Sheet>
       </div>
 
       {/* Stats Cards */}
@@ -420,7 +429,7 @@ const Customers = () => {
         </Card>
       )}
 
-      {/* Edit Customer Modal Dialog */}
+      {/* Edit Customer Sheet */}
       {selectedCustomer && (
         <EditCustomerForm
           customer={selectedCustomer}
