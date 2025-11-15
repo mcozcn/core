@@ -3,8 +3,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { getCustomers, setCustomers, type Customer, getMembershipPackages, saveMemberSubscription, getCustomerRecords, setCustomerRecords, type MembershipPackage, type CustomerRecord } from '@/utils/storage';
 import { addGroupSchedule, getSchedulesByDayAndTime } from '@/utils/storage/groupSchedules';
 import { Textarea } from "@/components/ui/textarea";
@@ -14,6 +12,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface AddCustomerFormProps {
   onSuccess?: () => void;
@@ -48,6 +47,35 @@ const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validation
+    if (!name.trim() || !phone.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Eksik Bilgi",
+        description: "Lütfen ad ve telefon bilgilerini giriniz.",
+      });
+      return;
+    }
+
+    if (!membershipStartDate || !selectedPackageId) {
+      toast({
+        variant: "destructive",
+        title: "Eksik Bilgi",
+        description: "Lütfen üyelik bilgilerini eksiksiz giriniz.",
+      });
+      return;
+    }
+
+    if (!selectedGroup || !selectedTimeSlot) {
+      toast({
+        variant: "destructive",
+        title: "Eksik Bilgi",
+        description: "Lütfen grup takvimi bilgilerini eksiksiz giriniz.",
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
 
     try {
@@ -218,184 +246,175 @@ const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 pb-6">
-      {/* Temel Bilgiler */}
-      <div className="space-y-4">
-        <h3 className="text-base font-semibold">Temel Bilgiler</h3>
-        
-        <div className="space-y-2">
-          <Label htmlFor="name">Müşteri Adı *</Label>
-          <Input
-            id="name"
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Müşteri adını girin"
-            required
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="phone">Telefon *</Label>
-          <Input
-            id="phone"
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="Telefon numarasını girin"
-            required
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="email">E-posta</Label>
-          <Input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="E-posta adresini girin"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="address">Adres</Label>
-          <Input
-            id="address"
-            type="text"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            placeholder="Adres bilgisini girin"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="notes">Notlar</Label>
-          <Textarea
-            id="notes"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Müşteri hakkında notlar"
-            className="min-h-[80px]"
-          />
-        </div>
-      </div>
-
-      <Separator />
-
-      {/* İsteğe Bağlı Bilgiler - Accordion */}
-      <Accordion type="multiple" className="w-full">
-        <AccordionItem value="membership">
-          <AccordionTrigger className="text-sm font-semibold">
-            Üyelik Bilgileri (İsteğe Bağlı)
-          </AccordionTrigger>
-          <AccordionContent className="space-y-4 pt-2">
-        
-            <div className="space-y-2">
-              <Label htmlFor="membershipPackage">Üyelik Paketi</Label>
-              <Select value={selectedPackageId} onValueChange={setSelectedPackageId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Üyelik paketi seçin" />
-                </SelectTrigger>
-                <SelectContent>
-                  {packages.map((pkg) => (
-                    <SelectItem key={pkg.id} value={pkg.id.toString()}>
-                      {pkg.name} - {pkg.price.toFixed(2)} TL ({pkg.duration} ay)
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Üyelik Başlama Tarihi</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !membershipStartDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {membershipStartDate ? format(membershipStartDate, "PPP") : <span>Tarih seçin</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={membershipStartDate}
-                    onSelect={setMembershipStartDate}
-                    initialFocus
-                    className={cn("p-3 pointer-events-auto")}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="group">
-          <AccordionTrigger className="text-sm font-semibold">
-            Grup Takvimi (İsteğe Bağlı)
-          </AccordionTrigger>
-          <AccordionContent className="space-y-4 pt-2">
-        
-            <div className="space-y-2">
-              <Label htmlFor="groupSelect">Grup Seçimi</Label>
-              <Select value={selectedGroup} onValueChange={(value: 'A' | 'B' | '') => setSelectedGroup(value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Grup seçin" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="A">
-                    <div className="flex flex-col items-start">
-                      <span className="font-medium">Grup A</span>
-                      <span className="text-xs text-muted-foreground">Pazartesi, Çarşamba, Cuma</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="B">
-                    <div className="flex flex-col items-start">
-                      <span className="font-medium">Grup B</span>
-                      <span className="text-xs text-muted-foreground">Salı, Perşembe, Cumartesi</span>
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {selectedGroup && (
+    <div className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Temel Bilgiler */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Temel Bilgiler</CardTitle>
+            <CardDescription>Müşterinin temel iletişim bilgileri</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="timeSlot">Saat Seçimi</Label>
-                <Select value={selectedTimeSlot} onValueChange={setSelectedTimeSlot}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Saat seçin (07:00 - 21:00)" />
+                <Label htmlFor="name">Ad Soyad *</Label>
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Ad ve soyad girin"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phone">Telefon *</Label>
+                <Input
+                  id="phone"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Telefon numarası girin"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">E-posta</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="E-posta adresi girin"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="address">Adres</Label>
+                <Input
+                  id="address"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="Adres girin"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notlar</Label>
+              <Textarea
+                id="notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Notlar ekleyin"
+                rows={3}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Üyelik Bilgileri */}
+        <Card className="border-primary/20">
+          <CardHeader>
+            <CardTitle className="text-primary">Üyelik Bilgileri *</CardTitle>
+            <CardDescription>Müşteri için üyelik paketi ve tarihi seçin</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="package">Üyelik Paketi *</Label>
+                <Select value={selectedPackageId} onValueChange={setSelectedPackageId} required>
+                  <SelectTrigger id="package">
+                    <SelectValue placeholder="Paket seçin" />
                   </SelectTrigger>
                   <SelectContent>
-                    {timeSlots.map((slot) => (
-                      <SelectItem key={slot} value={slot}>
-                        {slot} - {parseInt(slot.split(':')[0]) + 1}:00
+                    {packages.map((pkg) => (
+                      <SelectItem key={pkg.id} value={pkg.id.toString()}>
+                        {pkg.name} - {pkg.price}₺ ({pkg.duration} ay)
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground">
-                  Her saat dilimi maksimum 4 kişilik gruptur
-                </p>
               </div>
-            )}
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
 
-      {/* Submit Button */}
-      <div className="pt-4 sticky bottom-0 bg-background border-t">
-        <Button type="submit" disabled={isSubmitting} className="w-full">
+              <div className="space-y-2">
+                <Label htmlFor="start-date">Başlangıç Tarihi *</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      id="start-date"
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !membershipStartDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {membershipStartDate ? format(membershipStartDate, "PPP") : "Tarih seçin"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={membershipStartDate}
+                      onSelect={setMembershipStartDate}
+                      initialFocus
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Grup Takvimi */}
+        <Card className="border-secondary/20">
+          <CardHeader>
+            <CardTitle className="text-secondary">Grup Takvimi *</CardTitle>
+            <CardDescription>Müşteri için antrenman grubu ve saati belirleyin</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="group">Grup *</Label>
+                <Select value={selectedGroup} onValueChange={(value) => setSelectedGroup(value as 'A' | 'B')} required>
+                  <SelectTrigger id="group">
+                    <SelectValue placeholder="Grup seçin" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="A">Grup A (Pazartesi-Çarşamba-Cuma)</SelectItem>
+                    <SelectItem value="B">Grup B (Salı-Perşembe-Cumartesi)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="time-slot">Saat *</Label>
+                <Select value={selectedTimeSlot} onValueChange={setSelectedTimeSlot} required>
+                  <SelectTrigger id="time-slot">
+                    <SelectValue placeholder="Saat seçin" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {timeSlots.map((slot) => (
+                      <SelectItem key={slot} value={slot}>
+                        {slot}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Button type="submit" className="w-full h-12 text-base font-semibold" disabled={isSubmitting}>
           {isSubmitting ? 'Ekleniyor...' : 'Müşteri Ekle'}
         </Button>
-      </div>
-    </form>
+      </form>
+    </div>
   );
 };
 

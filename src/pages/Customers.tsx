@@ -7,11 +7,10 @@ import { getCustomers, getCustomerRecords, getAppointments, setCustomers } from 
 import SearchInput from '@/components/common/SearchInput';
 import CustomerDetailView from '@/components/customers/CustomerDetailView';
 import { Edit, Plus, User, Users, Calendar, DollarSign, TrendingUp, Trash2 } from "lucide-react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import AddCustomerForm from '@/components/customers/AddCustomerForm';
 import EditCustomerForm from '@/components/customers/EditCustomerForm';
-import { useIsMobile } from '@/hooks/use-mobile';
 import {
   Table,
   TableBody,
@@ -40,7 +39,6 @@ const Customers = () => {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const isMobile = useIsMobile();
 
   // Admin kontrolü - artık herkes admin yetkisine sahip
   const isAdmin = true;
@@ -130,26 +128,22 @@ const Customers = () => {
           <h1 className="text-3xl font-serif">Müşteri Yönetimi</h1>
           <p className="text-muted-foreground mt-1">Müşterilerinizi yönetin ve ilişkilerinizi güçlendirin</p>
         </div>
-        <Sheet open={showAddDialog} onOpenChange={setShowAddDialog}>
-          <SheetTrigger asChild>
+        <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+          <DialogTrigger asChild>
             <Button className="bg-primary hover:bg-primary/90 gap-2">
               <Plus className="h-4 w-4" />
               Yeni Müşteri
             </Button>
-          </SheetTrigger>
-          <SheetContent 
-            side={isMobile ? "bottom" : "right"} 
-            className={isMobile ? "h-[90vh]" : "w-full sm:max-w-[540px]"}
-            onInteractOutside={(e) => e.preventDefault()}
-          >
-            <SheetHeader>
-              <SheetTitle>Yeni Müşteri Ekle</SheetTitle>
-            </SheetHeader>
-            <ScrollArea className="h-[calc(100vh-8rem)] mt-4 pr-4">
+          </DialogTrigger>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0">
+            <DialogHeader className="p-6 pb-4">
+              <DialogTitle className="text-2xl">Yeni Müşteri Ekle</DialogTitle>
+            </DialogHeader>
+            <ScrollArea className="max-h-[calc(90vh-100px)] px-6 pb-6">
               <AddCustomerForm onSuccess={handleAddSuccess} />
             </ScrollArea>
-          </SheetContent>
-        </Sheet>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Stats Cards */}
