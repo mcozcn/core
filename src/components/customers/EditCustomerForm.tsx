@@ -4,15 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { getCustomers, setCustomers, type Customer } from '@/utils/storage';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 interface EditCustomerFormProps {
   customer: Customer;
@@ -27,7 +26,6 @@ const EditCustomerForm = ({ customer, open, onOpenChange, onSuccess }: EditCusto
   const [email, setEmail] = useState(customer.email || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const isMobile = useIsMobile();
 
   // Update form state when customer prop changes
   useEffect(() => {
@@ -82,21 +80,17 @@ const EditCustomerForm = ({ customer, open, onOpenChange, onSuccess }: EditCusto
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent 
-        side={isMobile ? "bottom" : "right"} 
-        className={isMobile ? "h-[90vh]" : "w-full sm:max-w-[540px]"}
-        onInteractOutside={(e) => e.preventDefault()}
-      >
-        <SheetHeader>
-          <SheetTitle>Müşteri Düzenle</SheetTitle>
-          <SheetDescription>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden p-0">
+        <DialogHeader className="p-6 pb-4">
+          <DialogTitle className="text-2xl">Müşteri Düzenle</DialogTitle>
+          <DialogDescription>
             Müşteri bilgilerini düzenlemek için aşağıdaki alanları kullanın.
-          </SheetDescription>
-        </SheetHeader>
+          </DialogDescription>
+        </DialogHeader>
         
-        <ScrollArea className="h-[calc(100vh-8rem)] mt-4 pr-4">
-          <form onSubmit={handleSubmit} className="space-y-4 pb-6">
+        <ScrollArea className="max-h-[calc(90vh-140px)] px-6 pb-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Müşteri Adı</Label>
               <Input
@@ -132,24 +126,13 @@ const EditCustomerForm = ({ customer, open, onOpenChange, onSuccess }: EditCusto
               />
             </div>
 
-            <div className="pt-4 flex gap-2 sticky bottom-0 bg-background border-t">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => onOpenChange(false)}
-                disabled={isSubmitting}
-                className="flex-1"
-              >
-                İptal
-              </Button>
-              <Button type="submit" disabled={isSubmitting} className="flex-1">
-                {isSubmitting ? 'Güncelleniyor...' : 'Güncelle'}
-              </Button>
-            </div>
+            <Button type="submit" className="w-full h-11" disabled={isSubmitting}>
+              {isSubmitting ? 'Güncelleniyor...' : 'Güncelle'}
+            </Button>
           </form>
         </ScrollArea>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 };
 
