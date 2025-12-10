@@ -123,14 +123,14 @@ const Customers = () => {
   return (
     <div className="p-4 md:p-6 md:pl-72 animate-fadeIn space-y-6">
       {/* Header Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4">
         <div>
-          <h1 className="text-3xl font-serif">Müşteri Yönetimi</h1>
-          <p className="text-muted-foreground mt-1">Müşterilerinizi yönetin ve ilişkilerinizi güçlendirin</p>
+          <h1 className="text-2xl md:text-3xl font-serif">Müşteri Yönetimi</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-1">Müşterilerinizi yönetin</p>
         </div>
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
           <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary/90 gap-2">
+            <Button className="bg-primary hover:bg-primary/90 gap-2 w-full sm:w-auto">
               <Plus className="h-4 w-4" />
               Yeni Müşteri
             </Button>
@@ -151,58 +151,58 @@ const Customers = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
         <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-500 rounded-lg">
-                <Users className="h-4 w-4 text-white" />
+          <CardContent className="p-3 md:p-4">
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="p-1.5 md:p-2 bg-blue-500 rounded-lg">
+                <Users className="h-3.5 w-3.5 md:h-4 md:w-4 text-white" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Toplam Müşteri</p>
-                <p className="text-2xl font-bold text-blue-600">{totalCustomers}</p>
+                <p className="text-xs md:text-sm text-muted-foreground">Toplam</p>
+                <p className="text-lg md:text-2xl font-bold text-blue-600">{totalCustomers}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-500 rounded-lg">
-                <TrendingUp className="h-4 w-4 text-white" />
+          <CardContent className="p-3 md:p-4">
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="p-1.5 md:p-2 bg-green-500 rounded-lg">
+                <TrendingUp className="h-3.5 w-3.5 md:h-4 md:w-4 text-white" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Aktif Müşteri</p>
-                <p className="text-2xl font-bold text-green-600">{activeCustomers}</p>
+                <p className="text-xs md:text-sm text-muted-foreground">Aktif</p>
+                <p className="text-lg md:text-2xl font-bold text-green-600">{activeCustomers}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border-purple-200">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-500 rounded-lg">
-                <DollarSign className="h-4 w-4 text-white" />
+          <CardContent className="p-3 md:p-4">
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="p-1.5 md:p-2 bg-purple-500 rounded-lg">
+                <DollarSign className="h-3.5 w-3.5 md:h-4 md:w-4 text-white" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Toplam Gelir</p>
-                <p className="text-2xl font-bold text-purple-600">₺{totalRevenue.toLocaleString()}</p>
+                <p className="text-xs md:text-sm text-muted-foreground">Gelir</p>
+                <p className="text-lg md:text-2xl font-bold text-purple-600">₺{totalRevenue.toLocaleString()}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 border-orange-200">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-orange-500 rounded-lg">
-                <Calendar className="h-4 w-4 text-white" />
+          <CardContent className="p-3 md:p-4">
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="p-1.5 md:p-2 bg-orange-500 rounded-lg">
+                <Calendar className="h-3.5 w-3.5 md:h-4 md:w-4 text-white" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Toplam Borç</p>
-                <p className="text-2xl font-bold text-orange-600">₺{totalDebt.toLocaleString()}</p>
+                <p className="text-xs md:text-sm text-muted-foreground">Borç</p>
+                <p className="text-lg md:text-2xl font-bold text-orange-600">₺{totalDebt.toLocaleString()}</p>
               </div>
             </div>
           </CardContent>
