@@ -10,8 +10,9 @@ import PersonnelList from '@/components/personnel/PersonnelList';
 import PersonnelDetailView from '@/components/personnel/PersonnelDetailView';
 import CreatePersonnelForm from '@/components/personnel/CreatePersonnelForm';
 import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
-const Personnel = () => {
+const PersonnelPage = () => {
   const [personnel, setPersonnel] = useState<Personnel[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -60,7 +61,7 @@ const Personnel = () => {
 
   if (selectedPersonnel) {
     return (
-      <div className="p-6 pl-72 animate-fadeIn">
+      <div className="p-4 md:p-6 md:pl-72 animate-fadeIn">
         <PersonnelDetailView 
           personnel={selectedPersonnel} 
           onBack={handleBackToList}
@@ -70,66 +71,71 @@ const Personnel = () => {
   }
 
   return (
-    <div className="p-6 pl-72 animate-fadeIn space-y-6">
+    <div className="p-4 md:p-6 md:pl-72 animate-fadeIn space-y-4 md:space-y-6">
       {/* Header Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4">
         <div>
-          <h1 className="text-3xl font-serif">Personel Yönetimi</h1>
-          <p className="text-muted-foreground mt-1">Personel cari hesap ve komisyon takibi</p>
+          <h1 className="text-2xl md:text-3xl font-serif">Personel Yönetimi</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-1">Personel cari hesap ve komisyon takibi</p>
         </div>
         
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogTrigger asChild>
-            <Button className="bg-primary hover:bg-primary/90 gap-2">
+            <Button className="bg-primary hover:bg-primary/90 gap-2 w-full sm:w-auto">
               <UserPlus className="h-4 w-4" />
               Yeni Personel Ekle
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
-            <CreatePersonnelForm onSuccess={handlePersonnelUpdate} />
+          <DialogContent 
+            className="sm:max-w-[550px] max-h-[90vh] overflow-hidden p-0"
+            onInteractOutside={(e) => e.preventDefault()}
+          >
+            <ScrollArea className="max-h-[90vh] p-6">
+              <CreatePersonnelForm onSuccess={handlePersonnelUpdate} />
+            </ScrollArea>
           </DialogContent>
         </Dialog>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-2 md:gap-4">
         <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-500 rounded-lg">
-                <Users className="h-4 w-4 text-white" />
+          <CardContent className="p-3 md:p-4">
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="p-1.5 md:p-2 bg-blue-500 rounded-lg">
+                <Users className="h-3.5 w-3.5 md:h-4 md:w-4 text-white" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Toplam Personel</p>
-                <p className="text-2xl font-bold text-blue-600">{personnel.length}</p>
+                <p className="text-xs md:text-sm text-muted-foreground">Toplam</p>
+                <p className="text-lg md:text-2xl font-bold text-blue-600">{personnel.length}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-500 rounded-lg">
-                <UserPlus className="h-4 w-4 text-white" />
+          <CardContent className="p-3 md:p-4">
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="p-1.5 md:p-2 bg-green-500 rounded-lg">
+                <UserPlus className="h-3.5 w-3.5 md:h-4 md:w-4 text-white" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Aktif Personel</p>
-                <p className="text-2xl font-bold text-green-600">{personnel.filter(p => p.isActive).length}</p>
+                <p className="text-xs md:text-sm text-muted-foreground">Aktif</p>
+                <p className="text-lg md:text-2xl font-bold text-green-600">{personnel.filter(p => p.isActive).length}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border-purple-200">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-500 rounded-lg">
-                <Search className="h-4 w-4 text-white" />
+          <CardContent className="p-3 md:p-4">
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="p-1.5 md:p-2 bg-purple-500 rounded-lg">
+                <Search className="h-3.5 w-3.5 md:h-4 md:w-4 text-white" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Sonuç</p>
-                <p className="text-2xl font-bold text-purple-600">{filteredPersonnel.length}</p>
+                <p className="text-xs md:text-sm text-muted-foreground">Sonuç</p>
+                <p className="text-lg md:text-2xl font-bold text-purple-600">{filteredPersonnel.length}</p>
               </div>
             </div>
           </CardContent>
@@ -138,10 +144,10 @@ const Personnel = () => {
 
       {/* Main Content */}
       <Card>
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
+        <CardHeader className="p-4 md:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4">
+            <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+              <Users className="h-4 w-4 md:h-5 md:w-5" />
               Personel Listesi ({filteredPersonnel.length})
             </CardTitle>
             
@@ -157,7 +163,7 @@ const Personnel = () => {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 pt-0 md:p-6 md:pt-0">
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
@@ -176,4 +182,4 @@ const Personnel = () => {
   );
 };
 
-export default Personnel;
+export default PersonnelPage;

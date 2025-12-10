@@ -97,101 +97,101 @@ const Dashboard = () => {
   const currentGroup = adjustedDayOfWeek <= 6 ? ([1, 3, 5].includes(adjustedDayOfWeek) ? 'A' : 'B') : null;
 
   return (
-    <div className="p-6 pl-72 animate-fadeIn space-y-8">
+    <div className="p-4 md:p-6 md:pl-72 animate-fadeIn space-y-6 md:space-y-8">
       {/* Header Section */}
-      <div className="text-center space-y-4">
-        <div className="flex justify-center mb-6">
+      <div className="text-center space-y-3 md:space-y-4">
+        <div className="flex justify-center mb-4 md:mb-6">
           <img 
             src="/lovable-uploads/core.png" 
             alt="CORE Logo" 
-            className="w-80 h-auto" 
+            className="w-48 md:w-80 h-auto" 
           />
         </div>
         <div className="max-w-2xl mx-auto">
-          <h1 className="text-3xl font-serif text-foreground mb-2">Hoş Geldiniz</h1>
-          <p className="text-muted-foreground">Bugün {getDayName(todayDayOfWeek)} - {currentGroup ? `Grup ${currentGroup}` : 'Pazar'}</p>
+          <h1 className="text-2xl md:text-3xl font-serif text-foreground mb-2">Hoş Geldiniz</h1>
+          <p className="text-sm md:text-base text-muted-foreground">Bugün {getDayName(todayDayOfWeek)} - {currentGroup ? `Grup ${currentGroup}` : 'Pazar'}</p>
         </div>
       </div>
 
       {/* Quick Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
         <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-800">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium">
-              <Users className="h-4 w-4" />
-              Bu Ay Yeni Üyelikler
+          <CardHeader className="pb-1 md:pb-2 p-3 md:p-6">
+            <CardTitle className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm font-medium">
+              <Users className="h-3.5 w-3.5 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Bu Ay</span> Yeni Üyelik
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{newMembershipsCount}</div>
+          <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+            <div className="text-2xl md:text-3xl font-bold">{newMembershipsCount}</div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 border-orange-200 dark:border-orange-800">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium">
-              <Clock className="h-4 w-4" />
-              Üyeliği Bitenler (5 Gün)
+          <CardHeader className="pb-1 md:pb-2 p-3 md:p-6">
+            <CardTitle className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm font-medium">
+              <Clock className="h-3.5 w-3.5 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Üyeliği</span> Biten (5 Gün)
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{expiringMemberships.length}</div>
+          <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+            <div className="text-2xl md:text-3xl font-bold">{expiringMemberships.length}</div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-800">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium">
-              <CreditCard className="h-4 w-4" />
+          <CardHeader className="pb-1 md:pb-2 p-3 md:p-6">
+            <CardTitle className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm font-medium">
+              <CreditCard className="h-3.5 w-3.5 md:h-4 md:w-4" />
               Ödemesi Yaklaşan
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{upcomingPayments.length}</div>
+          <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+            <div className="text-2xl md:text-3xl font-bold">{upcomingPayments.length}</div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border-purple-200 dark:border-purple-800">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium">
-              <TrendingUp className="h-4 w-4" />
+          <CardHeader className="pb-1 md:pb-2 p-3 md:p-6">
+            <CardTitle className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm font-medium">
+              <TrendingUp className="h-3.5 w-3.5 md:h-4 md:w-4" />
               Bugünkü Gruplar
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{todayGroups.length}</div>
+          <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+            <div className="text-2xl md:text-3xl font-bold">{todayGroups.length}</div>
           </CardContent>
         </Card>
       </div>
 
       {/* Today's Groups Table */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Bugünkü Antrenman Grupları {currentGroup && `- Grup ${currentGroup}`}
+        <CardHeader className="p-4 md:p-6">
+          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+            <Calendar className="h-4 w-4 md:h-5 md:w-5" />
+            Bugünkü Gruplar {currentGroup && `- Grup ${currentGroup}`}
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 pt-0 md:p-6 md:pt-0">
           {sortedTimeSlots.length > 0 ? (
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
               {sortedTimeSlots.map(timeSlot => (
                 <div key={timeSlot} className="space-y-2">
                   <div className="flex items-center gap-2 pb-2 border-b">
-                    <Clock className="h-4 w-4 text-primary" />
-                    <h3 className="font-semibold text-lg">{timeSlot}</h3>
-                    <span className="text-sm text-muted-foreground">
+                    <Clock className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary" />
+                    <h3 className="font-semibold text-base md:text-lg">{timeSlot}</h3>
+                    <span className="text-xs md:text-sm text-muted-foreground">
                       ({groupedByTime[timeSlot].length} üye)
                     </span>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                     {groupedByTime[timeSlot].map(schedule => (
                       <Link
                         key={schedule.id}
                         to={`/customers`}
-                        className="p-3 bg-accent/50 rounded-lg hover:bg-accent transition-colors"
+                        className="p-2.5 md:p-3 bg-accent/50 rounded-lg hover:bg-accent transition-colors active:scale-[0.98]"
                       >
-                        <div className="font-medium">{schedule.customerName}</div>
+                        <div className="font-medium text-sm md:text-base">{schedule.customerName}</div>
                         <div className="text-xs text-muted-foreground">Grup {schedule.group}</div>
                       </Link>
                     ))}
@@ -200,7 +200,7 @@ const Dashboard = () => {
               ))}
             </div>
           ) : (
-            <div className="text-center text-muted-foreground py-8">
+            <div className="text-center text-muted-foreground py-6 md:py-8 text-sm md:text-base">
               Bugün için grup antrenmanı bulunmamaktadır.
             </div>
           )}
@@ -208,16 +208,16 @@ const Dashboard = () => {
       </Card>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6">
         {/* Expiring Memberships */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              Üyeliği Bitenler (5 Gün İçinde)
+          <CardHeader className="p-4 md:p-6">
+            <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+              <Clock className="h-4 w-4 md:h-5 md:w-5" />
+              Üyeliği Bitenler (5 Gün)
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 pt-0 md:p-6 md:pt-0">
             <div className="space-y-2">
               {expiringMemberships.length > 0 ? (
                 expiringMemberships.map(sub => {
@@ -228,17 +228,17 @@ const Dashboard = () => {
                     <Link
                       key={sub.id}
                       to="/customers"
-                      className="flex items-center justify-between p-3 bg-accent/50 rounded-lg hover:bg-accent transition-colors"
+                      className="flex items-center justify-between p-2.5 md:p-3 bg-accent/50 rounded-lg hover:bg-accent transition-colors active:scale-[0.98]"
                     >
-                      <div>
-                        <div className="font-medium">{customer?.name || 'Bilinmeyen'}</div>
-                        <div className="text-sm text-muted-foreground">
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium text-sm md:text-base truncate">{customer?.name || 'Bilinmeyen'}</div>
+                        <div className="text-xs md:text-sm text-muted-foreground truncate">
                           {sub.packageName}
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-sm font-medium text-orange-600 dark:text-orange-400">
-                          {daysUntilExpiry} gün kaldı
+                      <div className="text-right ml-2 shrink-0">
+                        <div className="text-xs md:text-sm font-medium text-orange-600 dark:text-orange-400">
+                          {daysUntilExpiry} gün
                         </div>
                         <div className="text-xs text-muted-foreground">
                           {new Date(sub.endDate).toLocaleDateString('tr-TR')}
@@ -248,8 +248,8 @@ const Dashboard = () => {
                   );
                 })
               ) : (
-                <div className="text-center text-muted-foreground py-4">
-                  Yakın zamanda biten üyelik bulunmamaktadır.
+                <div className="text-center text-muted-foreground py-4 text-sm md:text-base">
+                  Yakın zamanda biten üyelik yok.
                 </div>
               )}
             </div>
@@ -258,13 +258,13 @@ const Dashboard = () => {
 
         {/* Upcoming Payments */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5" />
-              Ödemesi Yaklaşan Üyeler (1 Hafta)
+          <CardHeader className="p-4 md:p-6">
+            <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+              <CreditCard className="h-4 w-4 md:h-5 md:w-5" />
+              Ödemesi Yaklaşan (1 Hafta)
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 pt-0 md:p-6 md:pt-0">
             <div className="space-y-2">
               {upcomingPayments.length > 0 ? (
                 upcomingPayments.slice(0, 10).map(payment => {
@@ -275,28 +275,28 @@ const Dashboard = () => {
                     <Link
                       key={payment.id}
                       to="/payment-tracking"
-                      className="flex items-center justify-between p-3 bg-accent/50 rounded-lg hover:bg-accent transition-colors"
+                      className="flex items-center justify-between p-2.5 md:p-3 bg-accent/50 rounded-lg hover:bg-accent transition-colors active:scale-[0.98]"
                     >
-                      <div>
-                        <div className="font-medium">{customer?.name || payment.customerName}</div>
-                        <div className="text-sm text-muted-foreground">
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium text-sm md:text-base truncate">{customer?.name || payment.customerName}</div>
+                        <div className="text-xs md:text-sm text-muted-foreground truncate">
                           {payment.itemName}
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="font-semibold text-primary">
+                      <div className="text-right ml-2 shrink-0">
+                        <div className="font-semibold text-primary text-sm md:text-base">
                           {formatCurrency(payment.amount)}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {daysUntilDue === 0 ? 'Bugün' : `${daysUntilDue} gün kaldı`}
+                          {daysUntilDue === 0 ? 'Bugün' : `${daysUntilDue} gün`}
                         </div>
                       </div>
                     </Link>
                   );
                 })
               ) : (
-                <div className="text-center text-muted-foreground py-4">
-                  Yakın zamanda ödemesi olan üye bulunmamaktadır.
+                <div className="text-center text-muted-foreground py-4 text-sm md:text-base">
+                  Yakın zamanda ödemesi olan üye yok.
                 </div>
               )}
             </div>
