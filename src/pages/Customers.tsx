@@ -135,7 +135,11 @@ const Customers = () => {
               Yeni Müşteri
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0">
+          <DialogContent 
+            className="max-w-4xl max-h-[90vh] overflow-hidden p-0"
+            onInteractOutside={(e) => e.preventDefault()}
+            onEscapeKeyDown={(e) => e.preventDefault()}
+          >
             <DialogHeader className="p-6 pb-4">
               <DialogTitle className="text-2xl">Yeni Müşteri Ekle</DialogTitle>
             </DialogHeader>
