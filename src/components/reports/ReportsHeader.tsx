@@ -27,17 +27,17 @@ export const ReportsHeader = ({
   handleDownloadReport
 }: ReportsHeaderProps) => {
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-      <h1 className="text-3xl font-serif">Performans Raporları</h1>
+    <div className="flex flex-col gap-4">
+      <h1 className="text-2xl md:text-3xl font-serif">Performans Raporları</h1>
       
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-col sm:flex-row flex-wrap gap-2 md:gap-3">
         <DatePickerWithRange 
           date={dateRange} 
           setDate={setDateRange} 
         />
         
         <Select value={reportType} onValueChange={setReportType}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue placeholder="Rapor türü" />
           </SelectTrigger>
           <SelectContent>
@@ -49,7 +49,7 @@ export const ReportsHeader = ({
           </SelectContent>
         </Select>
         
-        <Button onClick={handleDownloadReport}>
+        <Button onClick={handleDownloadReport} size="sm" className="w-full sm:w-auto">
           <Download className="mr-2 h-4 w-4" />
           PDF İndir
         </Button>

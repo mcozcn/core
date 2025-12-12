@@ -216,30 +216,31 @@ const PaymentTracking = () => {
   };
 
   return (
-    <div className="p-6 pl-72 animate-fadeIn space-y-6">
+    <div className="p-4 md:p-6 md:pl-72 animate-fadeIn space-y-4 md:space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-serif">Ödeme ve Üyelik Takip</h1>
-          <p className="text-muted-foreground mt-1">Vadeli ödemeleri, borçları ve üyelik sürelerini takip edin</p>
+          <h1 className="text-2xl md:text-3xl font-serif">Ödeme ve Üyelik Takip</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-1">Vadeli ödemeleri, borçları ve üyelik sürelerini takip edin</p>
         </div>
       </div>
 
       {/* Date Filter */}
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 md:gap-4">
         <DatePickerWithRange date={dateRange} setDate={setDateRange} locale={tr} />
         <Button 
           variant="outline" 
           size="icon" 
           onClick={resetDateFilter} 
           title="Filtreyi Sıfırla"
+          className="self-start"
         >
           <RotateCcw className="h-4 w-4" />
         </Button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4">
         <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">

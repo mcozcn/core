@@ -58,16 +58,16 @@ const Services = () => {
   };
 
   return (
-    <div className="p-8 pl-72 animate-fadeIn">
-      <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-4xl font-serif">Hizmet Yönetimi</h1>
-        <Button onClick={() => setShowForm(true)} className="flex items-center gap-1">
+    <div className="p-4 md:p-8 md:pl-72 animate-fadeIn">
+      <div className="mb-4 md:mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <h1 className="text-2xl md:text-4xl font-serif">Hizmet Yönetimi</h1>
+        <Button onClick={() => setShowForm(true)} size="sm" className="flex items-center gap-1 w-full sm:w-auto">
           <FileText className="w-4 h-4 mr-1" />
           Yeni Hizmet Ekle
         </Button>
       </div>
 
-      <div className="mb-6">
+      <div className="mb-4 md:mb-6">
         <SearchInput
           value={searchTerm}
           onChange={setSearchTerm}
@@ -89,22 +89,22 @@ const Services = () => {
         />
       )}
 
-      <div className="grid gap-4">
+      <div className="grid gap-3 md:gap-4">
         {filteredServices.length === 0 ? (
-          <Card className="p-8 text-center">
-            <p className="text-muted-foreground">
+          <Card className="p-6 md:p-8 text-center">
+            <p className="text-sm md:text-base text-muted-foreground">
               {searchTerm ? 'Arama sonucu bulunamadı' : 'Henüz hizmet eklenmemiş'}
             </p>
           </Card>
         ) : (
           filteredServices.map((service) => (
-            <Card key={service.id} className="p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold">{service.name}</h3>
-                  <p className="text-muted-foreground">{service.description}</p>
+            <Card key={service.id} className="p-4 md:p-6">
+              <div className="flex justify-between items-start mb-3 md:mb-4">
+                <div className="flex-1 min-w-0 mr-2">
+                  <h3 className="text-base md:text-lg font-semibold truncate">{service.name}</h3>
+                  <p className="text-sm text-muted-foreground line-clamp-2">{service.description}</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-1 md:gap-2 flex-shrink-0">
                   <Button
                     variant="ghost"
                     size="icon"
@@ -125,18 +125,18 @@ const Services = () => {
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </AlertDialogTrigger>
-                    <AlertDialogContent>
+                    <AlertDialogContent className="w-[95vw] max-w-md">
                       <AlertDialogHeader>
                         <AlertDialogTitle>Hizmeti Sil</AlertDialogTitle>
                         <AlertDialogDescription>
                           Bu işlem geri alınamaz. "{service.name}" adlı hizmeti kalıcı olarak silmek istediğinizden emin misiniz?
                         </AlertDialogDescription>
                       </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>İptal</AlertDialogCancel>
+                      <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                        <AlertDialogCancel className="w-full sm:w-auto">İptal</AlertDialogCancel>
                         <AlertDialogAction 
                           onClick={() => handleDeleteService(service.id)}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          className="w-full sm:w-auto bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         >
                           Sil
                         </AlertDialogAction>
@@ -145,11 +145,11 @@ const Services = () => {
                   </AlertDialog>
                 </div>
               </div>
-              <div className="flex gap-4 text-sm">
-                <span>Fiyat: {service.price} ₺</span>
-                {service.duration && <span>Süre: {service.duration} dk</span>}
-                <span>Seans: {service.sessionCount}</span>
-                <span>Tür: {service.type === 'recurring' ? 'Sürekli' : 'Tek Seferlik'}</span>
+              <div className="flex flex-wrap gap-2 md:gap-4 text-xs md:text-sm">
+                <span className="bg-muted px-2 py-1 rounded">Fiyat: {service.price} ₺</span>
+                {service.duration && <span className="bg-muted px-2 py-1 rounded">Süre: {service.duration} dk</span>}
+                <span className="bg-muted px-2 py-1 rounded">Seans: {service.sessionCount}</span>
+                <span className="bg-muted px-2 py-1 rounded">Tür: {service.type === 'recurring' ? 'Sürekli' : 'Tek Seferlik'}</span>
               </div>
             </Card>
           ))

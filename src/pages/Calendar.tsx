@@ -79,22 +79,22 @@ const Calendar = () => {
   const weekEnd = addDays(weekStart, 5); // Cumartesi
 
   return (
-    <div className="p-6 pl-72 animate-fadeIn">
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
+    <div className="p-4 md:p-6 md:pl-72 animate-fadeIn">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4 md:mb-6 gap-4">
         <div>
-          <h1 className="text-3xl font-serif">Grup Takvimi</h1>
-          <p className="text-muted-foreground mt-1">Haftalık grup antrenman programı - Pazartesi'den Cumartesi'ye</p>
+          <h1 className="text-2xl md:text-3xl font-serif">Grup Takvimi</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-1">Haftalık grup antrenman programı</p>
         </div>
       </div>
 
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <CalendarIcon className="h-5 w-5" />
-              {format(weekStart, 'd MMMM', { locale: tr })} - {format(weekEnd, 'd MMMM yyyy', { locale: tr })}
+        <CardHeader className="p-3 md:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <CardTitle className="flex items-center gap-2 text-sm md:text-base">
+              <CalendarIcon className="h-4 w-4 md:h-5 md:w-5" />
+              <span className="truncate">{format(weekStart, 'd MMM', { locale: tr })} - {format(weekEnd, 'd MMM yyyy', { locale: tr })}</span>
             </CardTitle>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button variant="outline" size="sm" onClick={goToPreviousWeek}>
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -104,32 +104,32 @@ const Calendar = () => {
               <Button variant="outline" size="sm" onClick={goToNextWeek}>
                 <ChevronRight className="h-4 w-4" />
               </Button>
-              <Button variant="outline" size="sm" onClick={handlePrint}>
-                <Printer className="h-4 w-4 mr-2" />
-                Yazdır
+              <Button variant="outline" size="sm" onClick={handlePrint} className="hidden sm:flex">
+                <Printer className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Yazdır</span>
               </Button>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div id="calendar-content" className="overflow-x-auto">
-            <div className="min-w-[1000px]">
+        <CardContent className="p-2 md:p-6">
+          <div id="calendar-content" className="overflow-x-auto -mx-2 md:mx-0 scrollbar-hide">
+            <div className="min-w-[800px] px-2 md:px-0">
               {/* Başlıklar */}
-              <div className="grid grid-cols-7 gap-2 mb-4">
-                <div className="font-semibold text-center text-sm p-2 bg-muted rounded">Saat</div>
+              <div className="grid grid-cols-7 gap-1 md:gap-2 mb-2 md:mb-4">
+                <div className="font-semibold text-center text-xs md:text-sm p-1.5 md:p-2 bg-muted rounded">Saat</div>
                 {workingDays.map((day) => (
-                  <div key={day.toString()} className="font-semibold text-center text-sm p-2 bg-muted rounded">
-                    <div>{format(day, 'EEEE', { locale: tr })}</div>
-                    <div className="text-xs text-muted-foreground">{format(day, 'd MMMM', { locale: tr })}</div>
-                    <div className="text-xs font-normal text-primary mt-1">{getGroupLabel(day)}</div>
+                  <div key={day.toString()} className="font-semibold text-center text-xs md:text-sm p-1.5 md:p-2 bg-muted rounded">
+                    <div className="truncate">{format(day, 'EEE', { locale: tr })}</div>
+                    <div className="text-[10px] md:text-xs text-muted-foreground">{format(day, 'd MMM', { locale: tr })}</div>
+                    <div className="text-[10px] md:text-xs font-normal text-primary mt-0.5 md:mt-1">{getGroupLabel(day)}</div>
                   </div>
                 ))}
               </div>
 
               {/* Saat slotları */}
               {workingHours.map((hour) => (
-                <div key={hour} className="grid grid-cols-7 gap-2 mb-2">
-                  <div className="text-center py-2 text-sm font-medium bg-muted/50 rounded flex items-center justify-center">
+                <div key={hour} className="grid grid-cols-7 gap-1 md:gap-2 mb-1 md:mb-2">
+                  <div className="text-center py-1.5 md:py-2 text-xs md:text-sm font-medium bg-muted/50 rounded flex items-center justify-center">
                     {hour}
                   </div>
                   {workingDays.map((day) => {
@@ -141,7 +141,7 @@ const Calendar = () => {
                     return (
                       <div 
                         key={`${day}-${hour}`} 
-                        className={`border rounded p-2 min-h-[80px] ${
+                        className={`border rounded p-1 md:p-2 min-h-[60px] md:min-h-[80px] ${
                           filled >= capacity 
                             ? 'bg-destructive/10 border-destructive/20' 
                             : filled > 0 
@@ -149,28 +149,28 @@ const Calendar = () => {
                             : 'bg-background border-border'
                         }`}
                       >
-                        <div className="space-y-1">
+                        <div className="space-y-0.5 md:space-y-1">
                           {slotSchedules.map((schedule) => (
                             <div 
                               key={schedule.id}
-                              className="group relative text-xs p-1.5 bg-primary/20 hover:bg-primary/30 rounded truncate cursor-pointer transition-colors"
+                              className="group relative text-[10px] md:text-xs p-1 md:p-1.5 bg-primary/20 hover:bg-primary/30 rounded truncate cursor-pointer transition-colors"
                               onClick={() => setSelectedCustomer({ id: schedule.customerId, name: schedule.customerName })}
                               title="Üye programını düzenlemek için tıklayın"
                             >
-                              <span className="font-medium">{schedule.customerName}</span>
+                              <span className="font-medium truncate block">{schedule.customerName}</span>
                               <button
-                                className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-destructive/20 rounded"
+                                className="absolute right-0.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-destructive/20 rounded"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setSelectedCustomer({ id: schedule.customerId, name: schedule.customerName });
                                 }}
                               >
-                                <X className="h-3 w-3" />
+                                <X className="h-2.5 w-2.5 md:h-3 md:w-3" />
                               </button>
                             </div>
                           ))}
-                          <div className="text-xs text-muted-foreground text-center mt-2">
-                            {available > 0 ? `${available} kontenjan` : 'Dolu'}
+                          <div className="text-[10px] md:text-xs text-muted-foreground text-center mt-1 md:mt-2">
+                            {available > 0 ? `${available} yer` : 'Dolu'}
                           </div>
                         </div>
                       </div>
@@ -180,18 +180,18 @@ const Calendar = () => {
               ))}
 
               {/* Legends */}
-              <div className="mt-6 flex gap-4 justify-center text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-background border border-border rounded"></div>
+              <div className="mt-4 md:mt-6 flex flex-wrap gap-2 md:gap-4 justify-center text-xs md:text-sm">
+                <div className="flex items-center gap-1 md:gap-2">
+                  <div className="w-3 h-3 md:w-4 md:h-4 bg-background border border-border rounded"></div>
                   <span>Boş</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-primary/5 border border-primary/20 rounded"></div>
-                  <span>Kısmi Dolu</span>
+                <div className="flex items-center gap-1 md:gap-2">
+                  <div className="w-3 h-3 md:w-4 md:h-4 bg-primary/5 border border-primary/20 rounded"></div>
+                  <span>Kısmi</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-destructive/10 border border-destructive/20 rounded"></div>
-                  <span>Tam Dolu</span>
+                <div className="flex items-center gap-1 md:gap-2">
+                  <div className="w-3 h-3 md:w-4 md:h-4 bg-destructive/10 border border-destructive/20 rounded"></div>
+                  <span>Dolu</span>
                 </div>
               </div>
             </div>
@@ -201,7 +201,7 @@ const Calendar = () => {
 
       {/* Üye Programı Düzenleme Dialog */}
       <Dialog open={!!selectedCustomer} onOpenChange={(open) => !open && setSelectedCustomer(null)}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="w-[95vw] max-w-[500px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Üye Programını Düzenle</DialogTitle>
           </DialogHeader>

@@ -144,34 +144,35 @@ const Financial = () => {
   }
 
   return (
-    <div className="p-8 pl-72 animate-fadeIn">
-      <div className="mb-8">
-        <h1 className="text-4xl font-serif">Finansal Takip</h1>
+    <div className="p-4 md:p-8 md:pl-72 animate-fadeIn">
+      <div className="mb-4 md:mb-8">
+        <h1 className="text-2xl md:text-4xl font-serif">Finansal Takip</h1>
       </div>
 
-      <div className="flex items-center gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 md:gap-4 mb-4 md:mb-6">
         <DatePickerWithRange date={dateRange} setDate={setDateRange} locale={tr} />
         <Button 
           variant="outline" 
           size="icon" 
           onClick={resetDateFilter} 
           title="Filtreyi Sıfırla"
+          className="self-start"
         >
           <RotateCcw className="h-4 w-4" />
         </Button>
       </div>
 
-      <div className="space-y-8">
+      <div className="space-y-4 md:space-y-8">
         {/* Dashboard Cards */}
         <FinancialDashboard dateRange={dateRange} />
         
         {/* Charts Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
           <RevenueExpenseChart />
           <MonthlyPaymentsExpensesChart />
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8">
           <RevenueSourceChart />
           <MonthlyFinancialSummary 
             customerRecords={filteredRecords}
@@ -180,13 +181,13 @@ const Financial = () => {
         </div>
         
         {/* Detailed Tables */}
-        <Card className="p-4">
+        <Card className="p-3 md:p-4">
           <Tabs defaultValue="all" className="w-full">
-            <TabsList className="w-full justify-start">
-              <TabsTrigger value="all">Tüm Kayıtlar</TabsTrigger>
-              <TabsTrigger value="payments">Tahsilatlar</TabsTrigger>
-              <TabsTrigger value="costs">Masraflar</TabsTrigger>
-              <TabsTrigger value="installments">Vadeli Ödemeler</TabsTrigger>
+            <TabsList className="w-full grid grid-cols-2 md:grid-cols-4 h-auto gap-1">
+              <TabsTrigger value="all" className="text-xs md:text-sm py-2">Tüm Kayıtlar</TabsTrigger>
+              <TabsTrigger value="payments" className="text-xs md:text-sm py-2">Tahsilatlar</TabsTrigger>
+              <TabsTrigger value="costs" className="text-xs md:text-sm py-2">Masraflar</TabsTrigger>
+              <TabsTrigger value="installments" className="text-xs md:text-sm py-2">Vadeli Ödemeler</TabsTrigger>
             </TabsList>
 
             <TabsContent value="all">
@@ -204,24 +205,24 @@ const Financial = () => {
             </TabsContent>
 
             <TabsContent value="installments">
-              <div className="space-y-6">
+              <div className="space-y-4 md:space-y-6">
                 {/* Vadeli Ödemeler İstatistikleri */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <Card className="p-4">
-                    <div className="text-sm text-muted-foreground">Toplam Vadeli</div>
-                    <div className="text-2xl font-bold">{installmentRecords.length}</div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                  <Card className="p-3 md:p-4">
+                    <div className="text-xs md:text-sm text-muted-foreground">Toplam Vadeli</div>
+                    <div className="text-lg md:text-2xl font-bold">{installmentRecords.length}</div>
                   </Card>
-                  <Card className="p-4">
-                    <div className="text-sm text-muted-foreground">Ödenen</div>
-                    <div className="text-2xl font-bold text-green-600">{paidInstallments.length}</div>
+                  <Card className="p-3 md:p-4">
+                    <div className="text-xs md:text-sm text-muted-foreground">Ödenen</div>
+                    <div className="text-lg md:text-2xl font-bold text-green-600">{paidInstallments.length}</div>
                   </Card>
-                  <Card className="p-4">
-                    <div className="text-sm text-muted-foreground">Bekleyen</div>
-                    <div className="text-2xl font-bold text-orange-600">{unpaidInstallments.length}</div>
+                  <Card className="p-3 md:p-4">
+                    <div className="text-xs md:text-sm text-muted-foreground">Bekleyen</div>
+                    <div className="text-lg md:text-2xl font-bold text-orange-600">{unpaidInstallments.length}</div>
                   </Card>
-                  <Card className="p-4">
-                    <div className="text-sm text-muted-foreground">Gecikmiş</div>
-                    <div className="text-2xl font-bold text-red-600">{overdueInstallments.length}</div>
+                  <Card className="p-3 md:p-4">
+                    <div className="text-xs md:text-sm text-muted-foreground">Gecikmiş</div>
+                    <div className="text-lg md:text-2xl font-bold text-red-600">{overdueInstallments.length}</div>
                   </Card>
                 </div>
 
