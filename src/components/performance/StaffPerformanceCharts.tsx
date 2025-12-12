@@ -62,18 +62,18 @@ const StaffPerformanceCharts = ({ data }: StaffPerformanceChartsProps) => {
   }));
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
       {/* Revenue and Commission Chart */}
       <Card>
-        <CardHeader>
-          <CardTitle>Gelir ve Hakediş Analizi</CardTitle>
+        <CardHeader className="p-3 md:p-6">
+          <CardTitle className="text-sm md:text-base">Gelir ve Hakediş Analizi</CardTitle>
         </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
+        <CardContent className="p-3 md:p-6 pt-0">
+          <ResponsiveContainer width="100%" height={250}>
             <BarChart data={revenueData}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
+              <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+              <YAxis tick={{ fontSize: 10 }} />
               <Tooltip formatter={(value) => `₺${value.toLocaleString()}`} />
               <Bar dataKey="gelir" fill="#8884d8" name="Gelir" />
               <Bar dataKey="hakediş" fill="#82ca9d" name="Hakediş" />
@@ -84,15 +84,15 @@ const StaffPerformanceCharts = ({ data }: StaffPerformanceChartsProps) => {
 
       {/* Appointment Status Chart */}
       <Card>
-        <CardHeader>
-          <CardTitle>Randevu Durumu Analizi</CardTitle>
+        <CardHeader className="p-3 md:p-6">
+          <CardTitle className="text-sm md:text-base">Randevu Durumu Analizi</CardTitle>
         </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
+        <CardContent className="p-3 md:p-6 pt-0">
+          <ResponsiveContainer width="100%" height={250}>
             <BarChart data={appointmentData}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
+              <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+              <YAxis tick={{ fontSize: 10 }} />
               <Tooltip />
               <Bar dataKey="onaylanan" fill="#10B981" name="Onaylanan" />
               <Bar dataKey="iptal" fill="#EF4444" name="İptal" />
@@ -104,15 +104,15 @@ const StaffPerformanceCharts = ({ data }: StaffPerformanceChartsProps) => {
 
       {/* Sales Performance Chart */}
       <Card>
-        <CardHeader>
-          <CardTitle>Satış Performansı</CardTitle>
+        <CardHeader className="p-3 md:p-6">
+          <CardTitle className="text-sm md:text-base">Satış Performansı</CardTitle>
         </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
+        <CardContent className="p-3 md:p-6 pt-0">
+          <ResponsiveContainer width="100%" height={250}>
             <LineChart data={salesData}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
+              <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+              <YAxis tick={{ fontSize: 10 }} />
               <Tooltip />
               <Line type="monotone" dataKey="hizmet" stroke="#8884d8" name="Hizmet Satışı" />
               <Line type="monotone" dataKey="ürün" stroke="#82ca9d" name="Ürün Satışı" />
@@ -123,19 +123,19 @@ const StaffPerformanceCharts = ({ data }: StaffPerformanceChartsProps) => {
 
       {/* Revenue Distribution Pie Chart */}
       <Card>
-        <CardHeader>
-          <CardTitle>Gelir Dağılımı</CardTitle>
+        <CardHeader className="p-3 md:p-6">
+          <CardTitle className="text-sm md:text-base">Gelir Dağılımı</CardTitle>
         </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
+        <CardContent className="p-3 md:p-6 pt-0">
+          <ResponsiveContainer width="100%" height={250}>
             <PieChart>
               <Pie
                 data={pieData}
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                outerRadius={80}
+                label={({ name, percent }) => `${name.substring(0, 8)}... ${(percent * 100).toFixed(0)}%`}
+                outerRadius={70}
                 fill="#8884d8"
                 dataKey="value"
               >
