@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -21,6 +20,8 @@ import Performance from '@/pages/Performance';
 import MembershipPackages from '@/pages/MembershipPackages';
 import CheckIn from '@/pages/CheckIn';
 import BodyMetrics from '@/pages/BodyMetrics';
+import Auth from '@/pages/Auth';
+import AuthGuard from '@/components/auth/AuthGuard';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -32,32 +33,34 @@ const queryClient = new QueryClient({
   },
 });
 
-const AppContent = () => {
+const ProtectedRoutes = () => {
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/calendar" element={<Calendar />} />
-        <Route path="/customers" element={<Customers />} />
-        <Route path="/payment-tracking" element={<PaymentTracking />} />
-        <Route path="/services" element={<Services />} />
-        <Route path="/stock" element={<Stock />} />
-        <Route path="/sales" element={<Sales />} />
-        <Route path="/costs" element={<Costs />} />
-        <Route path="/financial" element={<Financial />} />
-        <Route path="/reports" element={<Reports />} />
-        <Route path="/backup" element={<Backup />} />
-        <Route path="/users" element={<UserManagement />} />
-        <Route path="/personnel" element={<Personnel />} />
-        <Route path="/performance" element={<Performance />} />
-        <Route path="/membership-packages" element={<MembershipPackages />} />
-        <Route path="/check-in" element={<CheckIn />} />
-        <Route path="/body-metrics" element={<BodyMetrics />} />
-        <Route path="*" element={<Dashboard />} />
-      </Routes>
-      <Toaster />
-    </div>
+    <AuthGuard>
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/calendar" element={<Calendar />} />
+          <Route path="/customers" element={<Customers />} />
+          <Route path="/payment-tracking" element={<PaymentTracking />} />
+          <Route path="/services" element={<Services />} />
+          <Route path="/stock" element={<Stock />} />
+          <Route path="/sales" element={<Sales />} />
+          <Route path="/costs" element={<Costs />} />
+          <Route path="/financial" element={<Financial />} />
+          <Route path="/reports" element={<Reports />} />
+          <Route path="/backup" element={<Backup />} />
+          <Route path="/users" element={<UserManagement />} />
+          <Route path="/personnel" element={<Personnel />} />
+          <Route path="/performance" element={<Performance />} />
+          <Route path="/membership-packages" element={<MembershipPackages />} />
+          <Route path="/check-in" element={<CheckIn />} />
+          <Route path="/body-metrics" element={<BodyMetrics />} />
+          <Route path="*" element={<Dashboard />} />
+        </Routes>
+        <Toaster />
+      </div>
+    </AuthGuard>
   );
 };
 
@@ -65,7 +68,10 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
-        <AppContent />
+        <Routes>
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/*" element={<ProtectedRoutes />} />
+        </Routes>
       </Router>
     </QueryClientProvider>
   );
