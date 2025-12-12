@@ -133,56 +133,59 @@ const MembershipPackages = () => {
   };
 
   return (
-    <div className="min-h-screen p-6 ml-56">
+    <div className="min-h-screen p-4 md:p-6 md:ml-56">
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 md:mb-8">
           <div>
-            <h1 className="text-4xl font-bold mb-2">Üyelik Paketleri</h1>
-            <p className="text-muted-foreground">Spor salonu üyelik paketlerini yönetin</p>
+            <h1 className="text-2xl md:text-4xl font-bold mb-1 md:mb-2">Üyelik Paketleri</h1>
+            <p className="text-sm md:text-base text-muted-foreground">Spor salonu üyelik paketlerini yönetin</p>
           </div>
-          <Button onClick={() => handleOpenDialog()} className="gradient-primary">
+          <Button onClick={() => handleOpenDialog()} size="sm" className="gradient-primary w-full sm:w-auto">
             <Plus className="mr-2 h-4 w-4" />
             Yeni Paket
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {packages.map((pkg) => (
             <Card key={pkg.id} className={`relative overflow-hidden bg-gradient-to-br ${getPackageColor(pkg.type)}`}>
-              <CardHeader>
+              <CardHeader className="p-4 md:p-6">
                 <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-2xl">{pkg.name}</CardTitle>
-                    <CardDescription className="mt-2">{pkg.description}</CardDescription>
+                  <div className="min-w-0 flex-1 mr-2">
+                    <CardTitle className="text-lg md:text-2xl truncate">{pkg.name}</CardTitle>
+                    <CardDescription className="mt-1 md:mt-2 text-sm line-clamp-2">{pkg.description}</CardDescription>
                   </div>
                   {pkg.isActive && (
-                    <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">Aktif</span>
+                    <span className="bg-green-500 text-white text-[10px] md:text-xs px-1.5 md:px-2 py-0.5 md:py-1 rounded-full flex-shrink-0">Aktif</span>
                   )}
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
+              <CardContent className="p-4 md:p-6 pt-0 md:pt-0">
+                <div className="space-y-3 md:space-y-4">
                   <div>
-                    <div className="text-3xl font-bold text-primary">₺{pkg.price.toLocaleString()}</div>
-                    <div className="text-sm text-muted-foreground">{pkg.duration} ay</div>
+                    <div className="text-2xl md:text-3xl font-bold text-primary">₺{pkg.price.toLocaleString()}</div>
+                    <div className="text-xs md:text-sm text-muted-foreground">{pkg.duration} ay</div>
                   </div>
 
-                  <div className="space-y-2">
-                    {pkg.features.map((feature, index) => (
+                  <div className="space-y-1.5 md:space-y-2">
+                    {pkg.features.slice(0, 4).map((feature, index) => (
                       <div key={index} className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-green-500" />
-                        <span className="text-sm">{feature}</span>
+                        <Check className="h-3 w-3 md:h-4 md:w-4 text-green-500 flex-shrink-0" />
+                        <span className="text-xs md:text-sm truncate">{feature}</span>
                       </div>
                     ))}
+                    {pkg.features.length > 4 && (
+                      <div className="text-xs text-muted-foreground">+{pkg.features.length - 4} daha</div>
+                    )}
                   </div>
 
-                  <div className="flex gap-2 pt-4 border-t">
-                    <Button variant="outline" size="sm" onClick={() => handleOpenDialog(pkg)}>
-                      <Edit className="h-4 w-4 mr-2" />
+                  <div className="flex gap-2 pt-3 md:pt-4 border-t">
+                    <Button variant="outline" size="sm" onClick={() => handleOpenDialog(pkg)} className="flex-1 text-xs md:text-sm">
+                      <Edit className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
                       Düzenle
                     </Button>
                     <Button variant="destructive" size="sm" onClick={() => handleDelete(pkg.id)}>
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-3 w-3 md:h-4 md:w-4" />
                     </Button>
                   </div>
                 </div>
@@ -192,7 +195,7 @@ const MembershipPackages = () => {
         </div>
 
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {editingPackage ? 'Paket Düzenle' : 'Yeni Paket Oluştur'}
@@ -220,7 +223,7 @@ const MembershipPackages = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3 md:gap-4">
                 <div>
                   <Label htmlFor="duration">Süre (Ay) *</Label>
                   <Input

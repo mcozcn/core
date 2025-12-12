@@ -78,20 +78,20 @@ const Backup = () => {
   };
 
   return (
-    <div className="p-6 pl-72 animate-fadeIn space-y-6">
+    <div className="p-4 md:p-6 md:pl-72 animate-fadeIn space-y-4 md:space-y-6">
       {/* Header Section */}
-      <div className="text-center space-y-4">
-        <div className="flex items-center justify-center gap-3 mb-2">
-          <Database className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-serif">Yedekleme ve Geri Yükleme</h1>
+      <div className="text-center space-y-2 md:space-y-4">
+        <div className="flex items-center justify-center gap-2 md:gap-3 mb-2">
+          <Database className="h-6 w-6 md:h-8 md:w-8 text-primary" />
+          <h1 className="text-xl md:text-3xl font-serif">Yedekleme ve Geri Yükleme</h1>
         </div>
-        <p className="text-muted-foreground max-w-2xl mx-auto">
+        <p className="text-sm md:text-base text-muted-foreground max-w-2xl mx-auto">
           Verilerinizi güvenli bir şekilde yedekleyin ve gerektiğinde geri yükleyin
         </p>
       </div>
 
       {/* Status Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">

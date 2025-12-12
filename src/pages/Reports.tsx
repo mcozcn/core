@@ -58,7 +58,7 @@ const Reports = () => {
   };
 
   return (
-    <div className="p-8 pl-72 animate-fadeIn space-y-8">
+    <div className="p-4 md:p-8 md:pl-72 animate-fadeIn space-y-4 md:space-y-8">
       {/* Reports Header */}
       <ReportsHeader 
         dateRange={dateRange}

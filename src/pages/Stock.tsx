@@ -54,130 +54,136 @@ const Stock = () => {
   const lowStockItems = stock.filter(item => item.quantity <= 5).length;
 
   return (
-    <div className="p-6 pl-72 space-y-6 animate-fadeIn bg-gradient-to-br from-background via-background to-accent/5 min-h-screen">
+    <div className="p-4 md:p-6 md:pl-72 space-y-4 md:space-y-6 animate-fadeIn bg-gradient-to-br from-background via-background to-accent/5 min-h-screen">
       {/* Header Section */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
+      <div className="mb-4 md:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 md:mb-6">
           <div>
-            <h1 className="text-4xl font-serif bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+            <h1 className="text-2xl md:text-4xl font-serif bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
               Stok ve Hizmet Yönetimi
             </h1>
-            <p className="text-muted-foreground mt-2">Ürün stoku ve hizmetlerinizi tek yerden yönetin</p>
+            <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">Ürün stoku ve hizmetlerinizi tek yerden yönetin</p>
           </div>
           
-          <div className="flex space-x-3">
+          <div className="flex flex-wrap gap-2 sm:gap-3">
             <Button 
               onClick={() => setShowStockEntryForm(true)}
-              className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-300"
+              size="sm"
+              className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-300 text-xs md:text-sm"
             >
               <Package className="h-4 w-4" />
-              Stok Girişi
+              <span className="hidden sm:inline">Stok Girişi</span>
+              <span className="sm:hidden">Stok</span>
             </Button>
             <Button 
               onClick={() => setShowAddProductForm(true)} 
               variant="outline"
-              className="flex items-center gap-2 border-primary text-primary hover:bg-primary hover:text-white shadow-md hover:shadow-lg transition-all duration-300"
+              size="sm"
+              className="flex items-center gap-2 border-primary text-primary hover:bg-primary hover:text-white shadow-md hover:shadow-lg transition-all duration-300 text-xs md:text-sm"
             >
               <Tag className="h-4 w-4" />
-              Yeni Ürün
+              <span className="hidden sm:inline">Yeni Ürün</span>
+              <span className="sm:hidden">Ürün</span>
             </Button>
             <Button 
               onClick={() => setShowAddServiceForm(true)} 
               variant="outline"
-              className="flex items-center gap-2 border-purple-500 text-purple-500 hover:bg-purple-500 hover:text-white shadow-md hover:shadow-lg transition-all duration-300"
+              size="sm"
+              className="flex items-center gap-2 border-purple-500 text-purple-500 hover:bg-purple-500 hover:text-white shadow-md hover:shadow-lg transition-all duration-300 text-xs md:text-sm"
             >
               <FileText className="h-4 w-4" />
-              Yeni Hizmet
+              <span className="hidden sm:inline">Yeni Hizmet</span>
+              <span className="sm:hidden">Hizmet</span>
             </Button>
           </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <Card className="p-4 bg-gradient-to-br from-green-50 to-green-100 border-green-200 hover:shadow-lg transition-shadow">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-500 rounded-lg">
-                <Package className="h-5 w-5 text-white" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
+          <Card className="p-3 md:p-4 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 hover:shadow-lg transition-shadow">
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="p-1.5 md:p-2 bg-green-500 rounded-lg">
+                <Package className="h-4 w-4 md:h-5 md:w-5 text-white" />
               </div>
               <div>
-                <p className="text-sm text-green-600 font-medium">Toplam Ürün</p>
-                <p className="text-2xl font-bold text-green-700">{totalProducts}</p>
+                <p className="text-xs md:text-sm text-green-600 font-medium">Toplam Ürün</p>
+                <p className="text-lg md:text-2xl font-bold text-green-700">{totalProducts}</p>
               </div>
             </div>
           </Card>
           
-          <Card className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 hover:shadow-lg transition-shadow">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-500 rounded-lg">
-                <FileText className="h-5 w-5 text-white" />
+          <Card className="p-3 md:p-4 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border-purple-200 hover:shadow-lg transition-shadow">
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="p-1.5 md:p-2 bg-purple-500 rounded-lg">
+                <FileText className="h-4 w-4 md:h-5 md:w-5 text-white" />
               </div>
               <div>
-                <p className="text-sm text-purple-600 font-medium">Toplam Hizmet</p>
-                <p className="text-2xl font-bold text-purple-700">{totalServices}</p>
+                <p className="text-xs md:text-sm text-purple-600 font-medium">Toplam Hizmet</p>
+                <p className="text-lg md:text-2xl font-bold text-purple-700">{totalServices}</p>
               </div>
             </div>
           </Card>
           
-          <Card className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 hover:shadow-lg transition-shadow">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-500 rounded-lg">
-                <Warehouse className="h-5 w-5 text-white" />
+          <Card className="p-3 md:p-4 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 hover:shadow-lg transition-shadow">
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="p-1.5 md:p-2 bg-blue-500 rounded-lg">
+                <Warehouse className="h-4 w-4 md:h-5 md:w-5 text-white" />
               </div>
               <div>
-                <p className="text-sm text-blue-600 font-medium">Stok Değeri</p>
-                <p className="text-2xl font-bold text-blue-700">₺{totalStockValue.toLocaleString()}</p>
+                <p className="text-xs md:text-sm text-blue-600 font-medium">Stok Değeri</p>
+                <p className="text-lg md:text-2xl font-bold text-blue-700">₺{totalStockValue.toLocaleString()}</p>
               </div>
             </div>
           </Card>
           
-          <Card className="p-4 bg-gradient-to-br from-red-50 to-red-100 border-red-200 hover:shadow-lg transition-shadow">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-red-500 rounded-lg">
-                <TrendingUp className="h-5 w-5 text-white" />
+          <Card className="p-3 md:p-4 bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 border-red-200 hover:shadow-lg transition-shadow">
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="p-1.5 md:p-2 bg-red-500 rounded-lg">
+                <TrendingUp className="h-4 w-4 md:h-5 md:w-5 text-white" />
               </div>
               <div>
-                <p className="text-sm text-red-600 font-medium">Kritik Stok</p>
-                <p className="text-2xl font-bold text-red-700">{lowStockItems}</p>
+                <p className="text-xs md:text-sm text-red-600 font-medium">Kritik Stok</p>
+                <p className="text-lg md:text-2xl font-bold text-red-700">{lowStockItems}</p>
               </div>
             </div>
           </Card>
         </div>
       </div>
 
-      <Tabs defaultValue="stock" className="space-y-6">
-        <TabsList className="w-full sm:w-auto grid grid-cols-3 sm:inline-flex bg-muted/50 p-1 rounded-lg">
+      <Tabs defaultValue="stock" className="space-y-4 md:space-y-6">
+        <TabsList className="w-full grid grid-cols-3 bg-muted/50 p-1 rounded-lg h-auto">
           <TabsTrigger 
             value="stock"
-            className="text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all"
+            className="text-xs md:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all py-2 px-1 md:px-3"
           >
-            <Package className="h-4 w-4 mr-2" />
-            Stok Durumu
+            <Package className="h-4 w-4 md:mr-2" />
+            <span className="hidden md:inline">Stok Durumu</span>
           </TabsTrigger>
           <TabsTrigger 
             value="services"
-            className="text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all"
+            className="text-xs md:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all py-2 px-1 md:px-3"
           >
-            <FileText className="h-4 w-4 mr-2" />
-            Hizmetler
+            <FileText className="h-4 w-4 md:mr-2" />
+            <span className="hidden md:inline">Hizmetler</span>
           </TabsTrigger>
           <TabsTrigger 
             value="movements"
-            className="text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all"
+            className="text-xs md:text-sm data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all py-2 px-1 md:px-3"
           >
-            <BarChart3 className="h-4 w-4 mr-2" />
-            Stok Hareketleri
+            <BarChart3 className="h-4 w-4 md:mr-2" />
+            <span className="hidden md:inline">Stok Hareketleri</span>
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="stock" className="space-y-4">
-          <Card className="p-6 shadow-lg border-0 bg-white/70 backdrop-blur-sm">
-            <div className="flex items-center justify-between mb-6">
+          <Card className="p-3 md:p-6 shadow-lg border-0 bg-white/70 dark:bg-card/70 backdrop-blur-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 md:mb-6">
               <div className="flex items-center gap-2">
-                <Package className="h-5 w-5 text-primary" />
-                <h2 className="text-xl font-semibold">Ürün Stok Durumu</h2>
-                <span className="text-sm text-muted-foreground">({totalProducts} ürün)</span>
+                <Package className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+                <h2 className="text-base md:text-xl font-semibold">Ürün Stok Durumu</h2>
+                <span className="text-xs md:text-sm text-muted-foreground">({totalProducts})</span>
               </div>
-              <div className="max-w-md">
+              <div className="w-full sm:max-w-md">
                 <SearchInput 
                   value={stockSearchTerm} 
                   onChange={setStockSearchTerm} 
@@ -185,19 +191,23 @@ const Stock = () => {
                 />
               </div>
             </div>
-            <StockTable searchTerm={stockSearchTerm} onEditProduct={setEditingProduct} />
+            <div className="overflow-x-auto -mx-3 md:mx-0">
+              <div className="min-w-[600px] md:min-w-0 px-3 md:px-0">
+                <StockTable searchTerm={stockSearchTerm} onEditProduct={setEditingProduct} />
+              </div>
+            </div>
           </Card>
         </TabsContent>
 
         <TabsContent value="services" className="space-y-4">
-          <Card className="p-6 shadow-lg border-0 bg-white/70 backdrop-blur-sm">
-            <div className="flex items-center justify-between mb-6">
+          <Card className="p-3 md:p-6 shadow-lg border-0 bg-white/70 dark:bg-card/70 backdrop-blur-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 md:mb-6">
               <div className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-primary" />
-                <h2 className="text-xl font-semibold">Hizmet Listesi</h2>
-                <span className="text-sm text-muted-foreground">({totalServices} hizmet)</span>
+                <FileText className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+                <h2 className="text-base md:text-xl font-semibold">Hizmet Listesi</h2>
+                <span className="text-xs md:text-sm text-muted-foreground">({totalServices})</span>
               </div>
-              <div className="max-w-md">
+              <div className="w-full sm:max-w-md">
                 <SearchInput 
                   value={serviceSearchTerm} 
                   onChange={setServiceSearchTerm} 
@@ -211,23 +221,27 @@ const Stock = () => {
             />
           </Card>
           
-          <Card className="p-6 shadow-lg border-0 bg-white/70 backdrop-blur-sm">
-            <div className="flex items-center gap-2 mb-4">
-              <BarChart3 className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-semibold">Hizmet Geçmişi</h2>
+          <Card className="p-3 md:p-6 shadow-lg border-0 bg-white/70 dark:bg-card/70 backdrop-blur-sm">
+            <div className="flex items-center gap-2 mb-3 md:mb-4">
+              <BarChart3 className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+              <h2 className="text-base md:text-xl font-semibold">Hizmet Geçmişi</h2>
             </div>
-            <ServiceHistoryTable searchTerm={serviceSearchTerm} />
+            <div className="overflow-x-auto -mx-3 md:mx-0">
+              <div className="min-w-[600px] md:min-w-0 px-3 md:px-0">
+                <ServiceHistoryTable searchTerm={serviceSearchTerm} />
+              </div>
+            </div>
           </Card>
         </TabsContent>
 
         <TabsContent value="movements" className="space-y-4">
-          <Card className="p-6 shadow-lg border-0 bg-white/70 backdrop-blur-sm">
-            <div className="flex items-center justify-between mb-6">
+          <Card className="p-3 md:p-6 shadow-lg border-0 bg-white/70 dark:bg-card/70 backdrop-blur-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 md:mb-6">
               <div className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-primary" />
-                <h2 className="text-xl font-semibold">Stok Hareketleri</h2>
+                <BarChart3 className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+                <h2 className="text-base md:text-xl font-semibold">Stok Hareketleri</h2>
               </div>
-              <div className="max-w-md">
+              <div className="w-full sm:max-w-md">
                 <SearchInput 
                   value={movementSearchTerm} 
                   onChange={setMovementSearchTerm} 
@@ -235,7 +249,11 @@ const Stock = () => {
                 />
               </div>
             </div>
-            <StockMovementsTable searchTerm={movementSearchTerm} />
+            <div className="overflow-x-auto -mx-3 md:mx-0">
+              <div className="min-w-[600px] md:min-w-0 px-3 md:px-0">
+                <StockMovementsTable searchTerm={movementSearchTerm} />
+              </div>
+            </div>
           </Card>
         </TabsContent>
       </Tabs>
