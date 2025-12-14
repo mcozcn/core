@@ -6,6 +6,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import './index.css';
 import { migrateLocalStorageToIDB } from './utils/storage/idb';
 import { checkMigrationNeeded, runMigrations } from './utils/storage/migration';
+import { checkStorageAllowed } from './utils/storage/availability';
 
 // Wrapper component to handle IndexedDB initialization
 const AppWithStorage = () => {
@@ -13,6 +14,11 @@ const AppWithStorage = () => {
     // Initialize storage and run migrations when app starts
     const initializeStorage = async () => {
       try {
+        const allowed = await checkStorageAllowed();
+        if (!allowed.localStorage && !allowed.indexedDB) {
+          console.warn('Storage APIs are not available in this context. Falling back to in-memory/local restrictions.');
+          return;
+        }
         // Check if data migration is needed
         const needsMigration = await checkMigrationNeeded();
         if (needsMigration) {
@@ -21,7 +27,11 @@ const AppWithStorage = () => {
         }
         
         // Migrate existing data from localStorage to IndexedDB
-        await migrateLocalStorageToIDB();
+        if (allowed.indexedDB) {
+          await migrateLocalStorageToIDB();
+        } else if (allowed.localStorage) {
+          console.warn('IndexedDB not available; skipping migration. Using localStorage fallback.');
+        }
         console.log('Storage initialization completed');
       } catch (error) {
         console.error('Error initializing storage:', error);

@@ -32,6 +32,7 @@ const initDB = (): Promise<IDBDatabase> => {
         'appointments', 'customers', 'services', 'stock', 'sales', 'serviceSales',
         'customerRecords', 'payments', 'costs', 'users', 'userPerformance',
         'userActivities', 'stockMovements', 'staff'
+        , 'groupSchedules'
       ];
       
       storeNames.forEach(storeName => {
@@ -62,7 +63,13 @@ export const getAllFromIDB = async <T>(storeName: string): Promise<T[]> => {
       };
     });
   } catch (error) {
-    console.error(`Error getting data from ${storeName}:`, error);
+    // If the object store is missing, this throws a NotFoundError.
+    // Warn instead of erroring to reduce noisy logs in restricted contexts.
+    if (error && (error.name === 'NotFoundError' || String(error).toLowerCase().includes('specified object stores'))) {
+      console.warn(`IndexedDB store not found (${storeName}) - falling back to localStorage`);
+    } else {
+      console.error(`Error getting data from ${storeName}:`, error);
+    }
     
     // Fall back to localStorage if IndexedDB fails
     const localData = localStorage.getItem(storeName);
@@ -104,10 +111,10 @@ export const saveToIDB = async <T extends { id: number | string }>(storeName: st
 export const migrateLocalStorageToIDB = async (): Promise<void> => {
   try {
     const storeNames = [
-      'appointments', 'customers', 'services', 'stock', 'sales', 'serviceSales',
-      'customerRecords', 'payments', 'costs', 'users', 'userPerformance',
-      'userActivities', 'stockMovements', 'staff'
-    ];
+        'appointments', 'customers', 'services', 'stock', 'sales', 'serviceSales',
+        'customerRecords', 'payments', 'costs', 'users', 'userPerformance',
+        'userActivities', 'stockMovements', 'staff', 'groupSchedules'
+      ];
     
     for (const storeName of storeNames) {
       const localData = localStorage.getItem(storeName);
