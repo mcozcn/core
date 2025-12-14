@@ -1,19 +1,19 @@
 
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Users, BarChart3, Package, DollarSign, CreditCard, ShoppingCart, Database, BarChart, Clock, ChevronLeft, ChevronRight, Activity, UserCheck, Scale, ClipboardCheck, Target, CalendarDays, Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "./ui/sheet";
 import { ScrollArea } from "./ui/scroll-area";
- import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from "@/hooks/use-mobile";
-  import { useAuth } from '@/contexts/AuthContext';
-  const { user, logout, isAuthenticated } = useAuth();
+import { useAuth } from '@/contexts/AuthContext';
 
 const Navigation = () => {
-  const { user } = useAuth();
+  const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -164,26 +164,7 @@ const Navigation = () => {
           </div>
           
           {/* Text and Collapse Button */}
-                {isAuthenticated ? (
-                  <button
-                    onClick={async () => {
-                      await logout();
-                      toast({ title: 'Çıkış yapıldı', description: 'Oturum kapatıldı.' });
-                      navigate('/');
-                    }}
-                    className="text-sm text-muted-foreground underline"
-                  >
-                    Çıkış Yap
-                  </button>
-                ) : (
-                  <button onClick={() => navigate('/login')} className="text-sm text-muted-foreground underline">Giriş</button>
-                )}
-              <div className="ml-2">
-                <button onClick={() => navigate('/login')} className="text-sm text-muted-foreground underline">
-                  {user?.username === 'guest' ? 'Misafir' : user?.displayName || 'Giriş'}
-                </button>
-              </div>
-                        </div>
+          <div className="flex items-center justify-between w-full">
             {!isCollapsed && (
               <div className="text-center flex-1">
                 <p className="text-xs font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
@@ -191,6 +172,24 @@ const Navigation = () => {
                 </p>
               </div>
             )}
+
+            <div className="flex items-center space-x-2">
+              {isAuthenticated ? (
+                <button
+                  onClick={async () => {
+                    await logout();
+                    toast({ title: 'Çıkış yapıldı', description: 'Oturum kapatıldı.' });
+                    navigate('/');
+                  }}
+                  className="text-sm text-muted-foreground underline"
+                >
+                  Çıkış Yap
+                </button>
+              ) : (
+                <button onClick={() => navigate('/login')} className="text-sm text-muted-foreground underline">Giriş</button>
+              )}
+            </div>
+
             <Button
               variant="ghost"
               size="sm"
