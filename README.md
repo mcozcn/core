@@ -64,6 +64,12 @@ This project is built with .
 
 Simply open [Lovable](https://lovable.dev/projects/f8bcca5f-8d50-43ee-8ce0-a0dcece39f7a) and click on Share -> Publish.
 
+## Running without a signup/login screen (Public mode)
+
+If you'd like the app to open directly without a signup or login screen and share the same data between web and mobile, see `docs/public-mode.md` for step-by-step instructions and security notes.
+
+Note: There are two user types available in this mode: `guest` (cannot save data) and `admin`. Default admin credentials: username `mos`, password `mos07`.
+
 ## I want to use a custom domain - is that possible?
 
 We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)

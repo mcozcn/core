@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { ensureWriteAllowed } from '@/utils/guestGuard';
 import type { Customer, CustomerRecord } from './types';
 
 // Transform database row to Customer type
@@ -68,6 +69,10 @@ export const setCustomers = async (customers: Customer[]): Promise<void> => {
 };
 
 export const addCustomer = async (customer: Omit<Customer, 'id' | 'createdAt' | 'updatedAt'>): Promise<Customer | null> => {
+  if (!(await ensureWriteAllowed())) {
+    console.warn('Add customer blocked: guest users cannot modify data');
+    return null;
+  }
   const dbCustomer = transformToDbCustomer(customer);
   
   const { data, error } = await supabase
@@ -85,6 +90,10 @@ export const addCustomer = async (customer: Omit<Customer, 'id' | 'createdAt' | 
 };
 
 export const updateCustomer = async (id: string | number, updates: Partial<Customer>): Promise<boolean> => {
+  if (!(await ensureWriteAllowed())) {
+    console.warn('Update customer blocked: guest users cannot modify data');
+    return false;
+  }
   const dbUpdates = transformToDbCustomer(updates);
   
   const { error } = await supabase
@@ -101,6 +110,11 @@ export const updateCustomer = async (id: string | number, updates: Partial<Custo
 };
 
 export const deleteCustomer = async (id: string | number): Promise<boolean> => {
+  if (!(await ensureWriteAllowed())) {
+    console.warn('Delete customer blocked: guest users cannot modify data');
+    return false;
+  }
+
   const { error } = await supabase
     .from('customers')
     .delete()

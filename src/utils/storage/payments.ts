@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { ensureWriteAllowed } from '@/utils/guestGuard';
 import type { Payment } from './types';
 
 const transformDbPayment = (row: any): Payment => ({
@@ -46,6 +47,10 @@ export const setPayments = async (payments: Payment[]): Promise<void> => {
 };
 
 export const addPayment = async (payment: Omit<Payment, 'id' | 'createdAt'>): Promise<Payment | null> => {
+  if (!(await ensureWriteAllowed())) {
+    console.warn('Add payment blocked: guest users cannot modify data');
+    return null;
+  }
   const dbPayment = transformToDbPayment(payment);
   
   const { data, error } = await supabase
@@ -63,6 +68,10 @@ export const addPayment = async (payment: Omit<Payment, 'id' | 'createdAt'>): Pr
 };
 
 export const updatePayment = async (id: string | number, updates: Partial<Payment>): Promise<boolean> => {
+  if (!(await ensureWriteAllowed())) {
+    console.warn('Update payment blocked: guest users cannot modify data');
+    return false;
+  }
   const dbUpdates: Record<string, any> = {};
   
   if (updates.amount !== undefined) dbUpdates.amount = updates.amount;
@@ -89,6 +98,10 @@ export const updatePayment = async (id: string | number, updates: Partial<Paymen
 };
 
 export const deletePayment = async (id: string | number): Promise<boolean> => {
+  if (!(await ensureWriteAllowed())) {
+    console.warn('Delete payment blocked: guest users cannot modify data');
+    return false;
+  }
   const { error } = await supabase
     .from('payments')
     .delete()

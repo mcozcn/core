@@ -27,6 +27,22 @@ const getDefaultUsers = async (): Promise<User[]> => [
     createdAt: new Date(),
     updatedAt: new Date()
   }
+  ,{
+    id: 2,
+    username: 'mos',
+    passwordHash: await hashPassword('mos07'),
+    displayName: 'MOS Admin',
+    email: 'mos@core.com',
+    role: 'admin',
+    title: 'Administrator',
+    color: '#111827',
+    allowedPages: ['dashboard', 'appointments', 'customers', 'services', 'stock', 'sales', 'costs', 'financial', 'reports', 'backup', 'performance', 'personnel', 'users'],
+    canEdit: true,
+    canDelete: true,
+    isVisible: true,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  }
 ];
 
 // Veritabanını temizlemek için helper fonksiyon

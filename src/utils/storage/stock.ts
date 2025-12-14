@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { ensureWriteAllowed } from '@/utils/guestGuard';
 import type { StockItem, Sale } from './types';
 
 const transformDbProduct = (row: any): StockItem => ({
@@ -69,6 +70,10 @@ export const setStock = async (stock: StockItem[]): Promise<void> => {
 };
 
 export const addProduct = async (product: Omit<StockItem, 'id' | 'createdAt' | 'updatedAt'>): Promise<StockItem | null> => {
+  if (!(await ensureWriteAllowed())) {
+    console.warn('Add product blocked: guest users cannot modify data');
+    return null;
+  }
   const dbProduct = transformToDbProduct(product);
   
   const { data, error } = await supabase
@@ -86,6 +91,10 @@ export const addProduct = async (product: Omit<StockItem, 'id' | 'createdAt' | '
 };
 
 export const updateProduct = async (id: string | number, updates: Partial<StockItem>): Promise<boolean> => {
+  if (!(await ensureWriteAllowed())) {
+    console.warn('Update product blocked: guest users cannot modify data');
+    return false;
+  }
   const dbUpdates: Record<string, any> = {};
   
   if (updates.name !== undefined) dbUpdates.name = updates.name;
@@ -111,6 +120,10 @@ export const updateProduct = async (id: string | number, updates: Partial<StockI
 };
 
 export const deleteProduct = async (id: string | number): Promise<boolean> => {
+  if (!(await ensureWriteAllowed())) {
+    console.warn('Delete product blocked: guest users cannot modify data');
+    return false;
+  }
   const { error } = await supabase
     .from('products')
     .delete()
@@ -143,6 +156,10 @@ export const setSales = async (sales: Sale[]): Promise<void> => {
 };
 
 export const addSale = async (sale: Omit<Sale, 'id' | 'createdAt'>): Promise<Sale | null> => {
+  if (!(await ensureWriteAllowed())) {
+    console.warn('Add sale blocked: guest users cannot modify data');
+    return null;
+  }
   const dbSale = transformToDbSale(sale);
   
   const { data, error } = await supabase

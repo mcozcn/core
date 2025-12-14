@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { ensureWriteAllowed } from '@/utils/guestGuard';
 
 export interface MembershipPackage {
   id: string | number;
@@ -64,6 +65,10 @@ export const getMembershipPackages = async (): Promise<MembershipPackage[]> => {
 };
 
 export const saveMembershipPackage = async (pkg: Omit<MembershipPackage, 'id' | 'createdAt'>): Promise<boolean> => {
+  if (!(await ensureWriteAllowed())) {
+    console.warn('Save membership package blocked: guest users cannot modify data');
+    return false;
+  }
   const dbPackage = transformToDbPackage(pkg);
   
   const { error } = await supabase
@@ -79,6 +84,10 @@ export const saveMembershipPackage = async (pkg: Omit<MembershipPackage, 'id' | 
 };
 
 export const updateMembershipPackage = async (id: number | string, updates: Partial<MembershipPackage>): Promise<boolean> => {
+  if (!(await ensureWriteAllowed())) {
+    console.warn('Update membership package blocked: guest users cannot modify data');
+    return false;
+  }
   const dbUpdates: Record<string, any> = {};
   
   if (updates.name !== undefined) dbUpdates.name = updates.name;
@@ -102,6 +111,10 @@ export const updateMembershipPackage = async (id: number | string, updates: Part
 };
 
 export const deleteMembershipPackage = async (id: number | string): Promise<boolean> => {
+  if (!(await ensureWriteAllowed())) {
+    console.warn('Delete membership package blocked: guest users cannot modify data');
+    return false;
+  }
   const { error } = await supabase
     .from('membership_packages')
     .delete()

@@ -7,7 +7,9 @@ import { verifyToken } from '@/utils/auth/security';
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
+  isGuest?: boolean;
   login: (username: string, password: string) => Promise<boolean>;
+  loginAsGuest: () => Promise<void>;
   logout: () => void;
   loading: boolean;
 }
@@ -31,7 +33,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(currentUser);
         setIsAuthenticated(true);
       } else {
-        await setCurrentUser(null);
+        // If no authenticated user exists, default to guest mode (allows trying app without persisting data)
+        const guestUser: User = {
+          id: 0,
+          username: 'guest',
+          displayName: 'Misafir',
+          email: null,
+          role: 'guest',
+          title: 'Misafir',
+          color: '#9CA3AF',
+          allowedPages: [],
+          canEdit: false,
+          canDelete: false,
+          isVisible: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+
+        setUser(guestUser);
+        setIsAuthenticated(true);
+        await setCurrentUser(guestUser);
       }
     } catch (error) {
       console.error('Auth init error:', error);
@@ -59,6 +80,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const loginAsGuest = async () => {
+    const guestUser: User = {
+      id: 0,
+      username: 'guest',
+      displayName: 'Misafir',
+      email: null,
+      role: 'guest',
+      title: 'Misafir',
+      color: '#9CA3AF',
+      allowedPages: [],
+      canEdit: false,
+      canDelete: false,
+      isVisible: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    setUser(guestUser);
+    setIsAuthenticated(true);
+    await setCurrentUser(guestUser);
+  };
+
   const logout = async () => {
     setUser(null);
     setIsAuthenticated(false);
@@ -66,7 +109,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, isGuest: user?.role === 'guest', login, loginAsGuest, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

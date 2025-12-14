@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Navigation from "@/components/Navigation";
 import React from 'react';
 import Dashboard from '@/pages/Dashboard';
+import Login from '@/pages/Login';
 import Calendar from '@/pages/Calendar';
 import Customers from '@/pages/Customers';
 import PaymentTracking from '@/pages/PaymentTracking';
@@ -20,8 +21,7 @@ import Performance from '@/pages/Performance';
 import MembershipPackages from '@/pages/MembershipPackages';
 import CheckIn from '@/pages/CheckIn';
 import BodyMetrics from '@/pages/BodyMetrics';
-import Auth from '@/pages/Auth';
-import AuthGuard from '@/components/auth/AuthGuard';
+// Auth page and guard are optional now that the app can run without login
 
 // Create a client
 const queryClient = new QueryClient({
@@ -35,11 +35,11 @@ const queryClient = new QueryClient({
 
 const ProtectedRoutes = () => {
   return (
-    <AuthGuard>
-      <div className="min-h-screen bg-background">
-        <Navigation />
+    <div className="min-h-screen bg-background">
+      <Navigation />
         <Routes>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/calendar" element={<Calendar />} />
           <Route path="/customers" element={<Customers />} />
           <Route path="/payment-tracking" element={<PaymentTracking />} />
@@ -69,7 +69,6 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <Router>
         <Routes>
-          <Route path="/auth" element={<Auth />} />
           <Route path="/*" element={<ProtectedRoutes />} />
         </Routes>
       </Router>

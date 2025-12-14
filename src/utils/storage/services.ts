@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { ensureWriteAllowed } from '@/utils/guestGuard';
 import type { Service, ServiceSale } from './types';
 
 const transformDbService = (row: any): Service => ({
@@ -61,6 +62,10 @@ export const setServices = async (services: Service[]): Promise<void> => {
 };
 
 export const addService = async (service: Omit<Service, 'id' | 'createdAt' | 'updatedAt'>): Promise<Service | null> => {
+  if (!(await ensureWriteAllowed())) {
+    console.warn('Add service blocked: guest users cannot modify data');
+    return null;
+  }
   const dbService = transformToDbService(service);
   
   const { data, error } = await supabase
@@ -78,6 +83,10 @@ export const addService = async (service: Omit<Service, 'id' | 'createdAt' | 'up
 };
 
 export const updateService = async (id: string | number, updates: Partial<Service>): Promise<boolean> => {
+  if (!(await ensureWriteAllowed())) {
+    console.warn('Update service blocked: guest users cannot modify data');
+    return false;
+  }
   const dbUpdates = transformToDbService(updates);
   
   const { error } = await supabase
@@ -94,6 +103,11 @@ export const updateService = async (id: string | number, updates: Partial<Servic
 };
 
 export const deleteService = async (id: string | number): Promise<boolean> => {
+  if (!(await ensureWriteAllowed())) {
+    console.warn('Delete service blocked: guest users cannot modify data');
+    return false;
+  }
+
   const { error } = await supabase
     .from('services')
     .delete()

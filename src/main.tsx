@@ -2,6 +2,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
+import { AuthProvider } from '@/contexts/AuthContext';
 import './index.css';
 import { migrateLocalStorageToIDB } from './utils/storage/idb';
 import { checkMigrationNeeded, runMigrations } from './utils/storage/migration';
@@ -30,7 +31,11 @@ const AppWithStorage = () => {
     initializeStorage();
   }, []);
 
-  return <App />;
+  return (
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  );
 };
 
 createRoot(document.getElementById("root")!).render(

@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { ensureWriteAllowed } from '@/utils/guestGuard';
 import type { Cost } from './types';
 
 const transformDbCost = (row: any): Cost => ({
@@ -44,6 +45,10 @@ export const setCosts = async (costs: Cost[]): Promise<void> => {
 };
 
 export const addCost = async (cost: Omit<Cost, 'id' | 'createdAt'>): Promise<Cost | null> => {
+  if (!(await ensureWriteAllowed())) {
+    console.warn('Add cost blocked: guest users cannot modify data');
+    return null;
+  }
   const dbCost = transformToDbCost(cost);
   
   const { data, error } = await supabase
@@ -61,6 +66,10 @@ export const addCost = async (cost: Omit<Cost, 'id' | 'createdAt'>): Promise<Cos
 };
 
 export const updateCost = async (id: string | number, updates: Partial<Cost>): Promise<boolean> => {
+  if (!(await ensureWriteAllowed())) {
+    console.warn('Update cost blocked: guest users cannot modify data');
+    return false;
+  }
   const dbUpdates: Record<string, any> = {};
   
   if (updates.category !== undefined) dbUpdates.category = updates.category;
@@ -82,6 +91,10 @@ export const updateCost = async (id: string | number, updates: Partial<Cost>): P
 };
 
 export const deleteCost = async (id: string | number): Promise<boolean> => {
+  if (!(await ensureWriteAllowed())) {
+    console.warn('Delete cost blocked: guest users cannot modify data');
+    return false;
+  }
   const { error } = await supabase
     .from('costs')
     .delete()
