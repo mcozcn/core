@@ -40,3 +40,7 @@ If you want, I can:
 ---
 
 If you try to create a membership package and it still fails, please copy the exact error message shown in browser console (or app toast). I can then update the client to show a clearer error and/or implement a fallback (server proxy).
+
+Quick debug tips:
+- Open the app with ?debug=true (e.g., http://localhost:5173/?debug=true) to show the **Auth Debug** panel which displays the current Supabase session and allows a refresh/log action.
+- After attempting a failing save, check the browser console and the Auth Debug panel for `Supabase session` information and the exact error returned by Supabase (often includes `status: 401` and message details).

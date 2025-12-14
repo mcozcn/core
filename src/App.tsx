@@ -6,6 +6,8 @@ import React from 'react';
 import Dashboard from '@/pages/Dashboard';
 import Login from '@/pages/Login';
 import GuestPrompt from '@/components/auth/GuestPrompt';
+import AuthDebugPanel from '@/components/auth/AuthDebugPanel';
+import { useLocation } from 'react-router-dom';
 import Calendar from '@/pages/Calendar';
 import Customers from '@/pages/Customers';
 import PaymentTracking from '@/pages/PaymentTracking';
@@ -35,9 +37,13 @@ const queryClient = new QueryClient({
 });
 
 const ProtectedRoutes = () => {
+  const location = useLocation();
+  const query = new URLSearchParams(location.search);
+  const showDebug = query.get('debug') === 'true';
   return (
     <div className="min-h-screen bg-background">
       <GuestPrompt />
+      {showDebug && <div className="max-w-7xl mx-auto px-4"><AuthDebugPanel /></div>}
       <Navigation />
         <Routes>
           <Route path="/" element={<Dashboard />} />

@@ -26,6 +26,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     initAuth();
   }, []);
 
+  useEffect(() => {
+    // Listen for Supabase auth state changes for debugging and to keep session in sync
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      console.debug('Supabase auth state change:', event, session);
+    });
+
+    return () => {
+      try {
+        listener?.subscription?.unsubscribe?.();
+      } catch (e) {
+        // ignore
+      }
+    };
+  }, []);
+
   const initAuth = async () => {
     try {
       const currentUser = await getCurrentUser();
@@ -62,21 +77,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // sign up programmatically (useful for first-time setups).
         try {
           const email = authResult.user.email || `${authResult.user.username}@core.com`;
-          const { error: signInError } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-          });
-
-          if (signInError) {
-            console.warn('Supabase sign-in failed, attempting signup...', signInError.message);
-            const { error: signUpError } = await supabase.auth.signUp({ email, password });
-            if (signUpError) {
-              console.warn('Supabase signup failed:', signUpError.message);
+          const signInResult = await supabase.auth.signInWithPassword({ email, password });
+          if (signInResult.error) {
+            console.warn('Supabase sign-in failed, attempting signup...', signInResult.error.message);
+            const signUpResult = await supabase.auth.signUp({ email, password });
+            if (signUpResult.error) {
+              console.warn('Supabase signup failed:', signUpResult.error.message, signUpResult.error);
             } else {
               // Try sign in again
-              const { error: signIn2Error } = await supabase.auth.signInWithPassword({ email, password });
-              if (signIn2Error) console.warn('Supabase sign-in after signup failed:', signIn2Error.message);
+              const signIn2Result = await supabase.auth.signInWithPassword({ email, password });
+              if (signIn2Result.error) console.warn('Supabase sign-in after signup failed:', signIn2Result.error.message, signIn2Result.error);
             }
+          }
+
+          // Always log current session after attempts so we can debug 401 issues
+          try {
+            const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+            if (sessionError) console.warn('Error fetching supabase session:', sessionError);
+            console.debug('Supabase session after login attempt:', sessionData?.session ?? null);
+          } catch (err) {
+            console.warn('getSession failed:', err);
           }
         } catch (err) {
           console.warn('Supabase auth attempt failed:', err);

@@ -96,11 +96,11 @@ const MembershipPackages = () => {
       return;
     }
 
-    const success = editingPackage
+    const result = editingPackage
       ? await updateMembershipPackage(editingPackage.id, formData)
       : await saveMembershipPackage(formData);
 
-    if (success) {
+    if (result.success) {
       toast({
         title: 'Başarılı',
         description: `Paket ${editingPackage ? 'güncellendi' : 'oluşturuldu'}`,
@@ -108,10 +108,14 @@ const MembershipPackages = () => {
       refetch();
       setDialogOpen(false);
     } else {
+      console.error('Membership save/update failed:', result.error);
+      const status = result.status;
       toast({
         variant: 'destructive',
-        title: 'Hata',
-        description: 'İşlem başarısız oldu',
+        title: status === 401 ? 'Yetkisiz (401)' : 'Hata',
+        description: status === 401
+          ? 'Sunucu: 401 Yetkisiz. Admin olarak giriş yaptığınızdan ve Supabase RLS politikalarının yazma izni verdiğinden emin olun. (docs/supabase-auth-and-rls.md)'
+          : 'İşlem başarısız oldu. Lütfen konsoldaki hatayı kontrol edin ve gerekirse dokümantasyona bakın.',
       });
     }
   };

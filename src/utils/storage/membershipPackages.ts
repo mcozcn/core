@@ -64,26 +64,32 @@ export const getMembershipPackages = async (): Promise<MembershipPackage[]> => {
   return (data || []).map(transformDbPackage);
 };
 
-export const saveMembershipPackage = async (pkg: Omit<MembershipPackage, 'id' | 'createdAt'>): Promise<boolean> => {
+export const saveMembershipPackage = async (pkg: Omit<MembershipPackage, 'id' | 'createdAt'>): Promise<{ success: boolean; error?: any; status?: number }> => {
   if (!(await ensureWriteAllowed())) {
     console.warn('Save membership package blocked: guest users cannot modify data');
     return false;
   }
   const dbPackage = transformToDbPackage(pkg);
   
-  const { error } = await supabase
+  const { data, error, status } = await supabase
     .from('membership_packages')
     .insert(dbPackage);
-  
+
   if (error) {
     console.error('Error saving membership package:', error);
-    return false;
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      console.debug('Supabase session at save time:', sessionData?.session ?? null);
+    } catch (e) {
+      console.warn('Failed to read supabase session while handling save error', e);
+    }
+    return { success: false, error, status };
   }
-  
-  return true;
+
+  return { success: true };
 };
 
-export const updateMembershipPackage = async (id: number | string, updates: Partial<MembershipPackage>): Promise<boolean> => {
+export const updateMembershipPackage = async (id: number | string, updates: Partial<MembershipPackage>): Promise<{ success: boolean; error?: any; status?: number }> => {
   if (!(await ensureWriteAllowed())) {
     console.warn('Update membership package blocked: guest users cannot modify data');
     return false;
@@ -97,35 +103,47 @@ export const updateMembershipPackage = async (id: number | string, updates: Part
   if (updates.features !== undefined) dbUpdates.features = updates.features;
   if (updates.isActive !== undefined) dbUpdates.is_active = updates.isActive;
   
-  const { error } = await supabase
+  const { data, error, status } = await supabase
     .from('membership_packages')
     .update(dbUpdates)
     .eq('id', String(id));
-  
+
   if (error) {
     console.error('Error updating membership package:', error);
-    return false;
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      console.debug('Supabase session at update time:', sessionData?.session ?? null);
+    } catch (e) {
+      console.warn('Failed to read supabase session while handling update error', e);
+    }
+    return { success: false, error, status };
   }
-  
-  return true;
+
+  return { success: true };
 };
 
-export const deleteMembershipPackage = async (id: number | string): Promise<boolean> => {
+export const deleteMembershipPackage = async (id: number | string): Promise<{ success: boolean; error?: any; status?: number }> => {
   if (!(await ensureWriteAllowed())) {
     console.warn('Delete membership package blocked: guest users cannot modify data');
     return false;
   }
-  const { error } = await supabase
+  const { data, error, status } = await supabase
     .from('membership_packages')
     .delete()
     .eq('id', String(id));
-  
+
   if (error) {
     console.error('Error deleting membership package:', error);
-    return false;
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      console.debug('Supabase session at delete time:', sessionData?.session ?? null);
+    } catch (e) {
+      console.warn('Failed to read supabase session while handling delete error', e);
+    }
+    return { success: false, error, status };
   }
-  
-  return true;
+
+  return { success: true };
 };
 
 // Subscription functions - these work through customers table membership fields
