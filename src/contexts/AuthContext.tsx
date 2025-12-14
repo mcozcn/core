@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@/types/user';
 import { getCurrentUser, setCurrentUser, authenticateUser } from '@/utils/storage/userManager';
+import { supabase } from '@/integrations/supabase/client';
 import { verifyToken } from '@/utils/auth/security';
 
 interface AuthContextType {
@@ -56,6 +57,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(authResult.user);
         setIsAuthenticated(true);
         await setCurrentUser(authResult.user);
+        // Try to sign in to Supabase so admin users can perform writes if RLS
+        // policies allow authenticated users. If sign in fails, attempt to
+        // sign up programmatically (useful for first-time setups).
+        try {
+          const email = authResult.user.email || `${authResult.user.username}@core.com`;
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+
+          if (signInError) {
+            console.warn('Supabase sign-in failed, attempting signup...', signInError.message);
+            const { error: signUpError } = await supabase.auth.signUp({ email, password });
+            if (signUpError) {
+              console.warn('Supabase signup failed:', signUpError.message);
+            } else {
+              // Try sign in again
+              const { error: signIn2Error } = await supabase.auth.signInWithPassword({ email, password });
+              if (signIn2Error) console.warn('Supabase sign-in after signup failed:', signIn2Error.message);
+            }
+          }
+        } catch (err) {
+          console.warn('Supabase auth attempt failed:', err);
+        }
         return true;
       }
       
@@ -89,6 +114,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const logout = async () => {
+    // Also sign out from Supabase to clear any session
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.warn('Supabase signOut failed:', err);
+    }
+
     setUser(null);
     setIsAuthenticated(false);
     await setCurrentUser(null);
