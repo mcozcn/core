@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, Edit, Trash2, Check, X } from 'lucide-react';
 import { getMembershipPackages, saveMembershipPackage, updateMembershipPackage, deleteMembershipPackage, MembershipPackage } from '@/utils/storage/membershipPackages';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,6 +15,7 @@ import { Switch } from '@/components/ui/switch';
 
 const MembershipPackages = () => {
   const { toast } = useToast();
+  const { isGuest } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPackage, setEditingPackage] = useState<MembershipPackage | null>(null);
   const [formData, setFormData] = useState({
@@ -77,6 +79,14 @@ const MembershipPackages = () => {
   };
 
   const handleSave = async () => {
+    if (isGuest) {
+      toast({
+        variant: 'destructive',
+        title: 'İzin yok',
+        description: 'Misafir modunda paket oluşturamaz veya düzenleyemezsiniz. Lütfen admin olarak giriş yapın.'
+      });
+      return;
+    }
     if (!formData.name || !formData.price) {
       toast({
         variant: 'destructive',
