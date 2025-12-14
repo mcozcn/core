@@ -217,7 +217,7 @@ const CheckIn = () => {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleCheckOut(record.memberId, record.memberName)}
+                        onClick={() => handleCheckOut(String(record.memberId), record.memberName)}
                         className="text-xs"
                       >
                         <LogOut className="mr-1 md:mr-2 h-3 w-3 md:h-4 md:w-4" />

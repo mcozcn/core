@@ -1,8 +1,8 @@
-import { getFromStorage, setToStorage } from './core';
+import { supabase } from "@/integrations/supabase/client";
 
 export interface CheckInRecord {
-  id: number;
-  memberId: number;
+  id: string | number;
+  memberId: string | number;
   memberName: string;
   checkInTime: Date;
   checkOutTime?: Date;
@@ -11,37 +11,61 @@ export interface CheckInRecord {
   createdAt: Date;
 }
 
-const CHECK_IN_KEY = 'check_in_records';
+const transformDbCheckIn = (row: any): CheckInRecord => ({
+  id: row.id,
+  memberId: row.customer_id,
+  memberName: '', // Will be populated from customer data if needed
+  checkInTime: new Date(row.check_in_time),
+  checkOutTime: row.check_out_time ? new Date(row.check_out_time) : undefined,
+  duration: row.check_out_time 
+    ? Math.floor((new Date(row.check_out_time).getTime() - new Date(row.check_in_time).getTime()) / 60000)
+    : undefined,
+  notes: row.notes || '',
+  createdAt: new Date(row.created_at),
+});
 
 export const getCheckInRecords = async (): Promise<CheckInRecord[]> => {
-  return await getFromStorage<CheckInRecord>(CHECK_IN_KEY);
+  const { data, error } = await supabase
+    .from('check_ins')
+    .select('*')
+    .order('check_in_time', { ascending: false });
+  
+  if (error) {
+    console.error('Error fetching check-ins:', error);
+    return [];
+  }
+  
+  return (data || []).map(transformDbCheckIn);
 };
 
-export const checkInMember = async (memberId: number, memberName: string, notes?: string): Promise<boolean> => {
+export const checkInMember = async (memberId: number | string, memberName: string, notes?: string): Promise<boolean> => {
   try {
-    const records = await getCheckInRecords();
-    
     // Check if member is already checked in
-    const existingCheckIn = records.find(r => 
-      r.memberId === memberId && !r.checkOutTime
-    );
+    const { data: existing } = await supabase
+      .from('check_ins')
+      .select('id')
+      .eq('customer_id', String(memberId))
+      .is('check_out_time', null)
+      .single();
     
-    if (existingCheckIn) {
+    if (existing) {
       console.warn('Member is already checked in');
       return false;
     }
     
-    const newRecord: CheckInRecord = {
-      id: Date.now(),
-      memberId,
-      memberName,
-      checkInTime: new Date(),
-      notes,
-      createdAt: new Date(),
-    };
+    const { error } = await supabase
+      .from('check_ins')
+      .insert({
+        customer_id: String(memberId),
+        notes: notes || null,
+        check_in_time: new Date().toISOString(),
+      });
     
-    records.push(newRecord);
-    await setToStorage(CHECK_IN_KEY, records);
+    if (error) {
+      console.error('Error checking in member:', error);
+      return false;
+    }
+    
     return true;
   } catch (error) {
     console.error('Error checking in member:', error);
@@ -49,25 +73,30 @@ export const checkInMember = async (memberId: number, memberName: string, notes?
   }
 };
 
-export const checkOutMember = async (memberId: number): Promise<boolean> => {
+export const checkOutMember = async (memberId: number | string): Promise<boolean> => {
   try {
-    const records = await getCheckInRecords();
-    const record = records.find(r => 
-      r.memberId === memberId && !r.checkOutTime
-    );
+    const { data: record, error: fetchError } = await supabase
+      .from('check_ins')
+      .select('id')
+      .eq('customer_id', String(memberId))
+      .is('check_out_time', null)
+      .single();
     
-    if (!record) {
+    if (fetchError || !record) {
       console.warn('No active check-in found for member');
       return false;
     }
     
-    const checkOutTime = new Date();
-    const duration = Math.floor((checkOutTime.getTime() - new Date(record.checkInTime).getTime()) / 60000);
+    const { error } = await supabase
+      .from('check_ins')
+      .update({ check_out_time: new Date().toISOString() })
+      .eq('id', record.id);
     
-    record.checkOutTime = checkOutTime;
-    record.duration = duration;
+    if (error) {
+      console.error('Error checking out member:', error);
+      return false;
+    }
     
-    await setToStorage(CHECK_IN_KEY, records);
     return true;
   } catch (error) {
     console.error('Error checking out member:', error);
@@ -76,18 +105,34 @@ export const checkOutMember = async (memberId: number): Promise<boolean> => {
 };
 
 export const getCurrentCheckIns = async (): Promise<CheckInRecord[]> => {
-  const records = await getCheckInRecords();
-  return records.filter(r => !r.checkOutTime);
+  const { data, error } = await supabase
+    .from('check_ins')
+    .select('*')
+    .is('check_out_time', null)
+    .order('check_in_time', { ascending: false });
+  
+  if (error) {
+    console.error('Error fetching current check-ins:', error);
+    return [];
+  }
+  
+  return (data || []).map(transformDbCheckIn);
 };
 
 export const getTodayCheckIns = async (): Promise<CheckInRecord[]> => {
-  const records = await getCheckInRecords();
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
-  return records.filter(r => {
-    const checkInDate = new Date(r.checkInTime);
-    checkInDate.setHours(0, 0, 0, 0);
-    return checkInDate.getTime() === today.getTime();
-  });
+  const { data, error } = await supabase
+    .from('check_ins')
+    .select('*')
+    .gte('check_in_time', today.toISOString())
+    .order('check_in_time', { ascending: false });
+  
+  if (error) {
+    console.error('Error fetching today check-ins:', error);
+    return [];
+  }
+  
+  return (data || []).map(transformDbCheckIn);
 };
