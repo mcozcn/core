@@ -66,6 +66,16 @@ If you want, I can:
 - Add example SQL migration files to this repo for the policies above, and/or
 - Add a small serverless function (`/api/write`) example that proxies write requests, validates your local admin token, and performs the write with `service_role` privileges.
 
+Restricted RLS example (recommended)
+
+If you prefer a safer, restrictive policy that **only allows writes from the admin email `mos@core.com`**, use the SQL file `supabase/migrations/20251215100000_membership_packages_restricted_rls.sql`. It:
+
+- Enables RLS on `membership_packages`,
+- Adds a `allow_authenticated_select` policy so authenticated users can read,
+- Adds a `allow_mos_write` policy that allows INSERT/UPDATE/DELETE only when `auth.email() = 'mos@core.com'`.
+
+Run that migration in the Supabase SQL Editor to test whether admin writes succeed; if they do, you can then modify the policy to include other admin emails or tighter checks as needed.
+
 ---
 
 If you try to create a membership package and it still fails, please copy the exact error message shown in browser console (or app toast). I can then update the client to show a clearer error and/or implement a fallback (server proxy).
