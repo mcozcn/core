@@ -5,6 +5,7 @@ import Navigation from "@/components/Navigation";
 import React from 'react';
 import Dashboard from '@/pages/Dashboard';
 import Login from '@/pages/Login';
+import GuestPrompt from '@/components/auth/GuestPrompt';
 import Calendar from '@/pages/Calendar';
 import Customers from '@/pages/Customers';
 import PaymentTracking from '@/pages/PaymentTracking';
@@ -36,6 +37,7 @@ const queryClient = new QueryClient({
 const ProtectedRoutes = () => {
   return (
     <div className="min-h-screen bg-background">
+      <GuestPrompt />
       <Navigation />
         <Routes>
           <Route path="/" element={<Dashboard />} />

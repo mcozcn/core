@@ -33,26 +33,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(currentUser);
         setIsAuthenticated(true);
       } else {
-        // If no authenticated user exists, default to guest mode (allows trying app without persisting data)
-        const guestUser: User = {
-          id: 0,
-          username: 'guest',
-          displayName: 'Misafir',
-          email: null,
-          role: 'guest',
-          title: 'Misafir',
-          color: '#9CA3AF',
-          allowedPages: [],
-          canEdit: false,
-          canDelete: false,
-          isVisible: false,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
-
-        setUser(guestUser);
-        setIsAuthenticated(true);
-        await setCurrentUser(guestUser);
+        // Do not auto-login as guest so admin users can explicitly sign in.
+        // Leave user null / unauthenticated; the UI will present clear options to
+        // 'Continue as guest' or 'Login' so admin login is visible.
+        await setCurrentUser(null);
+        setUser(null);
+        setIsAuthenticated(false);
       }
     } catch (error) {
       console.error('Auth init error:', error);
