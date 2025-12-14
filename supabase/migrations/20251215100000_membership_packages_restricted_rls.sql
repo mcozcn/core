@@ -6,13 +6,17 @@ BEGIN;
 
 ALTER TABLE IF EXISTS public.membership_packages ENABLE ROW LEVEL SECURITY;
 
+-- Ensure old policies (if any) are removed so the script can be run multiple times safely
+DROP POLICY IF EXISTS allow_authenticated_select ON public.membership_packages;
+DROP POLICY IF EXISTS allow_mos_write ON public.membership_packages;
+
 -- Allow authenticated selects
-CREATE POLICY IF NOT EXISTS allow_authenticated_select ON public.membership_packages
+CREATE POLICY allow_authenticated_select ON public.membership_packages
   FOR SELECT
   USING (auth.role() = 'authenticated' OR auth.uid() IS NOT NULL);
 
 -- Allow only mos@core.com to insert/update/delete
-CREATE POLICY IF NOT EXISTS allow_mos_write ON public.membership_packages
+CREATE POLICY allow_mos_write ON public.membership_packages
   FOR INSERT, UPDATE, DELETE
   USING (auth.email() = 'mos@core.com')
   WITH CHECK (auth.email() = 'mos@core.com');
