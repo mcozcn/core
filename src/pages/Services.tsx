@@ -38,7 +38,7 @@ const Services = () => {
     service.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleDeleteService = async (serviceId: number) => {
+  const handleDeleteService = async (serviceId: string | number) => {
     try {
       const updatedServices = services.filter(s => s.id !== serviceId);
       setServices(updatedServices);

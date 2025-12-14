@@ -27,7 +27,7 @@ interface CustomerAppointmentsListProps {
 }
 
 const CustomerAppointmentsList = ({ appointments, customerPhone }: CustomerAppointmentsListProps) => {
-  const [selectedAppointment, setSelectedAppointment] = useState<number | null>(null);
+  const [selectedAppointment, setSelectedAppointment] = useState<string | number | null>(null);
   const [cancellationNote, setCancellationNote] = useState("");
   const [showCancellationDialog, setShowCancellationDialog] = useState(false);
   const { toast } = useToast();

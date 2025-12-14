@@ -106,7 +106,7 @@ const MembershipPackages = () => {
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string | number) => {
     if (window.confirm('Bu paketi silmek istediğinizden emin misiniz?')) {
       const success = await deleteMembershipPackage(id);
       if (success) {

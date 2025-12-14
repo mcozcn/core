@@ -34,7 +34,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const Customers = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | number | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const queryClient = useQueryClient();
@@ -76,7 +76,7 @@ const Customers = () => {
     setShowEditDialog(false);
   };
 
-  const handleDeleteCustomer = async (customerId: number) => {
+  const handleDeleteCustomer = async (customerId: string | number) => {
     try {
       const updatedCustomers = customers.filter(c => c.id !== customerId);
       await setCustomers(updatedCustomers);

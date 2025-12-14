@@ -68,7 +68,7 @@ const StockMovementsTable = ({ searchTerm = '' }: StockMovementsTableProps) => {
   });
 
   // Find previous movements for a product
-  const getProductPreviousMovement = (productId: number, currentDate: Date) => {
+  const getProductPreviousMovement = (productId: string | number, currentDate: Date) => {
     if (!movements) return null;
     
     const previousMovements = movements

@@ -18,7 +18,7 @@ import {
 
 interface StaffPerformanceChartsProps {
   data: Array<{
-    id: number;
+    id: string | number;
     name: string;
     role: string;
     servicesProvided: number;
