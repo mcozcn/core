@@ -37,6 +37,15 @@ If you prefer a more secure approach for production:
 
 If you'd like a ready-to-run example migration, I've added a permissive SQL migration to `supabase/migrations/20251215083000_add_membership_packages_rls.sql` that enables RLS on `membership_packages` and creates permissive policies for authenticated users (for testing). **Do not** use it as-is in production — instead use it to confirm whether RLS is the cause of your 401, then tighten policies appropriately.
 
+Environment variables check:
+
+- Ensure your `.env` / `.env.local` has these variables set for local development:
+
+  - `VITE_SUPABASE_URL` (e.g., https://xyz.supabase.co)
+  - `VITE_SUPABASE_PUBLISHABLE_KEY` (the anon/public key)
+
+  You can also use the in-app debug panel (open `/?debug=true`) and click **Test Supabase** to confirm env var presence and run a minimal test query.
+
 If you want, I can:
 - Add example SQL migration files to this repo for the policies above, and/or
 - Add a small serverless function (`/api/write`) example that proxies write requests, validates your local admin token, and performs the write with `service_role` privileges.

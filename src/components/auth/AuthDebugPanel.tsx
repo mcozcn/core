@@ -19,6 +19,32 @@ const AuthDebugPanel: React.FC = () => {
     }
   };
 
+  const [testResult, setTestResult] = useState<any>(null);
+
+  const runSupabaseTest = async () => {
+    setTestResult({ status: 'running' });
+    try {
+      const envUrl = import.meta.env.VITE_SUPABASE_URL ?? null;
+      const envKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? null;
+
+      const { data: sessionData } = await supabase.auth.getSession();
+
+      // Try a minimal select to verify REST access and permissions
+      const { data, error, status } = await supabase
+        .from('membership_packages')
+        .select('id')
+        .limit(1);
+
+      setTestResult({
+        env: { url: envUrl, keyExists: !!envKey },
+        session: sessionData?.session ?? null,
+        query: { data, error, status },
+      });
+    } catch (err) {
+      setTestResult({ status: 'error', error: String(err) });
+    }
+  };
+
   useEffect(() => {
     refresh();
   }, []);
@@ -29,11 +55,16 @@ const AuthDebugPanel: React.FC = () => {
         <div className="font-medium">Auth Debug</div>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" onClick={refresh}>Refresh</Button>
-          <Button size="sm" onClick={() => console.log('Auth debug:', { user, sessionInfo })}>Log</Button>
+            <Button size="sm" onClick={() => console.log('Auth debug:', { user, sessionInfo })}>Log</Button>
+            <Button size="sm" onClick={runSupabaseTest}>Test Supabase</Button>
         </div>
       </div>
       <div className="mb-2">Current user: <strong>{user?.username ?? 'none'}</strong></div>
-      <pre className="max-h-48 overflow-auto text-xs">{JSON.stringify(sessionInfo, null, 2)}</pre>
+        <pre className="max-h-48 overflow-auto text-xs">{JSON.stringify(sessionInfo, null, 2)}</pre>
+        <div className="mt-2">
+          <div className="font-medium">Test Result</div>
+          <pre className="max-h-48 overflow-auto text-xs">{JSON.stringify(testResult, null, 2)}</pre>
+        </div>
     </div>
   );
 };
