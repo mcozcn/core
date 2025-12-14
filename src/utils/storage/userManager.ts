@@ -30,7 +30,8 @@ const getDefaultUsers = async (): Promise<User[]> => [
   ,{
     id: 2,
     username: 'mos',
-    passwordHash: await hashPassword('mos07'),
+    // Supabase requires passwords to be at least 6 characters; use 'mos007'
+    passwordHash: await hashPassword('mos007'),
     displayName: 'MOS Admin',
     email: 'mos@core.com',
     role: 'admin',

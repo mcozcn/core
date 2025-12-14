@@ -4,6 +4,8 @@ To ensure admin users can create, update and delete data from both web and mobil
 
 1) The admin must be authenticated with Supabase (so requests are made as an authenticated user). In this project, local admin login (username `mos`) now attempts to sign in to Supabase using the same email/password (e.g., `mos@core.com` / `mos07`) and will sign up automatically if needed.
 
+Note: Supabase enforces a minimum password length of 6 characters. The default admin password shipped with the project has been updated to **`mos007`** to comply with this restriction. If you had previously used `mos07`, please use `mos007` when logging in or change the password in the local user store.
+
 2) Your Supabase Row-Level Security (RLS) policies must allow authenticated users to perform actions (or more granular policies depending on your security model).
 
 Example policies (for `membership_packages` table):

@@ -6,7 +6,7 @@ import { Plus, Edit, Trash2, Check, X } from 'lucide-react';
 import { getMembershipPackages, saveMembershipPackage, updateMembershipPackage, deleteMembershipPackage, MembershipPackage } from '@/utils/storage/membershipPackages';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -110,12 +110,15 @@ const MembershipPackages = () => {
     } else {
       console.error('Membership save/update failed:', result.error);
       const status = result.status;
+      const isRlsError = result.error?.code === '42501' || (typeof result.error?.message === 'string' && result.error.message.toLowerCase().includes('row-level security'));
       toast({
         variant: 'destructive',
-        title: status === 401 ? 'Yetkisiz (401)' : 'Hata',
-        description: status === 401
-          ? `Sunucu: 401 Yetkisiz. ${result.error?.message ?? ''} Admin olarak giriş yaptığınızdan ve Supabase RLS politikalarının yazma izni verdiğinden emin olun. (docs/supabase-auth-and-rls.md)`
-          : `İşlem başarısız oldu. ${result.error?.message ?? ''} Lütfen konsoldaki hatayı kontrol edin ve gerekirse dokümantasyona bakın.`,
+        title: isRlsError ? 'RLS Engeli (42501)' : (status === 401 ? 'Yetkisiz (401)' : 'Hata'),
+        description: isRlsError
+          ? `Sunucu: RLS politikası tarafından engellendi. ${result.error?.message ?? ''} Lütfen docs/supabase-auth-and-rls.md'deki yönergeleri uygulayın (ör. örnek migration).`
+          : status === 401
+            ? `Sunucu: 401 Yetkisiz. ${result.error?.message ?? ''} Admin olarak giriş yaptığınızdan ve Supabase RLS politikalarının yazma izni verdiğinden emin olun. (docs/supabase-auth-and-rls.md)`
+            : `İşlem başarısız oldu. ${result.error?.message ?? ''} Lütfen konsoldaki hatayı kontrol edin ve gerekirse dokümantasyona bakın.`,
       });
     }
   };
@@ -214,6 +217,7 @@ const MembershipPackages = () => {
               <DialogTitle>
                 {editingPackage ? 'Paket Düzenle' : 'Yeni Paket Oluştur'}
               </DialogTitle>
+              <DialogDescription>Paket bilgilerini girin ve kaydedin.</DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4">
