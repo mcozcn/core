@@ -3,11 +3,20 @@ import { saveToIDB } from './idb';
 
 export const checkMigrationNeeded = async (): Promise<boolean> => {
   // Simple check - if any data exists in localStorage but not in IndexedDB
-  const hasLocalStorageData = Object.keys(localStorage).some(key => 
-    ['stock', 'appointments', 'customers', 'services', 'sales', 'costs', 'payments'].includes(key)
-  );
-  
-  return hasLocalStorageData;
+  try {
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') return false;
+
+    const hasLocalStorageData = Object.keys(localStorage).some(key =>
+      ['stock', 'appointments', 'customers', 'services', 'sales', 'costs', 'payments'].includes(key)
+    );
+
+    return hasLocalStorageData;
+  } catch (error) {
+    // In some contexts (sandboxed frames or restricted environments) accessing storage
+    // may throw. Treat this as "no migration needed" to avoid breaking the app.
+    console.warn('checkMigrationNeeded: storage access not available in this context:', error);
+    return false;
+  }
 };
 
 export const runMigrations = async (): Promise<void> => {
@@ -16,7 +25,9 @@ export const runMigrations = async (): Promise<void> => {
 
 export const migrateStockData = async () => {
   try {
-    const storedData = localStorage.getItem('stock');
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
+    let storedData: string | null = null;
+    try { storedData = localStorage.getItem('stock'); } catch (err) { storedData = null; }
     
     if (storedData) {
       const parsedData = JSON.parse(storedData);
@@ -42,7 +53,9 @@ export const migrateStockData = async () => {
 
 export const migrateAppointmentsData = async () => {
   try {
-    const storedData = localStorage.getItem('appointments');
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
+    let storedData: string | null = null;
+    try { storedData = localStorage.getItem('appointments'); } catch (err) { storedData = null; }
     
     if (storedData) {
       const parsedData = JSON.parse(storedData);
@@ -59,7 +72,9 @@ export const migrateAppointmentsData = async () => {
 
 export const migrateCustomersData = async () => {
   try {
-    const storedData = localStorage.getItem('customers');
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
+    let storedData: string | null = null;
+    try { storedData = localStorage.getItem('customers'); } catch (err) { storedData = null; }
     
     if (storedData) {
       const parsedData = JSON.parse(storedData);
@@ -76,7 +91,9 @@ export const migrateCustomersData = async () => {
 
 export const migrateServicesData = async () => {
   try {
-    const storedData = localStorage.getItem('services');
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
+    let storedData: string | null = null;
+    try { storedData = localStorage.getItem('services'); } catch (err) { storedData = null; }
     
     if (storedData) {
       const parsedData = JSON.parse(storedData);
@@ -93,7 +110,9 @@ export const migrateServicesData = async () => {
 
 export const migrateSalesData = async () => {
   try {
-    const storedData = localStorage.getItem('sales');
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
+    let storedData: string | null = null;
+    try { storedData = localStorage.getItem('sales'); } catch (err) { storedData = null; }
     
     if (storedData) {
       const parsedData = JSON.parse(storedData);
