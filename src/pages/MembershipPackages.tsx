@@ -114,8 +114,8 @@ const MembershipPackages = () => {
         variant: 'destructive',
         title: status === 401 ? 'Yetkisiz (401)' : 'Hata',
         description: status === 401
-          ? 'Sunucu: 401 Yetkisiz. Admin olarak giriş yaptığınızdan ve Supabase RLS politikalarının yazma izni verdiğinden emin olun. (docs/supabase-auth-and-rls.md)'
-          : 'İşlem başarısız oldu. Lütfen konsoldaki hatayı kontrol edin ve gerekirse dokümantasyona bakın.',
+          ? `Sunucu: 401 Yetkisiz. ${result.error?.message ?? ''} Admin olarak giriş yaptığınızdan ve Supabase RLS politikalarının yazma izni verdiğinden emin olun. (docs/supabase-auth-and-rls.md)`
+          : `İşlem başarısız oldu. ${result.error?.message ?? ''} Lütfen konsoldaki hatayı kontrol edin ve gerekirse dokümantasyona bakın.`,
       });
     }
   };
