@@ -6,9 +6,10 @@ import { Button } from "./ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "./ui/sheet";
 import { ScrollArea } from "./ui/scroll-area";
+ import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from "@/hooks/use-mobile";
   import { useAuth } from '@/contexts/AuthContext';
-  import { useNavigate } from 'react-router-dom';
+  const { user, logout, isAuthenticated } = useAuth();
 
 const Navigation = () => {
   const { user } = useAuth();
@@ -163,8 +164,20 @@ const Navigation = () => {
           </div>
           
           {/* Text and Collapse Button */}
-          <div className="flex items-center justify-between w-full">
-                        <div className="flex items-center space-x-2">
+                {isAuthenticated ? (
+                  <button
+                    onClick={async () => {
+                      await logout();
+                      toast({ title: 'Çıkış yapıldı', description: 'Oturum kapatıldı.' });
+                      navigate('/');
+                    }}
+                    className="text-sm text-muted-foreground underline"
+                  >
+                    Çıkış Yap
+                  </button>
+                ) : (
+                  <button onClick={() => navigate('/login')} className="text-sm text-muted-foreground underline">Giriş</button>
+                )}
               <div className="ml-2">
                 <button onClick={() => navigate('/login')} className="text-sm text-muted-foreground underline">
                   {user?.username === 'guest' ? 'Misafir' : user?.displayName || 'Giriş'}

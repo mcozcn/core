@@ -5,7 +5,10 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const GuestPrompt = () => {
   const navigate = useNavigate();
-  const { loginAsGuest } = useAuth();
+  const { loginAsGuest, isAuthenticated } = useAuth();
+
+  // Do not show the prompt when the user is already authenticated
+  if (isAuthenticated) return null;
 
   return (
     <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-3xl px-4">
