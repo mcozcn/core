@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@/types/user';
 import { getCurrentUser, setCurrentUser, authenticateUser } from '@/utils/storage/userManager';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import { verifyToken } from '@/utils/auth/security';
 
 interface AuthContextType {
@@ -21,6 +22,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     initAuth();
@@ -80,13 +82,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           const signInResult = await supabase.auth.signInWithPassword({ email, password });
           if (signInResult.error) {
             console.warn('Supabase sign-in failed, attempting signup...', signInResult.error.message);
+            toast({
+              variant: 'destructive',
+              title: 'Supabase oturumu oluşturulamadı',
+              description: `Supabase sign-in hatası: ${signInResult.error.message || 'bilinmeyen hata'}`,
+            });
             const signUpResult = await supabase.auth.signUp({ email, password });
             if (signUpResult.error) {
               console.warn('Supabase signup failed:', signUpResult.error.message, signUpResult.error);
+              toast({
+                variant: 'destructive',
+                title: 'Supabase signup başarısız',
+                description: signUpResult.error.message || 'Kayıt sırasında hata oluştu',
+              });
             } else {
               // Try sign in again
               const signIn2Result = await supabase.auth.signInWithPassword({ email, password });
-              if (signIn2Result.error) console.warn('Supabase sign-in after signup failed:', signIn2Result.error.message, signIn2Result.error);
+              if (signIn2Result.error) {
+                console.warn('Supabase sign-in after signup failed:', signIn2Result.error.message, signIn2Result.error);
+                toast({
+                  variant: 'destructive',
+                  title: 'Supabase oturumu oluşturulamadı',
+                  description: signIn2Result.error.message || 'Oturum açma başarısız',
+                });
+              }
             }
           }
 
