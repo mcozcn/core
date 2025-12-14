@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
+import { Label } from '@/components/ui/label';
 
 const AuthDebugPanel: React.FC = () => {
   const { user } = useAuth();
@@ -20,6 +23,31 @@ const AuthDebugPanel: React.FC = () => {
   };
 
   const [testResult, setTestResult] = useState<any>(null);
+  const { toast } = useToast();
+  const [password, setPassword] = useState('');
+
+  const signInCurrentUser = async () => {
+    if (!user?.email) {
+      toast({ title: 'No email for current user', description: 'Cannot sign in to Supabase without an email.' });
+      return;
+    }
+
+    try {
+      const email = user.email;
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        console.warn('Supabase sign-in error:', error);
+        toast({ variant: 'destructive', title: 'Supabase sign-in failed', description: error.message || String(error) });
+      } else {
+        toast({ title: 'Supabase sign-in succeeded' });
+        await refresh();
+        await runSupabaseTest();
+      }
+    } catch (err) {
+      console.error('Sign-in failed:', err);
+      toast({ variant: 'destructive', title: 'Sign-in failed', description: String(err) });
+    }
+  };
 
   const runSupabaseTest = async () => {
     setTestResult({ status: 'running' });
@@ -59,7 +87,17 @@ const AuthDebugPanel: React.FC = () => {
             <Button size="sm" onClick={runSupabaseTest}>Test Supabase</Button>
         </div>
       </div>
-      <div className="mb-2">Current user: <strong>{user?.username ?? 'none'}</strong></div>
+        <div className="mb-2">Current user: <strong>{user?.username ?? 'none'}</strong></div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2 items-center">
+          <div>
+            <Label>Supabase password</Label>
+            <Input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="Enter admin password for Supabase" />
+          </div>
+          <div className="col-span-2 flex gap-2">
+            <Button size="sm" onClick={signInCurrentUser}>Sign in current user to Supabase</Button>
+            <Button size="sm" variant="outline" onClick={() => { setPassword(''); }}>Clear</Button>
+          </div>
+        </div>
         <pre className="max-h-48 overflow-auto text-xs">{JSON.stringify(sessionInfo, null, 2)}</pre>
         <div className="mt-2">
           <div className="font-medium">Test Result</div>
