@@ -32,7 +32,6 @@ CREATE POLICY allow_authenticated_select ON public.membership_packages
 -- Allow only mos@core.com to insert/update/delete
 CREATE POLICY allow_mos_insert ON public.membership_packages
   FOR INSERT
-  USING (auth.email() = 'mos@core.com')
   WITH CHECK (auth.email() = 'mos@core.com');
 
 CREATE POLICY allow_mos_update ON public.membership_packages
