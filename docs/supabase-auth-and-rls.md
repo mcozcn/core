@@ -46,6 +46,22 @@ Environment variables check:
 
   You can also use the in-app debug panel (open `/?debug=true`) and click **Test Supabase** to confirm env var presence and run a minimal test query.
 
+Command-line test (PowerShell)
+
+1. Temporarily set env vars and run the included script from the repository root:
+
+```powershell
+$env:VITE_SUPABASE_URL = 'https://<your-project>.supabase.co'
+$env:VITE_SUPABASE_PUBLISHABLE_KEY = '<your-anon-key>'
+node scripts/test-supabase-connection.js
+```
+
+2. The script will print the endpoint it tests, the HTTP status, and the response body (or an error). Typical failures:
+- 401/403: key is invalid or no session/permissions
+- 42501: Row-Level Security policy blocked the action (for writes)
+
+Security note: You posted a publishable key in the chat. If this key was shared publicly, **rotate** it in the Supabase dashboard now and replace `VITE_SUPABASE_PUBLISHABLE_KEY` with the new anon key in your local `.env`.
+
 If you want, I can:
 - Add example SQL migration files to this repo for the policies above, and/or
 - Add a small serverless function (`/api/write`) example that proxies write requests, validates your local admin token, and performs the write with `service_role` privileges.
