@@ -34,15 +34,37 @@ const AuthDebugPanel: React.FC = () => {
 
     try {
       const email = user.email;
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        console.warn('Supabase sign-in error:', error);
-        toast({ variant: 'destructive', title: 'Supabase sign-in failed', description: error.message || String(error) });
+      const signInResult = await supabase.auth.signInWithPassword({ email, password });
+      if (signInResult.error) {
+        console.warn('Supabase sign-in error:', signInResult.error);
+        // If sign-in failed, attempt to sign up (helpful for first-time setups)
+        try {
+          const signUpResult = await supabase.auth.signUp({ email, password });
+          if (signUpResult.error) {
+            // If signup also fails, show the original sign-in error to the user
+            console.warn('Supabase signup failed:', signUpResult.error);
+            toast({ variant: 'destructive', title: 'Supabase sign-in failed', description: signInResult.error.message || String(signInResult.error) });
+            return;
+          }
+          // After signup, try sign-in again
+          const signIn2 = await supabase.auth.signInWithPassword({ email, password });
+          if (signIn2.error) {
+            console.warn('Supabase sign-in after signup failed:', signIn2.error);
+            toast({ variant: 'destructive', title: 'Supabase sign-in failed', description: signIn2.error.message || String(signIn2.error) });
+            return;
+          }
+          toast({ title: 'Supabase signup + sign-in succeeded' });
+        } catch (err) {
+          console.error('Signup attempt failed:', err);
+          toast({ variant: 'destructive', title: 'Supabase signup failed', description: String(err) });
+          return;
+        }
       } else {
         toast({ title: 'Supabase sign-in succeeded' });
-        await refresh();
-        await runSupabaseTest();
       }
+
+      await refresh();
+      await runSupabaseTest();
     } catch (err) {
       console.error('Sign-in failed:', err);
       toast({ variant: 'destructive', title: 'Sign-in failed', description: String(err) });
