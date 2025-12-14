@@ -1,18 +1,18 @@
+// All IDs are now strings to support both legacy number IDs and Supabase UUIDs
+export type EntityId = string | number;
+
 export interface Appointment {
-  id: number;
-  customerId: number;
+  id: EntityId;
+  customerId: EntityId;
   customerName: string;
-  serviceId: number;
+  serviceId: EntityId;
   serviceName: string;
-  service?: string; // For backward compatibility
-  date: string; // Changed from Date to string for consistency
-  startTime: string;
-  endTime: string;
-  time?: string; // Additional time property used in many components
+  service?: string;
+  time?: string;
   price: number;
   notes?: string;
   status?: 'pending' | 'confirmed' | 'cancelled';
-  staffId?: number;
+  staffId?: string | number;
   staffName?: string;
   staffColor?: string;
   cancellationNote?: string;
@@ -20,22 +20,34 @@ export interface Appointment {
 }
 
 export interface Customer {
-  id: number;
+  id: string | number;
   name: string;
+  firstName?: string;
+  lastName?: string;
   phone: string;
   email?: string;
   address?: string;
   notes?: string;
+  gender?: string;
+  birthDate?: Date;
+  totalDebt?: number;
+  isActive?: boolean;
+  membershipPackageId?: string | number;
+  membershipStartDate?: Date;
+  membershipEndDate?: Date;
+  groupNumber?: number;
+  timeSlot?: string;
   appointments?: Appointment[];
   createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface CustomerRecord {
-  id: number;
-  customerId: number;
+  id: string | number;
+  customerId: string | number;
   customerName?: string;
   type: 'payment' | 'debt' | 'service' | 'product';
-  itemId: number;
+  itemId: string | number;
   itemName: string;
   amount: number;
   date: Date;
@@ -46,113 +58,137 @@ export interface CustomerRecord {
   paymentMethod?: string;
   discount?: number;
   quantity?: number;
-  staffId?: number;
+  staffId?: string | number;
   staffName?: string;
   commissionAmount?: number;
 }
 
 export interface Service {
-  id: number;
+  id: string | number;
   name: string;
   description?: string;
   price: number;
   duration: number;
+  category?: string;
   type?: 'one-time' | 'recurring';
   sessionCount?: number;
   commissionRate?: number;
+  isActive?: boolean;
   createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface ServiceSale {
-  id: number;
-  serviceId: number;
-  serviceName: string;
+  id: string | number;
+  serviceId?: string | number;
+  serviceName?: string;
   price: number;
   saleDate: Date;
-  customerId?: number;
+  customerId?: string | number;
   customerName?: string;
   customerPhone?: string;
-  staffId?: number;
+  personnelId?: string | number;
+  staffId?: string | number;
   staffName?: string;
   commissionAmount?: number;
   totalPrice?: number;
-}
-
-export interface StockItem {
-  id: number;
-  name: string;
-  productName?: string; // For backward compatibility
-  description?: string;
-  price: number;
-  quantity: number;
-  unit: string;
-  category: string;
-  cost?: number;
-  productId?: number; // For backward compatibility
-  commissionRate?: number;
-  lastUpdated?: Date;
-  criticalLevel?: number;
+  notes?: string;
   createdAt?: Date;
 }
 
+export interface StockItem {
+  id: string | number;
+  name: string;
+  productName?: string;
+  description?: string;
+  price?: number;
+  purchasePrice?: number;
+  salePrice?: number;
+  quantity?: number;
+  stockQuantity?: number;
+  minStockLevel?: number;
+  unit?: string;
+  category?: string;
+  cost?: number;
+  productId?: string | number;
+  commissionRate?: number;
+  lastUpdated?: Date;
+  criticalLevel?: number;
+  isActive?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
 export interface StockMovement {
-  id: number;
-  stockItemId: number;
+  id: string | number;
+  stockItemId: string | number;
   stockItemName: string;
   quantityChange: number;
   movementDate: Date;
   type: 'in' | 'out';
   reason?: string;
-  date?: Date; // For backward compatibility
-  productId?: number; // For backward compatibility
+  date?: Date;
+  productId?: string | number;
   description?: string;
   quantity?: number;
   cost?: number;
 }
 
 export interface Sale {
-  id: number;
-  customerId: number;
-  customerName: string;
-  stockItemId: number;
-  stockItemName: string;
+  id: string | number;
+  productId?: string | number;
+  customerId?: string | number;
+  customerName?: string;
+  personnelId?: string | number;
+  stockItemId?: string | number;
+  stockItemName?: string;
   quantity: number;
   unitPrice: number;
   totalPrice: number;
   saleDate: Date;
-  date?: string; // For backward compatibility
-  productId?: number; // For backward compatibility
-  productName?: string; // For backward compatibility
+  date?: string;
+  productName?: string;
   customerPhone?: string;
-  staffId?: number;
+  staffId?: string | number;
   staffName?: string;
   commissionAmount?: number;
   discount?: number;
   total?: number;
   paymentMethod?: string;
+  notes?: string;
+  createdAt?: Date;
 }
 
 export interface Cost {
-  id: number;
-  name: string;
+  id: string | number;
+  name?: string;
+  category: string;
   description?: string;
   amount: number;
-  date: Date;
-  category: string;
+  date?: Date;
+  costDate?: Date;
   notes?: string;
+  personnelId?: string | number;
+  createdAt?: Date;
 }
 
 export interface Payment {
-  id: number;
-  customerId: number;
-  customerName: string;
+  id: string | number;
+  customerId: string | number;
+  customerName?: string;
   amount: number;
-  date: Date;
-  method: string;
+  date?: Date;
+  paymentDate?: Date;
+  dueDate?: Date;
+  paymentType?: string;
+  method?: string;
+  isPaid?: boolean;
+  notes?: string;
+  createdAt?: Date;
 }
 
 export interface User {
-  id: number;
+  id: string | number;
   username: string;
   password?: string;
   displayName: string;
@@ -168,10 +204,10 @@ export interface User {
 }
 
 export interface StaffPerformance {
-  id: number;
-  staffId: number;
+  id: string | number;
+  staffId: string | number;
   staffName: string;
-  name?: string; // For backward compatibility
+  name?: string;
   role?: string;
   date: Date;
   appointmentsCompleted: number;
@@ -189,8 +225,8 @@ export interface StaffPerformance {
 }
 
 export interface UserPerformance {
-  id: number;
-  userId: number;
+  id: string | number;
+  userId: string | number;
   userName: string;
   date: Date;
   activityType: string;
@@ -201,22 +237,22 @@ export interface UserPerformance {
 }
 
 export interface UserActivity {
-  id: number;
-  userId: number;
+  id: string | number;
+  userId: string | number;
   userName: string;
   timestamp: Date;
   activityType: string;
   details: string;
-  action?: string; // For backward compatibility
-  username?: string; // For backward compatibility
+  action?: string;
+  username?: string;
 }
 
 export interface GroupSchedule {
-  id: number;
-  customerId: number;
+  id: string | number;
+  customerId: string | number;
   customerName: string;
-  group: 'A' | 'B'; // A: Pazartesi-Çarşamba-Cuma, B: Salı-Perşembe-Cumartesi
-  timeSlot: string; // Format: "07:00" - saatlik slot
+  group: 'A' | 'B';
+  timeSlot: string;
   startDate: Date;
   endDate?: Date;
   isActive: boolean;
@@ -224,14 +260,14 @@ export interface GroupSchedule {
 }
 
 export interface MemberSubscription {
-  id: number;
-  customerId: number;
-  packageId: number;
+  id: string | number;
+  customerId: string | number;
+  packageId: string | number;
   packageName: string;
   startDate: Date;
   endDate: Date;
   price: number;
   status: 'active' | 'expired' | 'cancelled';
-  groupScheduleId?: number;
+  groupScheduleId?: string | number;
   createdAt: Date;
 }
