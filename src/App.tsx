@@ -60,7 +60,6 @@ const ProtectedRoutes = () => {
         </Routes>
         <Toaster />
       </div>
-    </AuthGuard>
   );
 };
 
