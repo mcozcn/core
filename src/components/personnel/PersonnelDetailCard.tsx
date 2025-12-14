@@ -284,7 +284,7 @@ const PersonnelDetailCard = ({ personnel, onClose }: PersonnelDetailCardProps) =
                           {'serviceName' in sale ? 'Hizmet' : 'Ürün'}
                         </TableCell>
                         <TableCell>
-                          {'serviceName' in sale ? sale.serviceName : sale.productName}
+                          {'serviceName' in sale ? sale.serviceName : (sale as any).productName || 'Ürün'}
                         </TableCell>
                         <TableCell className="text-right">
                           {formatCurrency(sale.totalPrice || ('price' in sale ? sale.price : 0) || 0)}

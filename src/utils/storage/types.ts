@@ -8,11 +8,14 @@ export interface Appointment {
   serviceId: EntityId;
   serviceName: string;
   service?: string;
+  date: string;
+  startTime: string;
+  endTime: string;
   time?: string;
   price: number;
   notes?: string;
   status?: 'pending' | 'confirmed' | 'cancelled';
-  staffId?: string | number;
+  staffId?: EntityId;
   staffName?: string;
   staffColor?: string;
   cancellationNote?: string;
@@ -20,7 +23,7 @@ export interface Appointment {
 }
 
 export interface Customer {
-  id: string | number;
+  id: EntityId;
   name: string;
   firstName?: string;
   lastName?: string;
@@ -32,7 +35,7 @@ export interface Customer {
   birthDate?: Date;
   totalDebt?: number;
   isActive?: boolean;
-  membershipPackageId?: string | number;
+  membershipPackageId?: EntityId;
   membershipStartDate?: Date;
   membershipEndDate?: Date;
   groupNumber?: number;
@@ -43,11 +46,11 @@ export interface Customer {
 }
 
 export interface CustomerRecord {
-  id: string | number;
-  customerId: string | number;
+  id: EntityId;
+  customerId: EntityId;
   customerName?: string;
   type: 'payment' | 'debt' | 'service' | 'product';
-  itemId: string | number;
+  itemId: EntityId;
   itemName: string;
   amount: number;
   date: Date;
@@ -58,13 +61,13 @@ export interface CustomerRecord {
   paymentMethod?: string;
   discount?: number;
   quantity?: number;
-  staffId?: string | number;
+  staffId?: EntityId;
   staffName?: string;
   commissionAmount?: number;
 }
 
 export interface Service {
-  id: string | number;
+  id: EntityId;
   name: string;
   description?: string;
   price: number;
@@ -79,16 +82,16 @@ export interface Service {
 }
 
 export interface ServiceSale {
-  id: string | number;
-  serviceId?: string | number;
+  id: EntityId;
+  serviceId?: EntityId;
   serviceName?: string;
   price: number;
   saleDate: Date;
-  customerId?: string | number;
+  customerId?: EntityId;
   customerName?: string;
   customerPhone?: string;
-  personnelId?: string | number;
-  staffId?: string | number;
+  personnelId?: EntityId;
+  staffId?: EntityId;
   staffName?: string;
   commissionAmount?: number;
   totalPrice?: number;
@@ -97,7 +100,7 @@ export interface ServiceSale {
 }
 
 export interface StockItem {
-  id: string | number;
+  id: EntityId;
   name: string;
   productName?: string;
   description?: string;
@@ -110,7 +113,7 @@ export interface StockItem {
   unit?: string;
   category?: string;
   cost?: number;
-  productId?: string | number;
+  productId?: EntityId;
   commissionRate?: number;
   lastUpdated?: Date;
   criticalLevel?: number;
@@ -120,36 +123,36 @@ export interface StockItem {
 }
 
 export interface StockMovement {
-  id: string | number;
-  stockItemId: string | number;
+  id: EntityId;
+  stockItemId: EntityId;
   stockItemName: string;
   quantityChange: number;
   movementDate: Date;
   type: 'in' | 'out';
   reason?: string;
   date?: Date;
-  productId?: string | number;
+  productId?: EntityId;
   description?: string;
   quantity?: number;
   cost?: number;
 }
 
 export interface Sale {
-  id: string | number;
-  productId?: string | number;
-  customerId?: string | number;
+  id: EntityId;
+  productId?: EntityId;
+  customerId?: EntityId;
   customerName?: string;
-  personnelId?: string | number;
-  stockItemId?: string | number;
+  personnelId?: EntityId;
+  stockItemId?: EntityId;
   stockItemName?: string;
+  productName?: string;
   quantity: number;
   unitPrice: number;
   totalPrice: number;
   saleDate: Date;
   date?: string;
-  productName?: string;
   customerPhone?: string;
-  staffId?: string | number;
+  staffId?: EntityId;
   staffName?: string;
   commissionAmount?: number;
   discount?: number;
@@ -160,7 +163,7 @@ export interface Sale {
 }
 
 export interface Cost {
-  id: string | number;
+  id: EntityId;
   name?: string;
   category: string;
   description?: string;
@@ -168,13 +171,13 @@ export interface Cost {
   date?: Date;
   costDate?: Date;
   notes?: string;
-  personnelId?: string | number;
+  personnelId?: EntityId;
   createdAt?: Date;
 }
 
 export interface Payment {
-  id: string | number;
-  customerId: string | number;
+  id: EntityId;
+  customerId: EntityId;
   customerName?: string;
   amount: number;
   date?: Date;
@@ -188,7 +191,7 @@ export interface Payment {
 }
 
 export interface User {
-  id: string | number;
+  id: EntityId;
   username: string;
   password?: string;
   displayName: string;
@@ -204,8 +207,8 @@ export interface User {
 }
 
 export interface StaffPerformance {
-  id: string | number;
-  staffId: string | number;
+  id: EntityId;
+  staffId: EntityId;
   staffName: string;
   name?: string;
   role?: string;
@@ -225,8 +228,8 @@ export interface StaffPerformance {
 }
 
 export interface UserPerformance {
-  id: string | number;
-  userId: string | number;
+  id: EntityId;
+  userId: EntityId;
   userName: string;
   date: Date;
   activityType: string;
@@ -237,8 +240,8 @@ export interface UserPerformance {
 }
 
 export interface UserActivity {
-  id: string | number;
-  userId: string | number;
+  id: EntityId;
+  userId: EntityId;
   userName: string;
   timestamp: Date;
   activityType: string;
@@ -248,8 +251,8 @@ export interface UserActivity {
 }
 
 export interface GroupSchedule {
-  id: string | number;
-  customerId: string | number;
+  id: EntityId;
+  customerId: EntityId;
   customerName: string;
   group: 'A' | 'B';
   timeSlot: string;
@@ -260,14 +263,14 @@ export interface GroupSchedule {
 }
 
 export interface MemberSubscription {
-  id: string | number;
-  customerId: string | number;
-  packageId: string | number;
+  id: EntityId;
+  customerId: EntityId;
+  packageId: EntityId;
   packageName: string;
   startDate: Date;
   endDate: Date;
   price: number;
   status: 'active' | 'expired' | 'cancelled';
-  groupScheduleId?: string | number;
+  groupScheduleId?: EntityId;
   createdAt: Date;
 }

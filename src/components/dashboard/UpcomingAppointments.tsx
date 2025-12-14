@@ -27,7 +27,7 @@ const UpcomingAppointments = ({ appointments }: UpcomingAppointmentsProps) => {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [cancellationNote, setCancellationNote] = useState('');
 
-  const handleStatusChange = (appointmentId: number, newStatus: 'confirmed' | 'cancelled') => {
+  const handleStatusChange = (appointmentId: string | number, newStatus: 'confirmed' | 'cancelled') => {
     if (newStatus === 'cancelled') {
       const appointment = appointments.find(apt => apt.id === appointmentId);
       if (appointment) {

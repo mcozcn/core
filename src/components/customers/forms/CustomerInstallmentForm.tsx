@@ -15,7 +15,7 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { getCustomerRecords, setCustomerRecords, type CustomerRecord } from '@/utils/storage';
 
 interface CustomerInstallmentFormProps {
-  customerId: number;
+  customerId: string | number;
   onSuccess?: () => void;
 }
 

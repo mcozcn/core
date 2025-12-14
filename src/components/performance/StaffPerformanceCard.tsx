@@ -16,7 +16,7 @@ import {
 
 interface StaffPerformanceCardProps {
   staff: {
-    id: number;
+    id: string | number;
     name: string;
     role: string;
     servicesProvided: number;

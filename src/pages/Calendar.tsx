@@ -11,7 +11,7 @@ import GroupScheduleManagement from "@/components/customers/GroupScheduleManagem
 
 const Calendar = () => {
   const [currentWeek, setCurrentWeek] = useState<Date>(new Date());
-  const [selectedCustomer, setSelectedCustomer] = useState<{ id: number; name: string } | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<{ id: string | number; name: string } | null>(null);
 
   const { data: schedules = [] } = useQuery({
     queryKey: ['groupSchedules'],

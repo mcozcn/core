@@ -22,7 +22,7 @@ export const addGroupSchedule = async (schedule: Omit<GroupSchedule, 'id' | 'cre
   return newSchedule;
 };
 
-export const updateGroupSchedule = async (id: number, updates: Partial<GroupSchedule>): Promise<void> => {
+export const updateGroupSchedule = async (id: string | number, updates: Partial<GroupSchedule>): Promise<void> => {
   const schedules = await getGroupSchedules();
   const updatedSchedules = schedules.map(schedule =>
     schedule.id === id ? { ...schedule, ...updates } : schedule
@@ -30,9 +30,15 @@ export const updateGroupSchedule = async (id: number, updates: Partial<GroupSche
   await setGroupSchedules(updatedSchedules);
 };
 
-export const deleteGroupSchedule = async (id: number): Promise<void> => {
+export const deleteGroupSchedule = async (id: string | number): Promise<void> => {
   const schedules = await getGroupSchedules();
   await setGroupSchedules(schedules.filter(schedule => schedule.id !== id));
+};
+
+// Get customer's current schedule
+export const getCustomerSchedule = async (customerId: string | number): Promise<GroupSchedule | null> => {
+  const schedules = await getGroupSchedules();
+  return schedules.find(s => s.customerId === customerId && s.isActive) || null;
 };
 
 // Get schedules for a specific day and time slot
@@ -54,10 +60,4 @@ export const getSchedulesByDayAndTime = async (
     
     return matchesTime && matchesDay;
   });
-};
-
-// Get customer's current schedule
-export const getCustomerSchedule = async (customerId: number): Promise<GroupSchedule | null> => {
-  const schedules = await getGroupSchedules();
-  return schedules.find(s => s.customerId === customerId && s.isActive) || null;
 };

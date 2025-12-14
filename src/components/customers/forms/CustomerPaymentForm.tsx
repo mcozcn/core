@@ -14,7 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { CreditCard, Banknote, Landmark, FileText, Clock, DollarSign } from "lucide-react";
 
 interface CustomerPaymentFormProps {
-  customerId: number;
+  customerId: string | number;
   onSuccess?: () => void;
 }
 

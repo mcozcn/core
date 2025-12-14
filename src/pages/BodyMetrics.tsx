@@ -18,8 +18,22 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 const BodyMetrics = () => {
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null);
-  const [formData, setFormData] = useState({
+  const [selectedMemberId, setSelectedMemberId] = useState<string | number | null>(null);
+  const [formData, setFormData] = useState<{
+    memberId: string | number;
+    memberName: string;
+    date: string;
+    weight: number;
+    height: number;
+    bodyFat: number;
+    muscleMass: number;
+    chest: number;
+    waist: number;
+    hips: number;
+    biceps: number;
+    thighs: number;
+    notes: string;
+  }>({
     memberId: 0,
     memberName: '',
     date: format(new Date(), 'yyyy-MM-dd'),

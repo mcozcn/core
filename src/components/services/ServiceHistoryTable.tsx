@@ -14,8 +14,8 @@ import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 
 interface PriceHistory {
-  id: number;
-  serviceId: number;
+  id: string | number;
+  serviceId: string | number;
   oldPrice: number;
   newPrice: number;
   date: Date;

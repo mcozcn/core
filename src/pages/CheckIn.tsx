@@ -42,7 +42,7 @@ const CheckIn = () => {
       return;
     }
 
-    const member = customers.find(c => c.id === parseInt(selectedMemberId));
+    const member = customers.find(c => String(c.id) === selectedMemberId);
     if (!member) return;
 
     const success = await checkInMember(member.id, member.name, notes);
@@ -65,7 +65,7 @@ const CheckIn = () => {
     }
   };
 
-  const handleCheckOut = async (memberId: number, memberName: string) => {
+  const handleCheckOut = async (memberId: string | number, memberName: string) => {
     const success = await checkOutMember(memberId);
     
     if (success) {
