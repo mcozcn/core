@@ -3,14 +3,16 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { getCustomers, setCustomers, type Customer, getMembershipPackages, saveMemberSubscription, getCustomerRecords, setCustomerRecords, type MembershipPackage, type CustomerRecord } from '@/utils/storage';
+import { getMembershipPackages, type MembershipPackage } from '@/utils/storage/membershipPackages';
+import { addCustomer, updateCustomer } from '@/utils/storage/customers';
+import { addPayment } from '@/utils/storage/payments';
 import { addGroupSchedule, getSchedulesByDayAndTime } from '@/utils/storage/groupSchedules';
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
+import { format, addDays } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -79,144 +81,104 @@ const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
     setIsSubmitting(true);
 
     try {
-      const newCustomer: Customer = {
-        id: Date.now(),
+      const selectedPackage = packages.find(p => p.id.toString() === selectedPackageId);
+      
+      if (!selectedPackage) {
+        toast({
+          variant: "destructive",
+          title: "Hata",
+          description: "Seçilen paket bulunamadı.",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Calculate membership end date (duration is in days now)
+      const endDate = addDays(membershipStartDate, selectedPackage.duration);
+
+      // Parse name into first and last name
+      const nameParts = name.trim().split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      // Create customer with membership info
+      const newCustomer = await addCustomer({
         name,
+        firstName,
+        lastName,
         phone,
         email,
         address,
         notes,
-        createdAt: new Date(),
-      };
+        totalDebt: selectedPackage.price, // Set initial debt as package price
+        isActive: true,
+        membershipPackageId: selectedPackage.id,
+        membershipStartDate,
+        membershipEndDate: endDate,
+        groupNumber: selectedGroup === 'A' ? 1 : 2,
+        timeSlot: selectedTimeSlot,
+      });
 
-      console.log('Yeni müşteri oluşturuluyor:', newCustomer);
+      if (!newCustomer) {
+        toast({
+          variant: "destructive",
+          title: "Hata",
+          description: "Müşteri eklenirken bir hata oluştu.",
+        });
+        setIsSubmitting(false);
+        return;
+      }
 
-      const existingCustomers = await getCustomers();
-      await setCustomers([...existingCustomers, newCustomer]);
+      console.log('Yeni müşteri oluşturuldu:', newCustomer);
 
-      // Üyelik paketi seçildiyse, üyelik kaydı ve borç kaydı oluştur
-      if (selectedPackageId && membershipStartDate) {
-        const selectedPackage = packages.find(p => p.id.toString() === selectedPackageId);
-        
-        if (selectedPackage) {
-          // Üyelik bitiş tarihini hesapla
-          const endDate = new Date(membershipStartDate);
-          endDate.setMonth(endDate.getMonth() + selectedPackage.duration);
+      // Add debt record to payments table
+      await addPayment({
+        customerId: newCustomer.id,
+        amount: selectedPackage.price,
+        paymentType: 'üyelik',
+        method: 'üyelik',
+        paymentDate: membershipStartDate,
+        date: membershipStartDate,
+        dueDate: membershipStartDate, // Due immediately
+        isPaid: false,
+        notes: `${selectedPackage.name} - Üyelik Ücreti`,
+      });
 
-          // Üyelik kaydı oluştur
-          await saveMemberSubscription({
-            memberId: newCustomer.id,
-            memberName: newCustomer.name,
-            packageId: selectedPackage.id,
-            packageName: selectedPackage.name,
-            packageType: selectedPackage.type,
-            startDate: membershipStartDate,
-            endDate: endDate,
-            price: selectedPackage.price,
-            isPaid: false,
-            isActive: true,
-            autoRenew: false,
-          });
+      console.log('Borç kaydı oluşturuldu');
 
-          // Müşteri carisine borç kaydı ekle
-          const existingRecords = await getCustomerRecords();
-          const debtRecord: CustomerRecord = {
-            id: Date.now(),
-            customerId: newCustomer.id,
-            customerName: newCustomer.name,
-            type: 'debt',
-            recordType: 'debt',
-            itemId: selectedPackage.id,
-            itemName: selectedPackage.name,
-            amount: selectedPackage.price,
-            description: `${selectedPackage.name} - Üyelik Ücreti`,
-            date: membershipStartDate,
-            isPaid: false,
-          };
-          await setCustomerRecords([...existingRecords, debtRecord]);
+      // Check capacity for group schedule
+      const groupDays = selectedGroup === 'A' ? [1, 3, 5] : [2, 4, 6];
+      let hasCapacity = true;
 
-          // Grup programı seçildiyse ekle
-          if (selectedGroup && selectedTimeSlot) {
-            // Kontenjan kontrolü
-            const groupDays = selectedGroup === 'A' ? [1, 3, 5] : [2, 4, 6];
-            let hasCapacity = true;
-
-            for (const dayOfWeek of groupDays) {
-              const existingSchedules = await getSchedulesByDayAndTime(dayOfWeek, selectedTimeSlot);
-              if (existingSchedules.length >= 4) {
-                hasCapacity = false;
-                break;
-              }
-            }
-
-            if (hasCapacity) {
-              await addGroupSchedule({
-                customerId: newCustomer.id,
-                customerName: newCustomer.name,
-                group: selectedGroup,
-                timeSlot: selectedTimeSlot,
-                startDate: membershipStartDate,
-                isActive: true,
-              });
-              console.log('Grup programı oluşturuldu');
-            } else {
-              toast({
-                variant: "destructive",
-                title: "Uyarı",
-                description: "Seçilen grup ve saat için kontenjan dolu! Grup programı oluşturulamadı.",
-              });
-            }
-          }
-
-          console.log('Üyelik kaydı ve borç kaydı oluşturuldu');
+      for (const dayOfWeek of groupDays) {
+        const existingSchedules = await getSchedulesByDayAndTime(dayOfWeek, selectedTimeSlot);
+        if (existingSchedules.length >= 4) {
+          hasCapacity = false;
+          break;
         }
       }
 
-      // Grup programı seçildiyse ekle (üyelikten bağımsız)
-      if (selectedGroup && selectedTimeSlot && !membershipStartDate) {
-        // Kontenjan kontrolü
-        const groupDays = selectedGroup === 'A' ? [1, 3, 5] : [2, 4, 6];
-        let hasCapacity = true;
-
-        for (const dayOfWeek of groupDays) {
-          const existingSchedules = await getSchedulesByDayAndTime(dayOfWeek, selectedTimeSlot);
-          if (existingSchedules.length >= 4) {
-            hasCapacity = false;
-            break;
-          }
-        }
-
-        if (hasCapacity) {
-          await addGroupSchedule({
-            customerId: newCustomer.id,
-            customerName: newCustomer.name,
-            group: selectedGroup,
-            timeSlot: selectedTimeSlot,
-            startDate: new Date(), // Bugünü başlangıç tarihi olarak kullan
-            isActive: true,
-          });
-          console.log('Grup programı oluşturuldu');
-        } else {
-          toast({
-            variant: "destructive",
-            title: "Uyarı",
-            description: "Seçilen grup ve saat için kontenjan dolu! Grup programı oluşturulamadı.",
-          });
-        }
+      if (hasCapacity) {
+        await addGroupSchedule({
+          customerId: newCustomer.id,
+          customerName: name,
+          group: selectedGroup,
+          timeSlot: selectedTimeSlot,
+          startDate: membershipStartDate,
+          isActive: true,
+        });
+        console.log('Grup programı oluşturuldu');
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Uyarı",
+          description: "Seçilen grup ve saat için kontenjan dolu! Grup programı oluşturulamadı.",
+        });
       }
-
-      const hasGroupSchedule = selectedGroup && selectedTimeSlot;
-      const hasMembership = selectedPackageId && membershipStartDate;
 
       toast({
         title: "Müşteri eklendi",
-        description: hasMembership && hasGroupSchedule
-          ? "Yeni müşteri, üyelik kaydı ve grup programı başarıyla oluşturuldu."
-          : hasMembership
-          ? "Yeni müşteri ve üyelik kaydı başarıyla oluşturuldu."
-          : hasGroupSchedule
-          ? "Yeni müşteri ve grup programı başarıyla oluşturuldu."
-          : "Yeni müşteri başarıyla eklendi.",
+        description: `${name} başarıyla kaydedildi. Üyelik: ${selectedPackage.name}, Borç: ₺${selectedPackage.price}`,
       });
 
       // Reset form
@@ -332,7 +294,7 @@ const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
                   <SelectContent>
                     {packages.map((pkg) => (
                       <SelectItem key={pkg.id} value={pkg.id.toString()}>
-                        {pkg.name} - {pkg.price}₺ ({pkg.duration} ay)
+                        {pkg.name} - {pkg.price}₺ ({pkg.duration} gün)
                       </SelectItem>
                     ))}
                   </SelectContent>
