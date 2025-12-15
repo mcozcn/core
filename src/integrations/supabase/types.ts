@@ -217,6 +217,47 @@ export type Database = {
           },
         ]
       }
+      group_schedules: {
+        Row: {
+          created_at: string
+          customer_id: string
+          customer_name: string
+          group_type: string
+          id: string
+          is_active: boolean
+          start_date: string
+          time_slot: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          customer_name: string
+          group_type: string
+          id?: string
+          is_active?: boolean
+          start_date?: string
+          time_slot: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          customer_name?: string
+          group_type?: string
+          id?: string
+          is_active?: boolean
+          start_date?: string
+          time_slot?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_schedules_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       membership_packages: {
         Row: {
           created_at: string

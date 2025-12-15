@@ -4,14 +4,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getCustomerRecords, getCustomers, setCustomerRecords, getMemberSubscriptions } from '@/utils/storage';
+import { getPayments, updatePayment, addPayment } from '@/utils/storage/payments';
+import { getCustomers } from '@/utils/storage/customers';
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { addDays, startOfDay, endOfDay, differenceInDays } from "date-fns";
 import { RotateCcw, Clock, AlertCircle, CheckCircle, Calendar, Users, CreditCard } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import { tr } from 'date-fns/locale';
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -32,7 +33,7 @@ const PaymentTracking = () => {
   });
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentNote, setPaymentNote] = useState('');
-  const [selectedRecord, setSelectedRecord] = useState<any>(null);
+  const [selectedPayment, setSelectedPayment] = useState<any>(null);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -42,14 +43,9 @@ const PaymentTracking = () => {
     queryFn: getCustomers,
   });
 
-  const { data: records = [] } = useQuery({
-    queryKey: ['customerRecords'],
-    queryFn: getCustomerRecords,
-  });
-
-  const { data: subscriptions = [] } = useQuery({
-    queryKey: ['memberSubscriptions'],
-    queryFn: getMemberSubscriptions,
+  const { data: payments = [] } = useQuery({
+    queryKey: ['payments'],
+    queryFn: getPayments,
   });
 
   const resetDateFilter = () => {
@@ -59,36 +55,34 @@ const PaymentTracking = () => {
     });
   };
 
-  // Vadeli ödemeleri filtrele - sadece ödenmemiş olanlar
-  const installmentRecords = records.filter(record => 
-    record.recordType === 'installment' && 
-    record.dueDate &&
-    !record.isPaid
-  ).filter(record => {
+  // Unpaid payments within date range
+  const unpaidPayments = payments.filter(payment => {
+    if (payment.isPaid) return false;
+    const dueDate = payment.dueDate ? new Date(payment.dueDate) : new Date(payment.paymentDate || payment.date!);
+    
     if (!dateRange.from || !dateRange.to) return true;
-    const dueDate = new Date(record.dueDate!);
     const fromDate = startOfDay(dateRange.from);
     const toDate = endOfDay(dateRange.to);
     return dueDate >= fromDate && dueDate <= toDate;
   });
 
-  // Müşteri bilgilerini ekle
-  const enrichedRecords = installmentRecords.map(record => {
-    const customer = customers.find(c => c.id === record.customerId);
+  // Enrich with customer info
+  const enrichedPayments = unpaidPayments.map(payment => {
+    const customer = customers.find(c => String(c.id) === String(payment.customerId));
     return {
-      ...record,
+      ...payment,
       customerName: customer?.name || 'Bilinmiyor',
       customerPhone: customer?.phone || ''
     };
   });
 
-  // Vade durumuna göre sırala
-  const sortedRecords = enrichedRecords.sort((a, b) => {
-    const dateA = new Date(a.dueDate!);
-    const dateB = new Date(b.dueDate!);
+  // Sort by due date
+  const sortedPayments = enrichedPayments.sort((a, b) => {
+    const dateA = new Date(a.dueDate || a.paymentDate || a.date!);
+    const dateB = new Date(b.dueDate || b.paymentDate || b.date!);
     const today = new Date();
     
-    // Geciken ödemeler önce
+    // Overdue payments first
     const isOverdueA = dateA < today;
     const isOverdueB = dateB < today;
     
@@ -99,47 +93,31 @@ const PaymentTracking = () => {
   });
 
   const handlePayment = async () => {
-    if (!selectedRecord || !paymentAmount) return;
+    if (!selectedPayment || !paymentAmount) return;
 
     const paymentAmountNum = Number(paymentAmount);
-    const installmentAmount = selectedRecord.amount;
 
-    // Ödeme kaydı oluştur
-    const paymentRecord = {
-      id: Date.now(),
-      customerId: selectedRecord.customerId,
-      customerName: selectedRecord.customerName,
-      type: 'payment' as const,
-      itemId: selectedRecord.id,
-      itemName: `Vadeli Ödeme Tahsilatı - ${selectedRecord.itemName}`,
-      amount: -paymentAmountNum, // Negatif değer çünkü ödeme
-      date: new Date(),
-      description: paymentNote || 'Vadeli ödeme tahsilatı',
-      recordType: 'installment_payment' as const
-    };
-
-    // Vadeli ödeme kaydını güncelle
-    const updatedRecords = records.map(record => {
-      if (record.id === selectedRecord.id) {
-        return {
-          ...record,
-          isPaid: paymentAmountNum >= installmentAmount,
-          // Kısmi ödeme durumunda tutarı güncelle
-          amount: paymentAmountNum >= installmentAmount ? installmentAmount : installmentAmount - paymentAmountNum
-        };
-      }
-      return record;
+    // Mark payment as paid
+    const success = await updatePayment(selectedPayment.id, {
+      isPaid: true,
+      notes: paymentNote ? `${selectedPayment.notes || ''} - Tahsilat: ${paymentNote}` : selectedPayment.notes
     });
 
-    await setCustomerRecords([...updatedRecords, paymentRecord]);
-    queryClient.invalidateQueries({ queryKey: ['customerRecords'] });
+    if (success) {
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
+      toast({
+        title: "Ödeme tahsil edildi",
+        description: `${paymentAmountNum} ₺ tutarında ödeme tahsil edildi.`,
+      });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Ödeme kaydedilemedi.",
+      });
+    }
 
-    toast({
-      title: "Vadeli ödeme tahsilatı yapıldı",
-      description: `${paymentAmountNum} ₺ tutarında vadeli ödeme tahsilatı alındı.`,
-    });
-
-    setSelectedRecord(null);
+    setSelectedPayment(null);
     setPaymentAmount('');
     setPaymentNote('');
     setShowPaymentDialog(false);
@@ -158,46 +136,31 @@ const PaymentTracking = () => {
     }
   };
 
-  // Borç kayıtlarını filtrele - anlık borcu olan müşteriler
-  const debtRecords = records.filter(record => 
-    record.recordType === 'debt' && !record.isPaid
-  );
-
-  // Üyelik kayıtlarını analiz et
-  const activeSubscriptions = subscriptions.filter(sub => sub.isActive);
-  
-  // 1 hafta içinde bitecek üyelikler
-  const expiringSubscriptions = activeSubscriptions.filter(sub => {
-    const endDate = new Date(sub.endDate);
+  // Memberships expiring in next 7 days
+  const expiringMemberships = customers.filter(c => {
+    if (!c.membershipEndDate || !c.isActive) return false;
+    const endDate = new Date(c.membershipEndDate);
     const today = new Date();
     const daysUntilExpiry = differenceInDays(endDate, today);
     return daysUntilExpiry >= 0 && daysUntilExpiry <= 7;
+  }).sort((a, b) => {
+    const dateA = new Date(a.membershipEndDate!);
+    const dateB = new Date(b.membershipEndDate!);
+    return dateA.getTime() - dateB.getTime();
   });
 
-  // Süresi dolmuş üyelikler
-  const expiredSubscriptions = activeSubscriptions.filter(sub => {
-    const endDate = new Date(sub.endDate);
-    return endDate < new Date();
+  // Expired memberships
+  const expiredMemberships = customers.filter(c => {
+    if (!c.membershipEndDate) return false;
+    const endDate = new Date(c.membershipEndDate);
+    return endDate < new Date() && c.isActive;
   });
 
-  // Tarih aralığına göre filtreleme için üyelikler
-  const filteredSubscriptions = expiringSubscriptions.filter(sub => {
-    if (!dateRange.from || !dateRange.to) return true;
-    const endDate = new Date(sub.endDate);
-    const fromDate = startOfDay(dateRange.from);
-    const toDate = endOfDay(dateRange.to);
-    return endDate >= fromDate && endDate <= toDate;
-  });
-
-  // İstatistikler
-  const totalAmount = enrichedRecords.reduce((sum, record) => sum + Math.abs(record.amount), 0);
-  const totalDebt = debtRecords.reduce((sum, record) => sum + Math.abs(record.amount), 0);
-  const overdueRecords = enrichedRecords.filter(record => new Date(record.dueDate!) < new Date());
-  const upcomingRecords = enrichedRecords.filter(record => {
-    const dueDate = new Date(record.dueDate!);
-    const today = new Date();
-    const diffDays = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    return diffDays >= 0 && diffDays <= 7;
+  // Stats
+  const totalUnpaid = enrichedPayments.reduce((sum, p) => sum + Math.abs(p.amount), 0);
+  const overduePayments = enrichedPayments.filter(p => {
+    const dueDate = new Date(p.dueDate || p.paymentDate || p.date!);
+    return dueDate < new Date();
   });
 
   const getMembershipStatusBadge = (endDate: Date) => {
@@ -221,7 +184,7 @@ const PaymentTracking = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-serif">Ödeme ve Üyelik Takip</h1>
-          <p className="text-sm md:text-base text-muted-foreground mt-1">Vadeli ödemeleri, borçları ve üyelik sürelerini takip edin</p>
+          <p className="text-sm md:text-base text-muted-foreground mt-1">Ödemeleri ve üyelik sürelerini takip edin</p>
         </div>
       </div>
 
@@ -240,7 +203,7 @@ const PaymentTracking = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
         <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -248,22 +211,8 @@ const PaymentTracking = () => {
                 <Clock className="h-4 w-4 text-white" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Vadeli Ödemeler</p>
-                <p className="text-2xl font-bold text-blue-600">{enrichedRecords.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border-purple-200">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-500 rounded-lg">
-                <CreditCard className="h-4 w-4 text-white" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Anlık Borçlar</p>
-                <p className="text-2xl font-bold text-purple-600">₺{totalDebt.toLocaleString()}</p>
+                <p className="text-sm text-muted-foreground">Bekleyen Ödeme</p>
+                <p className="text-2xl font-bold text-blue-600">{enrichedPayments.length}</p>
               </div>
             </div>
           </CardContent>
@@ -276,8 +225,8 @@ const PaymentTracking = () => {
                 <AlertCircle className="h-4 w-4 text-white" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Bitecek Üyelikler</p>
-                <p className="text-2xl font-bold text-red-600">{expiringSubscriptions.length}</p>
+                <p className="text-sm text-muted-foreground">Geciken</p>
+                <p className="text-2xl font-bold text-red-600">{overduePayments.length}</p>
               </div>
             </div>
           </CardContent>
@@ -290,8 +239,8 @@ const PaymentTracking = () => {
                 <Users className="h-4 w-4 text-white" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Süresi Dolmuş</p>
-                <p className="text-2xl font-bold text-orange-600">{expiredSubscriptions.length}</p>
+                <p className="text-sm text-muted-foreground">Bitecek Üyelik</p>
+                <p className="text-2xl font-bold text-orange-600">{expiringMemberships.length}</p>
               </div>
             </div>
           </CardContent>
@@ -301,11 +250,11 @@ const PaymentTracking = () => {
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-green-500 rounded-lg">
-                <CheckCircle className="h-4 w-4 text-white" />
+                <CreditCard className="h-4 w-4 text-white" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Toplam Vadeli</p>
-                <p className="text-2xl font-bold text-green-600">₺{totalAmount.toLocaleString()}</p>
+                <p className="text-sm text-muted-foreground">Toplam Borç</p>
+                <p className="text-2xl font-bold text-green-600">₺{totalUnpaid.toLocaleString()}</p>
               </div>
             </div>
           </CardContent>
@@ -313,90 +262,19 @@ const PaymentTracking = () => {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="installments" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="installments">Vadeli Ödemeler</TabsTrigger>
-          <TabsTrigger value="debts">Anlık Borçlar</TabsTrigger>
+      <Tabs defaultValue="payments" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="payments">Bekleyen Ödemeler</TabsTrigger>
           <TabsTrigger value="memberships">Üyelikler</TabsTrigger>
         </TabsList>
 
-        {/* Vadeli Ödemeler Tab */}
-        <TabsContent value="installments">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                Vadeli Ödemeler
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Müşteri</TableHead>
-                      <TableHead>Tutar</TableHead>
-                      <TableHead>Vade Tarihi</TableHead>
-                      <TableHead>Durum</TableHead>
-                      <TableHead>Açıklama</TableHead>
-                      <TableHead>İşlemler</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {sortedRecords.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center h-32">
-                          Seçilen tarih aralığında vadeli ödeme bulunmamaktadır.
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      sortedRecords.map((record) => (
-                        <TableRow key={record.id}>
-                          <TableCell>
-                            <div>
-                              <p className="font-medium">{record.customerName}</p>
-                              <p className="text-sm text-muted-foreground">{record.customerPhone}</p>
-                            </div>
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            ₺{Math.abs(record.amount).toLocaleString()}
-                          </TableCell>
-                          <TableCell>
-                            {new Date(record.dueDate!).toLocaleDateString('tr-TR')}
-                          </TableCell>
-                          <TableCell>
-                            {getStatusBadge(new Date(record.dueDate!))}
-                          </TableCell>
-                          <TableCell>{record.description || '-'}</TableCell>
-                          <TableCell>
-                            <Button 
-                              size="sm" 
-                              onClick={() => {
-                                setSelectedRecord(record);
-                                setPaymentAmount(Math.abs(record.amount).toString());
-                                setShowPaymentDialog(true);
-                              }}
-                            >
-                              Tahsilat Yap
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Anlık Borçlar Tab */}
-        <TabsContent value="debts">
+        {/* Payments Tab */}
+        <TabsContent value="payments">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CreditCard className="h-5 w-5" />
-                Anlık Borçlar
+                Bekleyen Ödemeler
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -407,34 +285,51 @@ const PaymentTracking = () => {
                       <TableHead>Müşteri</TableHead>
                       <TableHead>Tutar</TableHead>
                       <TableHead>Tarih</TableHead>
+                      <TableHead>Durum</TableHead>
                       <TableHead>Açıklama</TableHead>
+                      <TableHead>İşlemler</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {debtRecords.length === 0 ? (
+                    {sortedPayments.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={4} className="text-center h-32">
-                          Anlık borç kaydı bulunmamaktadır.
+                        <TableCell colSpan={6} className="text-center h-32">
+                          Seçilen tarih aralığında bekleyen ödeme bulunmamaktadır.
                         </TableCell>
                       </TableRow>
                     ) : (
-                      debtRecords.map((record) => {
-                        const customer = customers.find(c => c.id === record.customerId);
+                      sortedPayments.map((payment) => {
+                        const dueDate = new Date(payment.dueDate || payment.paymentDate || payment.date!);
                         return (
-                          <TableRow key={record.id}>
+                          <TableRow key={payment.id}>
                             <TableCell>
                               <div>
-                                <p className="font-medium">{customer?.name || 'Bilinmiyor'}</p>
-                                <p className="text-sm text-muted-foreground">{customer?.phone || ''}</p>
+                                <p className="font-medium">{payment.customerName}</p>
+                                <p className="text-sm text-muted-foreground">{payment.customerPhone}</p>
                               </div>
                             </TableCell>
-                            <TableCell className="font-medium text-red-600">
-                              ₺{Math.abs(record.amount).toLocaleString()}
+                            <TableCell className="font-medium">
+                              ₺{Math.abs(payment.amount).toLocaleString()}
                             </TableCell>
                             <TableCell>
-                              {new Date(record.date).toLocaleDateString('tr-TR')}
+                              {dueDate.toLocaleDateString('tr-TR')}
                             </TableCell>
-                            <TableCell>{record.description || '-'}</TableCell>
+                            <TableCell>
+                              {getStatusBadge(dueDate)}
+                            </TableCell>
+                            <TableCell>{payment.notes || payment.paymentType || '-'}</TableCell>
+                            <TableCell>
+                              <Button 
+                                size="sm" 
+                                onClick={() => {
+                                  setSelectedPayment(payment);
+                                  setPaymentAmount(Math.abs(payment.amount).toString());
+                                  setShowPaymentDialog(true);
+                                }}
+                              >
+                                Tahsil Et
+                              </Button>
+                            </TableCell>
                           </TableRow>
                         );
                       })
@@ -446,13 +341,13 @@ const PaymentTracking = () => {
           </Card>
         </TabsContent>
 
-        {/* Üyelikler Tab */}
+        {/* Memberships Tab */}
         <TabsContent value="memberships">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
-                Üyelik Takibi - 1 Hafta İçinde Bitecek
+                Üyelik Takibi
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -461,49 +356,38 @@ const PaymentTracking = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Üye</TableHead>
-                      <TableHead>Paket</TableHead>
+                      <TableHead>Telefon</TableHead>
                       <TableHead>Başlangıç</TableHead>
                       <TableHead>Bitiş</TableHead>
-                      <TableHead>Ücret</TableHead>
                       <TableHead>Durum</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredSubscriptions.length === 0 ? (
+                    {expiringMemberships.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center h-32">
-                          {dateRange.from && dateRange.to 
-                            ? 'Seçilen tarih aralığında bitecek üyelik bulunmamaktadır.'
-                            : '1 hafta içinde bitecek üyelik bulunmamaktadır.'}
+                        <TableCell colSpan={5} className="text-center h-32">
+                          1 hafta içinde bitecek üyelik bulunmamaktadır.
                         </TableCell>
                       </TableRow>
                     ) : (
-                      filteredSubscriptions.map((subscription) => (
-                        <TableRow key={subscription.id}>
+                      expiringMemberships.map((customer) => (
+                        <TableRow key={customer.id}>
                           <TableCell>
-                            <div>
-                              <p className="font-medium">{subscription.memberName}</p>
-                            </div>
+                            <p className="font-medium">{customer.name}</p>
                           </TableCell>
+                          <TableCell>{customer.phone}</TableCell>
                           <TableCell>
-                            <div>
-                              <p className="font-medium">{subscription.packageName}</p>
-                              <Badge variant="outline" className="text-xs mt-1">
-                                {subscription.packageType}
-                              </Badge>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {new Date(subscription.startDate).toLocaleDateString('tr-TR')}
+                            {customer.membershipStartDate 
+                              ? new Date(customer.membershipStartDate).toLocaleDateString('tr-TR')
+                              : '-'}
                           </TableCell>
                           <TableCell className="font-medium">
-                            {new Date(subscription.endDate).toLocaleDateString('tr-TR')}
+                            {customer.membershipEndDate 
+                              ? new Date(customer.membershipEndDate).toLocaleDateString('tr-TR')
+                              : '-'}
                           </TableCell>
                           <TableCell>
-                            ₺{subscription.price.toLocaleString()}
-                          </TableCell>
-                          <TableCell>
-                            {getMembershipStatusBadge(new Date(subscription.endDate))}
+                            {customer.membershipEndDate && getMembershipStatusBadge(new Date(customer.membershipEndDate))}
                           </TableCell>
                         </TableRow>
                       ))
@@ -520,7 +404,7 @@ const PaymentTracking = () => {
       <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Vadeli Ödeme Tahsilatı - {selectedRecord?.customerName}</DialogTitle>
+            <DialogTitle>Ödeme Tahsilatı - {selectedPayment?.customerName}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -529,11 +413,7 @@ const PaymentTracking = () => {
                 type="number"
                 value={paymentAmount}
                 onChange={(e) => setPaymentAmount(e.target.value)}
-                max={selectedRecord?.amount || 0}
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                Maksimum: ₺{selectedRecord?.amount?.toLocaleString() || 0}
-              </p>
             </div>
             <div>
               <Label>Not</Label>

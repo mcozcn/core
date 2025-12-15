@@ -1,12 +1,13 @@
 
 import { useQuery } from "@tanstack/react-query";
-import { getCustomers, getCustomerRecords } from "@/utils/localStorage";
+import { getCustomers } from "@/utils/storage/customers";
+import { getPayments } from "@/utils/storage/payments";
 import { getGroupSchedules } from "@/utils/storage/groupSchedules";
-import { getMemberSubscriptions } from "@/utils/storage/membershipPackages";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Calendar, CreditCard, Clock, TrendingUp } from "lucide-react";
 import { formatCurrency } from "@/utils/format";
 import { Link } from "react-router-dom";
+import { differenceInDays, startOfMonth } from "date-fns";
 
 const Dashboard = () => {
   const today = new Date();
@@ -20,28 +21,19 @@ const Dashboard = () => {
     queryFn: getGroupSchedules
   });
 
-  const { data: memberSubscriptions = [] } = useQuery({
-    queryKey: ['memberSubscriptions'],
-    queryFn: getMemberSubscriptions
-  });
-
   const { data: customers = [] } = useQuery({
     queryKey: ['customers'],
     queryFn: getCustomers
   });
 
-  const { data: customerRecords = [] } = useQuery({
-    queryKey: ['customerRecords'],
-    queryFn: getCustomerRecords
+  const { data: payments = [] } = useQuery({
+    queryKey: ['payments'],
+    queryFn: getPayments
   });
 
   // Get today's active groups
   const todayGroups = groupSchedules.filter(schedule => {
     if (!schedule.isActive) return false;
-    
-    const scheduleEndDate = schedule.endDate ? new Date(schedule.endDate) : null;
-    const isExpired = scheduleEndDate && scheduleEndDate < today;
-    if (isExpired) return false;
 
     // Group A: Pazartesi(1), Çarşamba(3), Cuma(5)
     // Group B: Salı(2), Perşembe(4), Cumartesi(6)
@@ -63,31 +55,41 @@ const Dashboard = () => {
   // Sort time slots
   const sortedTimeSlots = Object.keys(groupedByTime).sort();
 
-  // New memberships this month
-  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-  const newMembershipsCount = memberSubscriptions.filter(sub => {
-    const subDate = new Date(sub.createdAt);
-    return subDate >= startOfMonth;
+  // New memberships this month (customers with membershipStartDate in current month)
+  const monthStart = startOfMonth(today);
+  const newMembershipsCount = customers.filter(c => {
+    if (!c.membershipStartDate) return false;
+    const startDate = new Date(c.membershipStartDate);
+    return startDate >= monthStart && startDate <= today;
   }).length;
 
   // Memberships expiring in next 5 days
   const fiveDaysFromNow = new Date(today);
   fiveDaysFromNow.setDate(today.getDate() + 5);
   
-  const expiringMemberships = memberSubscriptions.filter(sub => {
-    const endDate = new Date(sub.endDate);
-    return endDate >= today && endDate <= fiveDaysFromNow && sub.isActive;
+  const expiringMemberships = customers.filter(c => {
+    if (!c.membershipEndDate || !c.isActive) return false;
+    const endDate = new Date(c.membershipEndDate);
+    return endDate >= today && endDate <= fiveDaysFromNow;
+  }).sort((a, b) => {
+    const dateA = new Date(a.membershipEndDate!);
+    const dateB = new Date(b.membershipEndDate!);
+    return dateA.getTime() - dateB.getTime();
   });
 
-  // Upcoming installment payments (within 1 week)
+  // Upcoming payments (within 1 week) - unpaid payments
   const oneWeekFromNow = new Date(today);
   oneWeekFromNow.setDate(today.getDate() + 7);
   
-  const upcomingPayments = customerRecords.filter(record => {
-    if (record.recordType !== 'installment' || record.isPaid || !record.dueDate) return false;
-    const dueDate = new Date(record.dueDate);
+  const upcomingPayments = payments.filter(payment => {
+    if (payment.isPaid) return false;
+    const dueDate = payment.dueDate ? new Date(payment.dueDate) : new Date(payment.paymentDate || payment.date!);
     return dueDate >= today && dueDate <= oneWeekFromNow;
-  }).sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime());
+  }).sort((a, b) => {
+    const dateA = new Date(a.dueDate || a.paymentDate || a.date!);
+    const dateB = new Date(b.dueDate || b.paymentDate || b.date!);
+    return dateA.getTime() - dateB.getTime();
+  });
 
   const getDayName = (dayNum: number) => {
     const days = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
@@ -220,28 +222,27 @@ const Dashboard = () => {
           <CardContent className="p-4 pt-0 md:p-6 md:pt-0">
             <div className="space-y-2">
               {expiringMemberships.length > 0 ? (
-                expiringMemberships.map(sub => {
-                  const customer = customers.find(c => c.id === sub.memberId);
-                  const daysUntilExpiry = Math.ceil((new Date(sub.endDate).getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                expiringMemberships.map(customer => {
+                  const daysUntilExpiry = differenceInDays(new Date(customer.membershipEndDate!), today);
                   
                   return (
                     <Link
-                      key={sub.id}
+                      key={customer.id}
                       to="/customers"
                       className="flex items-center justify-between p-2.5 md:p-3 bg-accent/50 rounded-lg hover:bg-accent transition-colors active:scale-[0.98]"
                     >
                       <div className="min-w-0 flex-1">
-                        <div className="font-medium text-sm md:text-base truncate">{customer?.name || 'Bilinmeyen'}</div>
+                        <div className="font-medium text-sm md:text-base truncate">{customer.name}</div>
                         <div className="text-xs md:text-sm text-muted-foreground truncate">
-                          {sub.packageName}
+                          {customer.phone}
                         </div>
                       </div>
                       <div className="text-right ml-2 shrink-0">
                         <div className="text-xs md:text-sm font-medium text-orange-600 dark:text-orange-400">
-                          {daysUntilExpiry} gün
+                          {daysUntilExpiry <= 0 ? 'Bugün' : `${daysUntilExpiry} gün`}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {new Date(sub.endDate).toLocaleDateString('tr-TR')}
+                          {new Date(customer.membershipEndDate!).toLocaleDateString('tr-TR')}
                         </div>
                       </div>
                     </Link>
@@ -268,8 +269,9 @@ const Dashboard = () => {
             <div className="space-y-2">
               {upcomingPayments.length > 0 ? (
                 upcomingPayments.slice(0, 10).map(payment => {
-                  const customer = customers.find(c => c.id === payment.customerId);
-                  const daysUntilDue = Math.ceil((new Date(payment.dueDate!).getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                  const customer = customers.find(c => String(c.id) === String(payment.customerId));
+                  const dueDate = payment.dueDate || payment.paymentDate || payment.date;
+                  const daysUntilDue = dueDate ? differenceInDays(new Date(dueDate), today) : 0;
                   
                   return (
                     <Link
@@ -278,9 +280,9 @@ const Dashboard = () => {
                       className="flex items-center justify-between p-2.5 md:p-3 bg-accent/50 rounded-lg hover:bg-accent transition-colors active:scale-[0.98]"
                     >
                       <div className="min-w-0 flex-1">
-                        <div className="font-medium text-sm md:text-base truncate">{customer?.name || payment.customerName}</div>
+                        <div className="font-medium text-sm md:text-base truncate">{customer?.name || 'Bilinmeyen'}</div>
                         <div className="text-xs md:text-sm text-muted-foreground truncate">
-                          {payment.itemName}
+                          {payment.notes || payment.paymentType}
                         </div>
                       </div>
                       <div className="text-right ml-2 shrink-0">
