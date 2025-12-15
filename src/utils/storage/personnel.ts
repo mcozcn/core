@@ -87,7 +87,7 @@ export const setPersonnel = async (personnel: Personnel[]): Promise<void> => {
 
 export const addPersonnel = async (personnelData: Omit<Personnel, 'id' | 'createdAt' | 'updatedAt'>): Promise<Personnel | null> => {
   if (!(await ensureWriteAllowed())) {
-    console.warn('Add personnel blocked: guest users cannot modify data');
+    console.warn('Write blocked: write access not allowed in current configuration');
     return null;
   }
   const dbPersonnel = transformToDbPersonnel(personnelData);
@@ -108,7 +108,7 @@ export const addPersonnel = async (personnelData: Omit<Personnel, 'id' | 'create
 
 export const updatePersonnel = async (id: number | string, updates: Partial<Personnel>): Promise<boolean> => {
   if (!(await ensureWriteAllowed())) {
-    console.warn('Update personnel blocked: guest users cannot modify data');
+    console.warn('Write blocked: write access not allowed in current configuration');
     return false;
   }
   const dbUpdates = transformToDbPersonnel(updates);
@@ -128,7 +128,7 @@ export const updatePersonnel = async (id: number | string, updates: Partial<Pers
 
 export const deletePersonnel = async (id: number | string): Promise<boolean> => {
   if (!(await ensureWriteAllowed())) {
-    console.warn('Delete personnel blocked: guest users cannot modify data');
+    console.warn('Write blocked: write access not allowed in current configuration');
     return false;
   }
 

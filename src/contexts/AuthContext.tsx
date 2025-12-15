@@ -9,7 +9,6 @@ import { verifyToken } from '@/utils/auth/security';
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  isGuest?: boolean;
   login: (username: string, password: string) => Promise<boolean>;
   loginAsGuest: () => Promise<void>;
   logout: () => void;
@@ -51,12 +50,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(currentUser);
         setIsAuthenticated(true);
       } else {
-        // Do not auto-login as guest so admin users can explicitly sign in.
-        // Leave user null / unauthenticated; the UI will present clear options to
-        // 'Continue as guest' or 'Login' so admin login is visible.
-        await setCurrentUser(null);
-        setUser(null);
-        setIsAuthenticated(false);
+        // Auto-enable public mode: sign-in as a local admin so app has full write access
+        const systemUser: User = {
+          id: 0,
+          username: 'system',
+          passwordHash: '',
+          displayName: 'Local Admin',
+          email: '',
+          role: 'admin',
+          title: 'Sistem',
+          color: '#111827',
+          allowedPages: [],
+          canEdit: true,
+          canDelete: true,
+          isVisible: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+
+        setUser(systemUser);
+        setIsAuthenticated(true);
+        await setCurrentUser(systemUser);
       }
     } catch (error) {
       console.error('Auth init error:', error);
@@ -131,26 +145,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const loginAsGuest = async () => {
-    const guestUser: User = {
+    // For compatibility, set a system admin instead of a guest so write operations work
+    const systemUser: User = {
       id: 0,
-      username: 'guest',
+      username: 'system',
       passwordHash: '',
-      displayName: 'Misafir',
+      displayName: 'Local Admin',
       email: '',
-      role: 'guest',
-      title: 'Misafir',
-      color: '#9CA3AF',
+      role: 'admin',
+      title: 'Sistem',
+      color: '#111827',
       allowedPages: [],
-      canEdit: false,
-      canDelete: false,
+      canEdit: true,
+      canDelete: true,
       isVisible: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
 
-    setUser(guestUser);
+    setUser(systemUser);
     setIsAuthenticated(true);
-    await setCurrentUser(guestUser);
+    await setCurrentUser(systemUser);
   };
 
   const logout = async () => {
@@ -167,7 +182,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, isGuest: user?.role === 'guest', login, loginAsGuest, logout, loading }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, login, loginAsGuest, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,4 +1,5 @@
 import { getCurrentUser } from '@/utils/storage/userManager';
+import { getAllowGuestWrites } from './appSettings';
 
 export const isGuestUser = async (): Promise<boolean> => {
   try {
@@ -11,6 +12,13 @@ export const isGuestUser = async (): Promise<boolean> => {
 };
 
 export const ensureWriteAllowed = async (): Promise<boolean> => {
+  // If app configured to allow guest writes (public mode), permit writes
+  try {
+    if (getAllowGuestWrites()) return true;
+  } catch (err) {
+    console.warn('allowGuestWrites check failed, continuing to guest check', err);
+  }
+
   const guest = await isGuestUser();
   if (guest) return false;
   return true;

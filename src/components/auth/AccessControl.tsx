@@ -22,7 +22,8 @@ const AccessControl = ({ children, user, isAuthenticated, loading }: AccessContr
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    // Redirect to homepage instead of login in public mode
+    return <Navigate to="/" state={{ from: location }} replace />;
   }
 
   // Mevcut sayfa

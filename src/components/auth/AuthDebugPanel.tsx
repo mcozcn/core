@@ -122,7 +122,22 @@ const AuthDebugPanel: React.FC = () => {
         </div>
         <pre className="max-h-48 overflow-auto text-xs">{JSON.stringify(sessionInfo, null, 2)}</pre>
         <div className="mt-2">
-          <div className="font-medium">Test Result</div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="font-medium">Test Result</div>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={async () => {
+                try {
+                  const { reconcileCustomerReferences } = await import('@/utils/cleanup/reconcile');
+                  const res = await reconcileCustomerReferences();
+                  toast({ title: 'Reconcile completed', description: `Removed ${res.removedSchedules} schedules, ${res.removedAppointments} appointments` });
+                  await refresh();
+                } catch (err) {
+                  console.error('Reconcile failed:', err);
+                  toast({ variant: 'destructive', title: 'Reconcile failed', description: String(err) });
+                }
+              }}>Reconcile Orphans</Button>
+            </div>
+          </div>
           <pre className="max-h-48 overflow-auto text-xs">{JSON.stringify(testResult, null, 2)}</pre>
         </div>
     </div>

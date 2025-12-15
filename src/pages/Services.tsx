@@ -40,15 +40,18 @@ const Services = () => {
 
   const handleDeleteService = async (serviceId: string | number) => {
     try {
-      const updatedServices = services.filter(s => s.id !== serviceId);
-      setServices(updatedServices);
-      queryClient.setQueryData(['services'], updatedServices);
-      
+      const { deleteService } = await import('@/utils/storage/services');
+      const success = await deleteService(serviceId);
+      if (!success) throw new Error('Delete failed');
+
+      queryClient.invalidateQueries({ queryKey: ['services'] });
+
       toast({
         title: "Hizmet silindi",
         description: "Hizmet başarıyla silindi.",
       });
     } catch (error) {
+      console.error('handleDeleteService error:', error);
       toast({
         variant: "destructive",
         title: "Hata",

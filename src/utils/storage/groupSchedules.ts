@@ -1,5 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { ensureWriteAllowed } from '@/utils/guestGuard';
+import { getFromStorage, setToStorage } from './core';
+import { STORAGE_KEYS } from './storageKeys';
 import type { GroupSchedule } from './types';
 
 // Transform database row to GroupSchedule type
@@ -25,17 +27,41 @@ const transformToDbSchedule = (schedule: Partial<GroupSchedule>) => ({
 });
 
 export const getGroupSchedules = async (): Promise<GroupSchedule[]> => {
-  const { data, error } = await supabase
-    .from('group_schedules')
-    .select('*')
-    .order('created_at', { ascending: false });
-  
-  if (error) {
-    console.error('Error fetching group schedules:', error);
-    return [];
+  // Try server first
+  let serverSchedules: GroupSchedule[] = [];
+  try {
+    const { data, error } = await supabase
+      .from('group_schedules')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    serverSchedules = (data || []).map(transformDbSchedule);
+  } catch (err) {
+    console.warn('Error fetching group schedules from server, will merge with local storage:', err);
   }
-  
-  return (data || []).map(transformDbSchedule);
+
+  // Read local schedules
+  let localSchedules: GroupSchedule[] = [];
+  try {
+    const local = await getFromStorage<any>(STORAGE_KEYS.GROUP_SCHEDULES);
+    localSchedules = (local || []).map((s: any) => ({
+      id: s.id,
+      customerId: s.customerId,
+      customerName: s.customerName,
+      group: s.group,
+      timeSlot: s.timeSlot,
+      startDate: s.startDate ? new Date(s.startDate) : new Date(),
+      isActive: s.isActive ?? true,
+      createdAt: s.createdAt ? new Date(s.createdAt) : new Date(),
+    }));
+  } catch (e) {
+    console.warn('Failed reading local group schedules:', e);
+  }
+
+  const merged = [...serverSchedules, ...localSchedules];
+  merged.sort((a, b) => +new Date(b.createdAt ?? 0) - +new Date(a.createdAt ?? 0));
+  return merged;
 };
 
 export const setGroupSchedules = async (schedules: GroupSchedule[]): Promise<void> => {
@@ -44,29 +70,49 @@ export const setGroupSchedules = async (schedules: GroupSchedule[]): Promise<voi
 
 export const addGroupSchedule = async (schedule: Omit<GroupSchedule, 'id' | 'createdAt'>): Promise<GroupSchedule | null> => {
   if (!(await ensureWriteAllowed())) {
-    console.warn('Add group schedule blocked: guest users cannot modify data');
+    console.warn('Write blocked: write access not allowed in current configuration');
     return null;
   }
   
   const dbSchedule = transformToDbSchedule(schedule);
   
-  const { data, error } = await supabase
-    .from('group_schedules')
-    .insert(dbSchedule)
-    .select()
-    .single();
-  
-  if (error) {
-    console.error('Error adding group schedule:', error);
-    return null;
+  try {
+    const { data, error } = await supabase
+      .from('group_schedules')
+      .insert(dbSchedule)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return transformDbSchedule(data);
+  } catch (err) {
+    console.warn('Error adding group schedule to server, saving locally as fallback:', err);
+    try {
+      const existing = await getFromStorage<any>(STORAGE_KEYS.GROUP_SCHEDULES);
+      const localId = `local-${Date.now()}`;
+      const localSchedule = {
+        id: localId,
+        customerId: schedule.customerId,
+        customerName: schedule.customerName,
+        group: schedule.group,
+        timeSlot: schedule.timeSlot,
+        startDate: schedule.startDate || new Date(),
+        isActive: schedule.isActive ?? true,
+        createdAt: new Date(),
+      } as GroupSchedule;
+
+      await setToStorage(STORAGE_KEYS.GROUP_SCHEDULES, [...existing, localSchedule as any]);
+      return localSchedule;
+    } catch (fallbackErr) {
+      console.error('Local fallback for adding group schedule failed:', fallbackErr);
+      return null;
+    }
   }
-  
-  return transformDbSchedule(data);
 };
 
 export const updateGroupSchedule = async (id: string | number, updates: Partial<GroupSchedule>): Promise<boolean> => {
   if (!(await ensureWriteAllowed())) {
-    console.warn('Update group schedule blocked: guest users cannot modify data');
+    console.warn('Write blocked: write access not allowed in current configuration');
     return false;
   }
   
@@ -93,7 +139,7 @@ export const updateGroupSchedule = async (id: string | number, updates: Partial<
 
 export const deleteGroupSchedule = async (id: string | number): Promise<boolean> => {
   if (!(await ensureWriteAllowed())) {
-    console.warn('Delete group schedule blocked: guest users cannot modify data');
+    console.warn('Write blocked: write access not allowed in current configuration');
     return false;
   }
   
@@ -136,18 +182,35 @@ export const getSchedulesByDayAndTime = async (
   // Group A: Monday(1), Wednesday(3), Friday(5)
   // Group B: Tuesday(2), Thursday(4), Saturday(6)
   const groupType = [1, 3, 5].includes(dayOfWeek) ? 'A' : 'B';
-  
-  const { data, error } = await supabase
-    .from('group_schedules')
-    .select('*')
-    .eq('time_slot', timeSlot)
-    .eq('group_type', groupType)
-    .eq('is_active', true);
-  
-  if (error) {
-    console.error('Error fetching schedules by day and time:', error);
-    return [];
+  try {
+    const { data, error } = await supabase
+      .from('group_schedules')
+      .select('*')
+      .eq('time_slot', timeSlot)
+      .eq('group_type', groupType)
+      .eq('is_active', true);
+
+    if (error) throw error;
+    return (data || []).map(transformDbSchedule);
+  } catch (err) {
+    console.warn('Server fetch for schedules failed, falling back to local schedules:', err);
+    try {
+      const local = await getFromStorage<any>(STORAGE_KEYS.GROUP_SCHEDULES);
+      return (local || [])
+        .filter((s: any) => s.timeSlot === timeSlot && s.group === groupType && (s.isActive ?? true))
+        .map((s: any) => ({
+          id: s.id,
+          customerId: s.customerId,
+          customerName: s.customerName,
+          group: s.group,
+          timeSlot: s.timeSlot,
+          startDate: s.startDate ? new Date(s.startDate) : new Date(),
+          isActive: s.isActive ?? true,
+          createdAt: s.createdAt ? new Date(s.createdAt) : new Date(),
+        }));
+    } catch (e) {
+      console.warn('Failed reading local group schedules:', e);
+      return [];
+    }
   }
-  
-  return (data || []).map(transformDbSchedule);
 };

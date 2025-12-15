@@ -41,21 +41,16 @@ const EditCustomerForm = ({ customer, open, onOpenChange, onSuccess }: EditCusto
     setIsSubmitting(true);
 
     try {
-      const customers = await getCustomers();
-      
-      const updatedCustomer: Customer = {
-        ...customer,
+      const { updateCustomer } = await import('@/utils/storage/customers');
+
+      const updatedCustomer: Partial<Customer> = {
         name,
         phone,
         email,
       };
 
-      // Müşteri ID'ye göre karşılaştırma yapılıyor
-      const updatedCustomers = customers.map(c => 
-        c.id === customer.id ? updatedCustomer : c
-      );
-
-      await setCustomers(updatedCustomers);
+      const ok = await updateCustomer(customer.id, updatedCustomer as any);
+      if (!ok) throw new Error('Update failed');
 
       toast({
         title: "Müşteri güncellendi",

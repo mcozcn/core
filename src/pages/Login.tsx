@@ -130,20 +130,7 @@ const Login = () => {
                 )}
               </Button>
             </form>
-            <div className="mt-3">
-              <Button
-                variant="ghost"
-                className="w-full h-12 text-base"
-                onClick={async () => {
-                  await loginAsGuest();
-                  toast({ title: 'Misafir modu', description: 'Veriler kaydedilmeyecektir.' });
-                  const from = location.state?.from?.pathname || '/';
-                  navigate(from, { replace: true });
-                }}
-              >
-                Misafir olarak devam et
-              </Button>
-            </div>
+            {/* Guest continuation removed in public mode */}
           </div>
         </Card>
       </div>

@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getMembershipPackages, type MembershipPackage } from '@/utils/storage/membershipPackages';
-import { addCustomer, updateCustomer } from '@/utils/storage/customers';
+import { addCustomer, updateCustomer, addCustomerRecord } from '@/utils/storage/customers';
 import { addPayment } from '@/utils/storage/payments';
+import { useQueryClient } from '@tanstack/react-query';
 import { addGroupSchedule, getSchedulesByDayAndTime } from '@/utils/storage/groupSchedules';
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -33,6 +34,7 @@ const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
   const [packages, setPackages] = useState<MembershipPackage[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const timeSlots = Array.from({ length: 14 }, (_, i) => {
     const hour = 7 + i;
@@ -129,10 +131,21 @@ const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
         return;
       }
 
+      // Refresh customers list so the new customer appears immediately
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+
+      // If customer was saved locally due to server write failure, notify user
+      if (typeof newCustomer.id === 'string' && newCustomer.id.startsWith('local-')) {
+        toast({
+          title: 'Kaydedildi (yerel yedek)',
+          description: 'Sunucuya kaydetme başarısız oldu; müşteri yerel olarak kaydedildi.'
+        });
+      }
+
       console.log('Yeni müşteri oluşturuldu:', newCustomer);
 
       // Add debt record to payments table
-      await addPayment({
+      const paymentResult = await addPayment({
         customerId: newCustomer.id,
         amount: selectedPackage.price,
         paymentType: 'üyelik',
@@ -144,7 +157,39 @@ const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
         notes: `${selectedPackage.name} - Üyelik Ücreti`,
       });
 
+      if (paymentResult && typeof paymentResult.id === 'string' && paymentResult.id.startsWith('local-')) {
+        toast({
+          title: 'Ödeme kaydedildi (yerel yedek)',
+          description: 'Sunucuya kaydetme başarısız oldu; ödeme yerel olarak kaydedildi.'
+        });
+      }
+
       console.log('Borç kaydı oluşturuldu');
+
+      // Also create a customer ledger record (so debt shows in cari kartı and financial lists)
+      const record = await addCustomerRecord({
+        customerId: newCustomer.id,
+        customerName: newCustomer.name,
+        type: 'debt',
+        itemId: selectedPackage.id,
+        itemName: selectedPackage.name,
+        amount: selectedPackage.price,
+        date: membershipStartDate || new Date(),
+        isPaid: false,
+        description: `${selectedPackage.name} - Üyelik Ücreti`,
+        recordType: 'debt',
+      });
+
+      if (record && typeof record.id === 'string' && record.id.startsWith('local-')) {
+        toast({
+          title: 'Borç kaydedildi (yerel yedek)',
+          description: 'Sunucuya kaydetme başarısız oldu; borç kaydı yerel olarak kaydedildi.'
+        });
+      }
+
+      // Refresh queries so the new payment and customer record appear in UI immediately
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
+      queryClient.invalidateQueries({ queryKey: ['customerRecords'] });
 
       // Check capacity for group schedule
       const groupDays = selectedGroup === 'A' ? [1, 3, 5] : [2, 4, 6];

@@ -32,7 +32,8 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    // In public mode, redirect to home instead of a login page
+    return <Navigate to="/" state={{ from: location }} replace />;
   }
 
   // Admin kullanıcıları her yere erişebilir

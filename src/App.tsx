@@ -4,8 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Navigation from "@/components/Navigation";
 import React from 'react';
 import Dashboard from '@/pages/Dashboard';
-import Login from '@/pages/Login';
-import GuestPrompt from '@/components/auth/GuestPrompt';
+// Login UI removed for public mode
 import AuthDebugPanel from '@/components/auth/AuthDebugPanel';
 import { useLocation } from 'react-router-dom';
 import Calendar from '@/pages/Calendar';
@@ -35,12 +34,12 @@ const ProtectedRoutes = () => {
   
   return (
     <div className="min-h-screen bg-background">
-      <GuestPrompt />
+      {/* GuestPrompt removed: app is in public mode */}
       {showDebug && <div className="max-w-7xl mx-auto px-4"><AuthDebugPanel /></div>}
       <Navigation />
       <Routes>
         <Route path="/" element={<Dashboard />} />
-        <Route path="/login" element={<Login />} />
+        {/* Login route removed in public mode */}
         <Route path="/calendar" element={<Calendar />} />
         <Route path="/customers" element={<Customers />} />
         <Route path="/payment-tracking" element={<PaymentTracking />} />

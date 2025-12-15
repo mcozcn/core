@@ -46,7 +46,7 @@ export const setCosts = async (costs: Cost[]): Promise<void> => {
 
 export const addCost = async (cost: Omit<Cost, 'id' | 'createdAt'>): Promise<Cost | null> => {
   if (!(await ensureWriteAllowed())) {
-    console.warn('Add cost blocked: guest users cannot modify data');
+    console.warn('Write blocked: write access not allowed in current configuration');
     return null;
   }
   const dbCost = transformToDbCost(cost);
@@ -67,7 +67,7 @@ export const addCost = async (cost: Omit<Cost, 'id' | 'createdAt'>): Promise<Cos
 
 export const updateCost = async (id: string | number, updates: Partial<Cost>): Promise<boolean> => {
   if (!(await ensureWriteAllowed())) {
-    console.warn('Update cost blocked: guest users cannot modify data');
+    console.warn('Write blocked: write access not allowed in current configuration');
     return false;
   }
   const dbUpdates: Record<string, any> = {};
@@ -92,7 +92,7 @@ export const updateCost = async (id: string | number, updates: Partial<Cost>): P
 
 export const deleteCost = async (id: string | number): Promise<boolean> => {
   if (!(await ensureWriteAllowed())) {
-    console.warn('Delete cost blocked: guest users cannot modify data');
+    console.warn('Write blocked: write access not allowed in current configuration');
     return false;
   }
   const { error } = await supabase

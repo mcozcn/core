@@ -14,8 +14,7 @@ import {
   Target, 
   CalendarDays, 
   Menu,
-  LogOut,
-  LogIn
+  
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
@@ -160,35 +159,7 @@ const Navigation = () => {
                   </div>
                 </ScrollArea>
 
-                <div className="p-4 border-t border-border">
-                  {isAuthenticated ? (
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start gap-3"
-                      onClick={async () => {
-                        await logout();
-                        toast({ title: 'Çıkış yapıldı' });
-                        navigate('/');
-                        setMobileOpen(false);
-                      }}
-                    >
-                      <LogOut size={20} />
-                      <span>Çıkış Yap</span>
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start gap-3"
-                      onClick={() => {
-                        navigate('/login');
-                        setMobileOpen(false);
-                      }}
-                    >
-                      <LogIn size={20} />
-                      <span>Giriş Yap</span>
-                    </Button>
-                  )}
-                </div>
+                {/* Authentication controls removed in public mode */}
               </div>
             </SheetContent>
           </Sheet>
@@ -221,32 +192,7 @@ const Navigation = () => {
           
           {!isCollapsed && (
             <div className="flex items-center justify-between w-full">
-              {isAuthenticated ? (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-xs text-muted-foreground hover:text-foreground gap-1.5"
-                  onClick={async () => {
-                    await logout();
-                    toast({ title: 'Çıkış yapıldı' });
-                    navigate('/');
-                  }}
-                >
-                  <LogOut size={14} />
-                  Çıkış
-                </Button>
-              ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-xs text-muted-foreground hover:text-foreground gap-1.5"
-                  onClick={() => navigate('/login')}
-                >
-                  <LogIn size={14} />
-                  Giriş
-                </Button>
-              )}
-              
+              <div />
               <Button
                 variant="ghost"
                 size="icon"

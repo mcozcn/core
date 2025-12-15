@@ -63,7 +63,7 @@ export const setServices = async (services: Service[]): Promise<void> => {
 
 export const addService = async (service: Omit<Service, 'id' | 'createdAt' | 'updatedAt'>): Promise<Service | null> => {
   if (!(await ensureWriteAllowed())) {
-    console.warn('Add service blocked: guest users cannot modify data');
+    console.warn('Write blocked: write access not allowed in current configuration');
     return null;
   }
   const dbService = transformToDbService(service);
@@ -84,7 +84,7 @@ export const addService = async (service: Omit<Service, 'id' | 'createdAt' | 'up
 
 export const updateService = async (id: string | number, updates: Partial<Service>): Promise<boolean> => {
   if (!(await ensureWriteAllowed())) {
-    console.warn('Update service blocked: guest users cannot modify data');
+    console.warn('Write blocked: write access not allowed in current configuration');
     return false;
   }
   const dbUpdates = transformToDbService(updates);
@@ -104,7 +104,7 @@ export const updateService = async (id: string | number, updates: Partial<Servic
 
 export const deleteService = async (id: string | number): Promise<boolean> => {
   if (!(await ensureWriteAllowed())) {
-    console.warn('Delete service blocked: guest users cannot modify data');
+    console.warn('Write blocked: write access not allowed in current configuration');
     return false;
   }
 

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getPayments, updatePayment, addPayment } from '@/utils/storage/payments';
+import { addCustomerRecord } from '@/utils/storage/customers';
 import { getCustomers } from '@/utils/storage/customers';
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { addDays, startOfDay, endOfDay, differenceInDays } from "date-fns";
@@ -97,14 +98,52 @@ const PaymentTracking = () => {
 
     const paymentAmountNum = Number(paymentAmount);
 
-    // Mark payment as paid
-    const success = await updatePayment(selectedPayment.id, {
-      isPaid: true,
-      notes: paymentNote ? `${selectedPayment.notes || ''} - Tahsilat: ${paymentNote}` : selectedPayment.notes
-    });
+    // Prevent overpayment
+    if (paymentAmountNum > Math.abs(selectedPayment.amount)) {
+      toast({ variant: 'destructive', title: 'Hata', description: 'Ödeme tutarı borçtan fazla olamaz.' });
+      return;
+    }
+
+    let success = false;
+
+    // Partial payment: reduce amount on the scheduled payment
+    if (paymentAmountNum < Math.abs(selectedPayment.amount)) {
+      const remaining = Math.abs(selectedPayment.amount) - paymentAmountNum;
+      success = await updatePayment(selectedPayment.id, {
+        amount: remaining * (selectedPayment.amount < 0 ? -1 : 1),
+        notes: paymentNote ? `${selectedPayment.notes || ''} - Tahsilat: ${paymentNote}` : selectedPayment.notes
+      });
+    } else {
+      // Full payment
+      success = await updatePayment(selectedPayment.id, {
+        isPaid: true,
+        notes: paymentNote ? `${selectedPayment.notes || ''} - Tahsilat: ${paymentNote}` : selectedPayment.notes
+      });
+    }
 
     if (success) {
+      // Record payment in customer ledger so cari list updates
+      try {
+        await addCustomerRecord({
+          customerId: selectedPayment.customerId,
+          customerName: selectedPayment.customerName,
+          type: 'payment',
+          itemId: selectedPayment.id,
+          itemName: `Ödeme - ${selectedPayment.customerName}`,
+          amount: -paymentAmountNum,
+          date: new Date(),
+          isPaid: true,
+          description: paymentNote || `Tahsilat: ${paymentAmountNum} ₺`,
+          recordType: 'payment',
+        });
+      } catch (err) {
+        console.warn('Failed to add customer record for payment:', err);
+      }
+
       queryClient.invalidateQueries({ queryKey: ['payments'] });
+      queryClient.invalidateQueries({ queryKey: ['customerRecords'] });
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+
       toast({
         title: "Ödeme tahsil edildi",
         description: `${paymentAmountNum} ₺ tutarında ödeme tahsil edildi.`,

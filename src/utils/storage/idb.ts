@@ -9,6 +9,44 @@
 const DB_NAME = 'glamAppointmentKeeperDB';
 const DB_VERSION = 1;
 
+// Required stores for the application
+const REQUIRED_STORES = [
+  'appointments', 'customers', 'services', 'stock', 'sales', 'serviceSales',
+  'customerRecords', 'payments', 'costs', 'users', 'userPerformance',
+  'userActivities', 'stockMovements', 'staff', 'groupSchedules'
+];
+
+// Ensure required stores exist by performing a version upgrade if necessary
+export const ensureStoresExist = async (): Promise<void> => {
+  try {
+    const db = await initDB();
+    const missing = REQUIRED_STORES.filter(name => !db.objectStoreNames.contains(name));
+    if (missing.length === 0) {
+      db.close();
+      return;
+    }
+
+    const newVersion = db.version + 1;
+    db.close();
+
+    await new Promise<void>((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, newVersion);
+      req.onupgradeneeded = () => {
+        const upgradeDB = (req as IDBOpenDBRequest).result;
+        missing.forEach(storeName => {
+          if (!upgradeDB.objectStoreNames.contains(storeName)) {
+            upgradeDB.createObjectStore(storeName, { keyPath: 'id' });
+          }
+        });
+      };
+      req.onsuccess = () => { try { req.result.close(); } catch(e) {}; resolve(); };
+      req.onerror = () => { reject(req.error); };
+    });
+  } catch (err) {
+    console.error('ensureStoresExist failed:', err);
+  }
+};
+
 // Initialize the database
 const initDB = (): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
@@ -21,6 +59,34 @@ const initDB = (): Promise<IDBDatabase> => {
 
     request.onsuccess = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
+
+      // If any required stores are missing from an existing DB, perform a version upgrade
+      const missing = REQUIRED_STORES.filter(name => !db.objectStoreNames.contains(name));
+      if (missing.length > 0) {
+        db.close();
+        const upgradeReq = indexedDB.open(DB_NAME, db.version + 1);
+
+        upgradeReq.onupgradeneeded = () => {
+          const upgradeDB = (upgradeReq as IDBOpenDBRequest).result;
+          missing.forEach(storeName => {
+            if (!upgradeDB.objectStoreNames.contains(storeName)) {
+              upgradeDB.createObjectStore(storeName, { keyPath: 'id' });
+            }
+          });
+        };
+
+        upgradeReq.onsuccess = () => {
+          resolve((upgradeReq as IDBOpenDBRequest).result);
+        };
+
+        upgradeReq.onerror = (e) => {
+          console.error('Failed to upgrade IndexedDB to add missing stores', e);
+          reject('Failed to upgrade IndexedDB');
+        };
+
+        return;
+      }
+
       resolve(db);
     };
 
@@ -80,7 +146,18 @@ export const getAllFromIDB = async <T>(storeName: string): Promise<T[]> => {
 // Save items to a store
 export const saveToIDB = async <T extends { id: number | string }>(storeName: string, items: T[]): Promise<void> => {
   try {
-    const db = await initDB();
+    let db = await initDB();
+
+    // If the store is missing (DB created earlier without it), try to create it and retry
+    if (!db.objectStoreNames.contains(storeName)) {
+      console.warn(`IndexedDB store missing (${storeName}), attempting to create it via upgrade`);
+      await ensureStoresExist();
+      db = await initDB();
+      if (!db.objectStoreNames.contains(storeName)) {
+        throw new Error(`IndexedDB store ${storeName} not found after upgrade`);
+      }
+    }
+
     const transaction = db.transaction(storeName, 'readwrite');
     const store = transaction.objectStore(storeName);
     

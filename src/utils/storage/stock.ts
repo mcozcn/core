@@ -71,7 +71,7 @@ export const setStock = async (stock: StockItem[]): Promise<void> => {
 
 export const addProduct = async (product: Omit<StockItem, 'id' | 'createdAt' | 'updatedAt'>): Promise<StockItem | null> => {
   if (!(await ensureWriteAllowed())) {
-    console.warn('Add product blocked: guest users cannot modify data');
+    console.warn('Write blocked: write access not allowed in current configuration');
     return null;
   }
   const dbProduct = transformToDbProduct(product);
@@ -92,7 +92,7 @@ export const addProduct = async (product: Omit<StockItem, 'id' | 'createdAt' | '
 
 export const updateProduct = async (id: string | number, updates: Partial<StockItem>): Promise<boolean> => {
   if (!(await ensureWriteAllowed())) {
-    console.warn('Update product blocked: guest users cannot modify data');
+    console.warn('Write blocked: write access not allowed in current configuration');
     return false;
   }
   const dbUpdates: Record<string, any> = {};
@@ -121,7 +121,7 @@ export const updateProduct = async (id: string | number, updates: Partial<StockI
 
 export const deleteProduct = async (id: string | number): Promise<boolean> => {
   if (!(await ensureWriteAllowed())) {
-    console.warn('Delete product blocked: guest users cannot modify data');
+    console.warn('Write blocked: write access not allowed in current configuration');
     return false;
   }
   const { error } = await supabase
@@ -157,7 +157,7 @@ export const setSales = async (sales: Sale[]): Promise<void> => {
 
 export const addSale = async (sale: Omit<Sale, 'id' | 'createdAt'>): Promise<Sale | null> => {
   if (!(await ensureWriteAllowed())) {
-    console.warn('Add sale blocked: guest users cannot modify data');
+    console.warn('Write blocked: write access not allowed in current configuration');
     return null;
   }
   const dbSale = transformToDbSale(sale);

@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Edit, Trash2, Check, X } from 'lucide-react';
 import { getMembershipPackages, saveMembershipPackage, updateMembershipPackage, deleteMembershipPackage, MembershipPackage } from '@/utils/storage/membershipPackages';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
+import { ensureWriteAllowed } from '@/utils/guestGuard';
+import { getFromStorage } from '@/utils/storage/core';
+import { STORAGE_KEYS } from '@/utils/storage/storageKeys';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,7 +17,7 @@ import { Switch } from '@/components/ui/switch';
 
 const MembershipPackages = () => {
   const { toast } = useToast();
-  const { isGuest } = useAuth();
+  const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPackage, setEditingPackage] = useState<MembershipPackage | null>(null);
   const [formData, setFormData] = useState({
@@ -79,11 +81,11 @@ const MembershipPackages = () => {
   };
 
   const handleSave = async () => {
-    if (isGuest) {
+    if (!(await ensureWriteAllowed())) {
       toast({
         variant: 'destructive',
         title: 'İzin yok',
-        description: 'Misafir modunda paket oluşturamaz veya düzenleyemezsiniz. Lütfen admin olarak giriş yapın.'
+        description: 'Yazma izni kapalı. Ayarlardan yazma iznini etkinleştirin.'
       });
       return;
     }
@@ -101,6 +103,31 @@ const MembershipPackages = () => {
       : await saveMembershipPackage(formData);
 
     if (result.success) {
+      if ((result as any).fallback) {
+        toast({
+          title: 'Kaydedildi (yerel yedek)',
+          description: 'Sunucu yazma hatası; paket yerel olarak kaydedildi.'
+        });
+        try {
+          const local = await getFromStorage<any>(STORAGE_KEYS.MEMBERSHIP_PACKAGES);
+          const current = queryClient.getQueryData<MembershipPackage[]>(['membershipPackages']) || [];
+          const currentIds = new Set(current.map(c => String(c.id)));
+          const toAdd = (local || []).filter((p: any) => !currentIds.has(String(p.id))).map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            description: p.description || '',
+            duration: p.duration || 30,
+            price: p.price || 0,
+            features: Array.isArray(p.features) ? p.features : [],
+            type: p.type || 'standard',
+            isActive: p.isActive ?? true,
+            createdAt: p.createdAt ? new Date(p.createdAt) : new Date(),
+          }));
+          if (toAdd.length > 0) queryClient.setQueryData(['membershipPackages'], [...toAdd, ...current]);
+        } catch (e) {
+          console.warn('Failed to merge local membership packages into cache:', e);
+        }
+      }
       toast({
         title: 'Başarılı',
         description: `Paket ${editingPackage ? 'güncellendi' : 'oluşturuldu'}`,

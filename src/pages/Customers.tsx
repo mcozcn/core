@@ -78,10 +78,15 @@ const Customers = () => {
 
   const handleDeleteCustomer = async (customerId: string | number) => {
     try {
-      const updatedCustomers = customers.filter(c => c.id !== customerId);
-      await setCustomers(updatedCustomers);
+      // Use the canonical delete method so server-side cascades and local cleanup run
+      const { deleteCustomer } = await import('@/utils/storage/customers');
+      const success = await deleteCustomer(customerId);
+      if (!success) throw new Error('Delete failed');
+
       queryClient.invalidateQueries({ queryKey: ['customers'] });
-      
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['customerRecords'] });
+
       // Eğer silinen müşteri seçili ise, seçimi temizle
       if (selectedCustomerId === customerId) {
         setSelectedCustomerId(null);
@@ -92,6 +97,7 @@ const Customers = () => {
         description: "Müşteri başarıyla silindi.",
       });
     } catch (error) {
+      console.error('handleDeleteCustomer error:', error);
       toast({
         variant: "destructive",
         title: "Hata",
