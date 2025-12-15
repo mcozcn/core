@@ -134,8 +134,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const guestUser: User = {
       id: 0,
       username: 'guest',
+      passwordHash: '',
       displayName: 'Misafir',
-      email: null,
+      email: '',
       role: 'guest',
       title: 'Misafir',
       color: '#9CA3AF',
