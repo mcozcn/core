@@ -67,7 +67,7 @@ export const getMembershipPackages = async (): Promise<MembershipPackage[]> => {
 export const saveMembershipPackage = async (pkg: Omit<MembershipPackage, 'id' | 'createdAt'>): Promise<{ success: boolean; error?: any; status?: number }> => {
   if (!(await ensureWriteAllowed())) {
     console.warn('Save membership package blocked: guest users cannot modify data');
-    return false;
+    return { success: false, error: 'Guest users cannot modify data' };
   }
   const dbPackage = transformToDbPackage(pkg);
   
@@ -92,7 +92,7 @@ export const saveMembershipPackage = async (pkg: Omit<MembershipPackage, 'id' | 
 export const updateMembershipPackage = async (id: number | string, updates: Partial<MembershipPackage>): Promise<{ success: boolean; error?: any; status?: number }> => {
   if (!(await ensureWriteAllowed())) {
     console.warn('Update membership package blocked: guest users cannot modify data');
-    return false;
+    return { success: false, error: 'Guest users cannot modify data' };
   }
   const dbUpdates: Record<string, any> = {};
   
@@ -125,7 +125,7 @@ export const updateMembershipPackage = async (id: number | string, updates: Part
 export const deleteMembershipPackage = async (id: number | string): Promise<{ success: boolean; error?: any; status?: number }> => {
   if (!(await ensureWriteAllowed())) {
     console.warn('Delete membership package blocked: guest users cannot modify data');
-    return false;
+    return { success: false, error: 'Guest users cannot modify data' };
   }
   const { data, error, status } = await supabase
     .from('membership_packages')
