@@ -1,17 +1,34 @@
-
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Users, BarChart3, Package, DollarSign, CreditCard, ShoppingCart, Database, BarChart, Clock, ChevronLeft, ChevronRight, Activity, UserCheck, Scale, ClipboardCheck, Target, CalendarDays, Menu, X } from "lucide-react";
+import { 
+  Users, 
+  LayoutDashboard, 
+  DollarSign, 
+  CreditCard, 
+  Database, 
+  Clock, 
+  ChevronLeft, 
+  ChevronRight, 
+  UserCheck, 
+  Scale, 
+  ClipboardCheck, 
+  Target, 
+  CalendarDays, 
+  Menu,
+  LogOut,
+  LogIn
+} from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
-import { Sheet, SheetContent, SheetTrigger, SheetClose } from "./ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { ScrollArea } from "./ui/scroll-area";
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from '@/contexts/AuthContext';
+import { Separator } from "./ui/separator";
 
 const Navigation = () => {
-  const { user, logout, isAuthenticated } = useAuth();
+  const { logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const location = useLocation();
@@ -19,31 +36,53 @@ const Navigation = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const isMobile = useIsMobile();
   
-  // Close mobile menu on route change
   useEffect(() => {
     setMobileOpen(false);
   }, [location.pathname]);
 
-  const links = [
-    { to: "/", label: "Ana Sayfa", icon: BarChart3 },
+  const mainLinks = [
+    { to: "/", label: "Ana Sayfa", icon: LayoutDashboard },
     { to: "/customers", label: "Üyeler", icon: Users },
     { to: "/calendar", label: "Antrenman Takvimi", icon: CalendarDays },
-    { to: "/services", label: "Hizmetler", icon: Activity },
-    { to: "/personnel", label: "Antrenörler", icon: UserCheck },
+    { to: "/membership-packages", label: "Üyelik Paketleri", icon: Target },
+  ];
+
+  const operationLinks = [
     { to: "/check-in", label: "Giriş/Çıkış", icon: ClipboardCheck },
     { to: "/body-metrics", label: "Vücut Ölçümleri", icon: Scale },
-    { to: "/membership-packages", label: "Üyelik Paketleri", icon: Target },
+    { to: "/personnel", label: "Personel", icon: UserCheck },
+  ];
+
+  const financeLinks = [
     { to: "/payment-tracking", label: "Ödeme ve Üyelik Takip", icon: Clock },
-    { to: "/stock", label: "Ürün Yönetimi", icon: Package },
-    { to: "/sales", label: "Satışlar", icon: ShoppingCart },
     { to: "/costs", label: "Masraflar", icon: DollarSign },
     { to: "/financial", label: "Finansal", icon: CreditCard },
-    { to: "/reports", label: "Raporlar", icon: BarChart },
-    { to: "/performance", label: "Performans", icon: BarChart3 },
+  ];
+
+  const systemLinks = [
     { to: "/backup", label: "Yedekleme", icon: Database },
   ];
 
-  const NavItem = ({ to, label, icon: Icon, onClick }: { to: string; label: string; icon: any; onClick?: () => void }) => {
+  const NavSection = ({ title, links, onClick }: { title: string; links: typeof mainLinks; onClick?: () => void }) => (
+    <div className="space-y-1">
+      {!isCollapsed && !isMobile && (
+        <p className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+          {title}
+        </p>
+      )}
+      {links.map((link) => (
+        <NavItem 
+          key={link.to} 
+          to={link.to} 
+          label={link.label} 
+          icon={link.icon}
+          onClick={onClick}
+        />
+      ))}
+    </div>
+  );
+
+  const NavItem = ({ to, label, icon: Icon, onClick }: { to: string; label: string; icon: React.ElementType; onClick?: () => void }) => {
     const isActive = location.pathname === to;
     
     if (isCollapsed && !isMobile) {
@@ -54,16 +93,16 @@ const Navigation = () => {
               <Link
                 to={to}
                 onClick={onClick}
-                className={`flex items-center justify-center h-10 w-10 rounded-lg transition-all duration-200 ${
+                className={`flex items-center justify-center h-11 w-11 rounded-xl mx-auto transition-all duration-200 ${
                   isActive
                     ? "bg-primary text-primary-foreground shadow-md"
                     : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                 }`}
               >
-                <Icon size={18} />
+                <Icon size={20} />
               </Link>
             </TooltipTrigger>
-            <TooltipContent side="right" className="ml-2">
+            <TooltipContent side="right" className="ml-2 font-medium">
               {label}
             </TooltipContent>
           </Tooltip>
@@ -75,60 +114,81 @@ const Navigation = () => {
       <Link
         to={to}
         onClick={onClick}
-        className={`flex items-center space-x-3 px-3 py-3 rounded-lg transition-all duration-200 ${
+        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 ${
           isActive
             ? "bg-primary text-primary-foreground shadow-md"
             : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
         }`}
       >
-        <Icon size={18} />
+        <Icon size={20} />
         <span className="text-sm font-medium">{label}</span>
       </Link>
     );
   };
 
-  // Mobile Navigation
   if (isMobile) {
     return (
       <>
-        {/* Mobile Header Bar */}
-        <div className="fixed top-0 left-0 right-0 h-14 bg-background/95 backdrop-blur border-b border-border z-50 flex items-center justify-between px-4">
+        <div className="fixed top-0 left-0 right-0 h-16 bg-card/95 backdrop-blur-xl border-b border-border z-50 flex items-center justify-between px-4 shadow-sm">
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-10 w-10">
-                <Menu size={24} />
+              <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl">
+                <Menu size={22} />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-72 p-0">
-              <div className="flex flex-col h-full">
-                {/* Logo */}
-                <div className="p-4 border-b border-border">
+            <SheetContent side="left" className="w-72 p-0 border-r-0">
+              <div className="flex flex-col h-full bg-card">
+                <div className="p-5 border-b border-border">
                   <div className="flex items-center justify-center">
                     <img 
                       src="/lovable-uploads/core.png" 
                       alt="CORE" 
-                      className="w-32 h-auto object-contain"
+                      className="w-28 h-auto object-contain"
                     />
                   </div>
-                  <p className="text-xs font-semibold text-center mt-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                    CORE FITNESS
-                  </p>
                 </div>
                 
-                {/* Navigation Links */}
-                <ScrollArea className="flex-1 py-4">
-                  <div className="space-y-1 px-3">
-                    {links.map((link) => (
-                      <NavItem 
-                        key={link.to} 
-                        to={link.to} 
-                        label={link.label} 
-                        icon={link.icon}
-                        onClick={() => setMobileOpen(false)}
-                      />
-                    ))}
+                <ScrollArea className="flex-1 py-4 px-3">
+                  <div className="space-y-6">
+                    <NavSection title="Ana Menü" links={mainLinks} onClick={() => setMobileOpen(false)} />
+                    <Separator />
+                    <NavSection title="Operasyonlar" links={operationLinks} onClick={() => setMobileOpen(false)} />
+                    <Separator />
+                    <NavSection title="Finans" links={financeLinks} onClick={() => setMobileOpen(false)} />
+                    <Separator />
+                    <NavSection title="Sistem" links={systemLinks} onClick={() => setMobileOpen(false)} />
                   </div>
                 </ScrollArea>
+
+                <div className="p-4 border-t border-border">
+                  {isAuthenticated ? (
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start gap-3"
+                      onClick={async () => {
+                        await logout();
+                        toast({ title: 'Çıkış yapıldı' });
+                        navigate('/');
+                        setMobileOpen(false);
+                      }}
+                    >
+                      <LogOut size={20} />
+                      <span>Çıkış Yap</span>
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start gap-3"
+                      onClick={() => {
+                        navigate('/login');
+                        setMobileOpen(false);
+                      }}
+                    >
+                      <LogIn size={20} />
+                      <span>Giriş Yap</span>
+                    </Button>
+                  )}
+                </div>
               </div>
             </SheetContent>
           </Sheet>
@@ -139,77 +199,89 @@ const Navigation = () => {
             className="h-8 object-contain"
           />
           
-          <div className="w-10" /> {/* Spacer for centering */}
+          <div className="w-10" />
         </div>
         
-        {/* Spacer to prevent content from going under fixed header */}
-        <div className="h-14" />
+        <div className="h-16" />
       </>
     );
   }
 
-  // Desktop Navigation
   return (
-    <nav className={`fixed top-0 left-0 h-full ${isCollapsed ? 'w-16' : 'w-56'} bg-background/95 backdrop-blur border-r border-border shadow-lg transition-all duration-300 z-50 flex flex-col`}>
-      {/* Header */}
+    <nav className={`fixed top-0 left-0 h-full ${isCollapsed ? 'w-[72px]' : 'w-60'} bg-card border-r border-border transition-all duration-300 z-50 flex flex-col shadow-lg`}>
       <div className="p-4 border-b border-border">
-        <div className="flex flex-col items-center space-y-4">
-          {/* Logo */}
-          <div className="flex items-center justify-center w-full px-2">
+        <div className="flex flex-col items-center space-y-3">
+          <div className="flex items-center justify-center w-full">
             <img 
               src="/lovable-uploads/core.png" 
               alt="CORE" 
-              className={`${isCollapsed ? 'w-10 h-6' : 'w-44 h-24'} object-contain transition-all duration-300`}
+              className={`${isCollapsed ? 'w-10 h-8' : 'w-32 h-16'} object-contain transition-all duration-300`}
             />
           </div>
           
-          {/* Text and Collapse Button */}
-          <div className="flex items-center justify-between w-full">
-            {!isCollapsed && (
-              <div className="text-center flex-1">
-                <p className="text-xs font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                  CORE FITNESS
-                </p>
-              </div>
-            )}
-
-            <div className="flex items-center space-x-2">
+          {!isCollapsed && (
+            <div className="flex items-center justify-between w-full">
               {isAuthenticated ? (
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs text-muted-foreground hover:text-foreground gap-1.5"
                   onClick={async () => {
                     await logout();
-                    toast({ title: 'Çıkış yapıldı', description: 'Oturum kapatıldı.' });
+                    toast({ title: 'Çıkış yapıldı' });
                     navigate('/');
                   }}
-                  className="text-sm text-muted-foreground underline"
                 >
-                  Çıkış Yap
-                </button>
+                  <LogOut size={14} />
+                  Çıkış
+                </Button>
               ) : (
-                <button onClick={() => navigate('/login')} className="text-sm text-muted-foreground underline">Giriş</button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs text-muted-foreground hover:text-foreground gap-1.5"
+                  onClick={() => navigate('/login')}
+                >
+                  <LogIn size={14} />
+                  Giriş
+                </Button>
               )}
+              
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                className="h-8 w-8 rounded-lg"
+              >
+                <ChevronLeft size={16} />
+              </Button>
             </div>
-
+          )}
+          
+          {isCollapsed && (
             <Button
               variant="ghost"
-              size="sm"
+              size="icon"
               onClick={() => setIsCollapsed(!isCollapsed)}
-              className="h-8 w-8 p-0 shrink-0"
+              className="h-8 w-8 rounded-lg"
             >
-              {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+              <ChevronRight size={16} />
             </Button>
-          </div>
+          )}
         </div>
       </div>
       
-      {/* Navigation Links */}
-      <div className="flex-1 overflow-y-auto py-4">
-        <div className={`space-y-1 ${isCollapsed ? 'px-2' : 'px-3'}`}>
-          {links.map((link) => (
-            <NavItem key={link.to} to={link.to} label={link.label} icon={link.icon} />
-          ))}
+      <ScrollArea className="flex-1 py-4">
+        <div className={`space-y-6 ${isCollapsed ? 'px-2' : 'px-3'}`}>
+          <NavSection title="Ana Menü" links={mainLinks} />
+          {!isCollapsed && <Separator />}
+          <NavSection title="Operasyonlar" links={operationLinks} />
+          {!isCollapsed && <Separator />}
+          <NavSection title="Finans" links={financeLinks} />
+          {!isCollapsed && <Separator />}
+          <NavSection title="Sistem" links={systemLinks} />
         </div>
-      </div>
+      </ScrollArea>
     </nav>
   );
 };
