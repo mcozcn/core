@@ -127,14 +127,14 @@ const PaymentTracking = () => {
         await addCustomerRecord({
           customerId: selectedPayment.customerId,
           customerName: selectedPayment.customerName,
-          type: 'payment',
+          type: 'payment' as const,
           itemId: selectedPayment.id,
           itemName: `Ödeme - ${selectedPayment.customerName}`,
           amount: -paymentAmountNum,
           date: new Date(),
           isPaid: true,
           description: paymentNote || `Tahsilat: ${paymentAmountNum} ₺`,
-          recordType: 'payment',
+          recordType: 'payment' as const,
         });
       } catch (err) {
         console.warn('Failed to add customer record for payment:', err);
@@ -218,12 +218,12 @@ const PaymentTracking = () => {
   };
 
   return (
-    <div className="p-4 md:p-6 md:pl-72 animate-fadeIn space-y-4 md:space-y-6">
+    <div className="page-container space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl md:text-3xl font-serif">Ödeme ve Üyelik Takip</h1>
-          <p className="text-sm md:text-base text-muted-foreground mt-1">Ödemeleri ve üyelik sürelerini takip edin</p>
+          <h1 className="page-title">Ödeme ve Üyelik Takip</h1>
+          <p className="page-subtitle">Ödemeleri ve üyelik sürelerini takip edin</p>
         </div>
       </div>
 

@@ -79,11 +79,11 @@ const Calendar = () => {
   const weekEnd = addDays(weekStart, 5); // Cumartesi
 
   return (
-    <div className="p-4 md:p-6 md:pl-72 animate-fadeIn">
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4 md:mb-6 gap-4">
+    <div className="page-container">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4 gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-serif">Grup Takvimi</h1>
-          <p className="text-sm md:text-base text-muted-foreground mt-1">Haftalık grup antrenman programı</p>
+          <h1 className="page-title">Grup Takvimi</h1>
+          <p className="page-subtitle">Haftalık grup antrenman programı</p>
         </div>
       </div>
 

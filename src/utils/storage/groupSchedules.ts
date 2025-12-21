@@ -1,7 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
 import { ensureWriteAllowed } from '@/utils/guestGuard';
-import { getFromStorage, setToStorage } from './core';
-import { STORAGE_KEYS } from './storageKeys';
 import type { GroupSchedule } from './types';
 
 // Transform database row to GroupSchedule type
@@ -27,8 +25,6 @@ const transformToDbSchedule = (schedule: Partial<GroupSchedule>) => ({
 });
 
 export const getGroupSchedules = async (): Promise<GroupSchedule[]> => {
-  // Try server first
-  let serverSchedules: GroupSchedule[] = [];
   try {
     const { data, error } = await supabase
       .from('group_schedules')
@@ -36,32 +32,11 @@ export const getGroupSchedules = async (): Promise<GroupSchedule[]> => {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    serverSchedules = (data || []).map(transformDbSchedule);
+    return (data || []).map(transformDbSchedule);
   } catch (err) {
-    console.warn('Error fetching group schedules from server, will merge with local storage:', err);
+    console.error('Error fetching group schedules from server:', err);
+    return [];
   }
-
-  // Read local schedules
-  let localSchedules: GroupSchedule[] = [];
-  try {
-    const local = await getFromStorage<any>(STORAGE_KEYS.GROUP_SCHEDULES);
-    localSchedules = (local || []).map((s: any) => ({
-      id: s.id,
-      customerId: s.customerId,
-      customerName: s.customerName,
-      group: s.group,
-      timeSlot: s.timeSlot,
-      startDate: s.startDate ? new Date(s.startDate) : new Date(),
-      isActive: s.isActive ?? true,
-      createdAt: s.createdAt ? new Date(s.createdAt) : new Date(),
-    }));
-  } catch (e) {
-    console.warn('Failed reading local group schedules:', e);
-  }
-
-  const merged = [...serverSchedules, ...localSchedules];
-  merged.sort((a, b) => +new Date(b.createdAt ?? 0) - +new Date(a.createdAt ?? 0));
-  return merged;
 };
 
 export const setGroupSchedules = async (schedules: GroupSchedule[]): Promise<void> => {
@@ -86,27 +61,8 @@ export const addGroupSchedule = async (schedule: Omit<GroupSchedule, 'id' | 'cre
     if (error) throw error;
     return transformDbSchedule(data);
   } catch (err) {
-    console.warn('Error adding group schedule to server, saving locally as fallback:', err);
-    try {
-      const existing = await getFromStorage<any>(STORAGE_KEYS.GROUP_SCHEDULES);
-      const localId = `local-${Date.now()}`;
-      const localSchedule = {
-        id: localId,
-        customerId: schedule.customerId,
-        customerName: schedule.customerName,
-        group: schedule.group,
-        timeSlot: schedule.timeSlot,
-        startDate: schedule.startDate || new Date(),
-        isActive: schedule.isActive ?? true,
-        createdAt: new Date(),
-      } as GroupSchedule;
-
-      await setToStorage(STORAGE_KEYS.GROUP_SCHEDULES, [...existing, localSchedule as any]);
-      return localSchedule;
-    } catch (fallbackErr) {
-      console.error('Local fallback for adding group schedule failed:', fallbackErr);
-      return null;
-    }
+    console.error('Error adding group schedule:', err);
+    return null;
   }
 };
 
@@ -193,24 +149,7 @@ export const getSchedulesByDayAndTime = async (
     if (error) throw error;
     return (data || []).map(transformDbSchedule);
   } catch (err) {
-    console.warn('Server fetch for schedules failed, falling back to local schedules:', err);
-    try {
-      const local = await getFromStorage<any>(STORAGE_KEYS.GROUP_SCHEDULES);
-      return (local || [])
-        .filter((s: any) => s.timeSlot === timeSlot && s.group === groupType && (s.isActive ?? true))
-        .map((s: any) => ({
-          id: s.id,
-          customerId: s.customerId,
-          customerName: s.customerName,
-          group: s.group,
-          timeSlot: s.timeSlot,
-          startDate: s.startDate ? new Date(s.startDate) : new Date(),
-          isActive: s.isActive ?? true,
-          createdAt: s.createdAt ? new Date(s.createdAt) : new Date(),
-        }));
-    } catch (e) {
-      console.warn('Failed reading local group schedules:', e);
-      return [];
-    }
+    console.error('Error fetching schedules by day and time:', err);
+    return [];
   }
 };

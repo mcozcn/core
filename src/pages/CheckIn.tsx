@@ -93,11 +93,11 @@ const CheckIn = () => {
   };
 
   return (
-    <div className="min-h-screen p-4 md:p-6 md:ml-56">
+    <div className="page-container space-y-4 md:space-y-6">
       <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
         <div>
-          <h1 className="text-2xl md:text-4xl font-bold mb-1 md:mb-2">Giriş / Çıkış Sistemi</h1>
-          <p className="text-sm md:text-base text-muted-foreground">Üye giriş-çıkış işlemlerini yönetin</p>
+          <h1 className="page-title">Giriş / Çıkış Sistemi</h1>
+          <p className="page-subtitle">Üye giriş-çıkış işlemlerini yönetin</p>
         </div>
 
         {/* Stats */}

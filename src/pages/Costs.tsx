@@ -45,9 +45,9 @@ const Costs = () => {
   });
 
   return (
-    <div className="p-4 md:p-8 md:pl-72 animate-fadeIn">
-      <div className="mb-4 md:mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-2xl md:text-4xl font-serif">Masraf Yönetimi</h1>
+    <div className="page-container">
+      <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <h1 className="page-title">Masraf Yönetimi</h1>
         <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
           <DialogTrigger asChild>
             <Button size="sm" className="w-full sm:w-auto">
