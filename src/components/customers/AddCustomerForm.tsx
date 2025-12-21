@@ -170,14 +170,14 @@ const AddCustomerForm = ({ onSuccess }: AddCustomerFormProps) => {
       const record = await addCustomerRecord({
         customerId: newCustomer.id,
         customerName: newCustomer.name,
-        type: 'debt',
+        type: 'debt' as const,
         itemId: selectedPackage.id,
         itemName: selectedPackage.name,
         amount: selectedPackage.price,
         date: membershipStartDate || new Date(),
         isPaid: false,
         description: `${selectedPackage.name} - Üyelik Ücreti`,
-        recordType: 'debt',
+        recordType: 'debt' as const,
       });
 
       if (record && typeof record.id === 'string' && record.id.startsWith('local-')) {

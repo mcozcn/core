@@ -1,7 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
 import { ensureWriteAllowed } from '@/utils/guestGuard';
-import { getFromStorage, setToStorage } from './core';
-import { STORAGE_KEYS } from './storageKeys';
 import type { Payment } from './types';
 
 const transformDbPayment = (row: any): Payment => ({
@@ -31,8 +29,6 @@ const transformToDbPayment = (payment: Partial<Payment>) => ({
 });
 
 export const getPayments = async (): Promise<Payment[]> => {
-  // Try server first
-  let serverPayments: Payment[] = [];
   try {
     const { data, error } = await supabase
       .from('payments')
@@ -40,34 +36,11 @@ export const getPayments = async (): Promise<Payment[]> => {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    serverPayments = (data || []).map(transformDbPayment);
+    return (data || []).map(transformDbPayment);
   } catch (err) {
-    console.warn('Error fetching payments from server, falling back to local:', err);
+    console.error('Error fetching payments from server:', err);
+    return [];
   }
-
-  // Read local payments and merge
-  let localPayments: Payment[] = [];
-  try {
-    const local = await getFromStorage<any>(STORAGE_KEYS.PAYMENTS);
-    localPayments = (local || []).map((p: any) => ({
-      id: p.id,
-      customerId: p.customerId,
-      customerName: p.customerName,
-      amount: p.amount,
-      paymentDate: p.paymentDate ? new Date(p.paymentDate) : new Date(),
-      date: p.date ? new Date(p.date) : new Date(),
-      dueDate: p.dueDate ? new Date(p.dueDate) : undefined,
-      isPaid: p.isPaid,
-      notes: p.notes || '',
-      createdAt: p.createdAt ? new Date(p.createdAt) : new Date(),
-    }));
-  } catch (e) {
-    console.warn('Failed reading local payments:', e);
-  }
-
-  const merged = [...localPayments, ...serverPayments];
-  merged.sort((a, b) => +new Date(b.createdAt ?? 0) - +new Date(a.createdAt ?? 0));
-  return merged;
 };
 
 export const setPayments = async (payments: Payment[]): Promise<void> => {
@@ -91,37 +64,8 @@ export const addPayment = async (payment: Omit<Payment, 'id' | 'createdAt'>): Pr
     if (error) throw error;
     return transformDbPayment(data);
   } catch (err) {
-    console.warn('Error adding payment to server, saving locally as fallback:', err);
-    try {
-      const existing = await getFromStorage<any>(STORAGE_KEYS.PAYMENTS);
-      const localId = `local-${Date.now()}`;
-      const localPayment = {
-        id: localId,
-        customerId: payment.customerId,
-        customerName: payment.customerName,
-        amount: payment.amount,
-        paymentDate: payment.paymentDate || payment.date || new Date(),
-        date: payment.date || payment.paymentDate || new Date(),
-        dueDate: payment.dueDate,
-        isPaid: payment.isPaid ?? false,
-        notes: payment.notes || '',
-        createdAt: new Date(),
-      } as Payment;
-
-      await setToStorage(STORAGE_KEYS.PAYMENTS, [...existing, localPayment as any]);
-      try {
-        const local = await import('@/utils/localStorage');
-        const localPayments = local.getPayments();
-        local.setPayments([...localPayments, localPayment as any]);
-      } catch (syncErr) {
-        console.warn('Local synchronous save after payment fallback failed:', syncErr);
-      }
-
-      return localPayment;
-    } catch (fallbackErr) {
-      console.error('Local fallback for adding payment failed:', fallbackErr);
-      return null;
-    }
+    console.error('Error adding payment:', err);
+    return null;
   }
 };
 

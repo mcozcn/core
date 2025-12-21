@@ -127,12 +127,12 @@ const Customers = () => {
   );
 
   return (
-    <div className="p-4 md:p-6 md:pl-72 animate-fadeIn space-y-6">
+    <div className="page-container space-y-4 md:space-y-6">
       {/* Header Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl md:text-3xl font-serif">Müşteri Yönetimi</h1>
-          <p className="text-sm md:text-base text-muted-foreground mt-1">Müşterilerinizi yönetin</p>
+          <h1 className="page-title">Müşteri Yönetimi</h1>
+          <p className="page-subtitle">Müşterilerinizi yönetin</p>
         </div>
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
           <DialogTrigger asChild>

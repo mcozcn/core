@@ -177,12 +177,12 @@ const MembershipPackages = () => {
   };
 
   return (
-    <div className="min-h-screen p-4 md:p-6 md:ml-56">
+    <div className="page-container">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 md:mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 md:mb-6">
           <div>
-            <h1 className="text-2xl md:text-4xl font-bold mb-1 md:mb-2">Üyelik Paketleri</h1>
-            <p className="text-sm md:text-base text-muted-foreground">Spor salonu üyelik paketlerini yönetin</p>
+            <h1 className="page-title">Üyelik Paketleri</h1>
+            <p className="page-subtitle">Spor salonu üyelik paketlerini yönetin</p>
           </div>
           <Button onClick={() => handleOpenDialog()} size="sm" className="gradient-primary w-full sm:w-auto">
             <Plus className="mr-2 h-4 w-4" />

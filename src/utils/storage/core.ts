@@ -1,28 +1,17 @@
+// Core storage utilities - Supabase-first approach
+// Local storage is no longer used as fallback to ensure data consistency across devices
 
-import { getAllFromIDB, saveToIDB } from './idb';
-
-// Convert promise-based getFromStorage to an async function that properly handles return types
 export const getFromStorage = async <T>(key: string): Promise<T[]> => {
-  try {
-    const result = await getAllFromIDB<T>(key);
-    return Array.isArray(result) ? result : [];
-  } catch (error) {
-    console.error(`Error getting data from storage for key ${key}:`, error);
-    // Fallback to localStorage
-    const data = localStorage.getItem(key);
-    return data ? JSON.parse(data) : [];
-  }
+  // Return empty array - all data should come from Supabase
+  console.warn(`getFromStorage called for ${key} - this should use Supabase directly`);
+  return [];
 };
 
-// Convert promise-based setToStorage to an async function
 export const setToStorage = async <T extends { id: string | number }>(key: string, data: T[]): Promise<void> => {
-  try {
-    await saveToIDB(key, data);
-  } catch (error) {
-    console.error(`Error setting data to storage for key ${key}:`, error);
-    // Fallback to localStorage
-    localStorage.setItem(key, JSON.stringify(data));
-  }
+  // No-op - all data should be saved to Supabase
+  console.warn(`setToStorage called for ${key} - this should use Supabase directly`);
 };
 
-export { getAllFromIDB, saveToIDB };
+// Keep these exports for backward compatibility but they're no longer used
+export const getAllFromIDB = async <T>(key: string): Promise<T[]> => [];
+export const saveToIDB = async <T extends { id: string | number }>(key: string, data: T[]): Promise<void> => {};
